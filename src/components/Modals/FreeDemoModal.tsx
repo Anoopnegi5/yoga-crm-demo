@@ -17,7 +17,7 @@ export const FreeDemoModal: React.FC<FreeDemoModalProps> = ({
   defaultGoal = '', 
   defaultProgram = 'Group Yoga Classes' 
 }) => {
-  const { addClient, showSuccessToast } = useApp();
+  const { addClient, customGroupBatches, showSuccessToast } = useApp();
 
   const [fullName, setFullName] = useState('');
   const [selectedCountry, setSelectedCountry] = useState<Country>(COUNTRIES[0]); // Default India +91
@@ -28,6 +28,9 @@ export const FreeDemoModal: React.FC<FreeDemoModalProps> = ({
   const [selectedProgram, setSelectedProgram] = useState(defaultProgram || 'Group Yoga Classes');
   const [goal, setGoal] = useState(defaultGoal || 'Flexibility');
   const [preferredTime, setPreferredTime] = useState('Morning');
+  const [selectedGroupBatch, setSelectedGroupBatch] = useState(
+    customGroupBatches?.[0] || 'Morning Vinyasa Batch (07:00 AM)'
+  );
   const [agreeContact, setAgreeContact] = useState(true);
 
   // Sync state when props change
@@ -43,9 +46,9 @@ export const FreeDemoModal: React.FC<FreeDemoModalProps> = ({
   if (!isOpen) return null;
 
   const filteredCountries = COUNTRIES.filter(c => 
-    c.name.toLowerCase().includes(countrySearch.toLowerCase()) || 
-    c.dialCode.includes(countrySearch) ||
-    c.code.toLowerCase().includes(countrySearch.toLowerCase())
+    (c.name || '').toLowerCase().includes((countrySearch || '').toLowerCase()) || 
+    (c.dialCode || '').includes(countrySearch) ||
+    (c.code || '').toLowerCase().includes((countrySearch || '').toLowerCase())
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -71,8 +74,8 @@ export const FreeDemoModal: React.FC<FreeDemoModalProps> = ({
 
     const fullPhoneNumber = `${selectedCountry.dialCode} ${cleanPhoneDigits}`;
 
-    // 1. WhatsApp Automated Message Generation with Selected Program
-    const waMessage = `Hi Anjali! 👋\n\nI would like to join the Free Demo Yoga Class.\n\n• Name: ${trimmedName}\n• WhatsApp: ${fullPhoneNumber}\n• Selected Program: ${selectedProgram}\n• My Goal: ${goal}\n• Preferred Time: ${preferredTime}\n\nPlease share the available demo class timings. 🧘🌿`;
+    // 1. WhatsApp Automated Message Generation with Selected Program & Group Batch
+    const waMessage = `Hi Anjali! 👋\n\nI would like to join the Free Demo Yoga Class.\n\n• Name: ${trimmedName}\n• WhatsApp: ${fullPhoneNumber}\n• Selected Program: ${selectedProgram}\n• Selected Group Batch: ${selectedGroupBatch}\n• My Goal: ${goal}\n• Preferred Time: ${preferredTime}\n\nPlease share the available demo class timings. 🧘🌿`;
 
     // Destination WhatsApp Business Number from SITE_CONFIG
     const destinationNumber = SITE_CONFIG.whatsappNumber.replace(/[^0-9]/g, '');
@@ -95,7 +98,7 @@ export const FreeDemoModal: React.FC<FreeDemoModalProps> = ({
       days: ['Mon', 'Wed', 'Fri'],
       timeSlot: preferredTime === 'Morning' ? 'Morning' : 'Evening',
       sessionType: selectedProgram.includes('Group') ? 'Group' : 'Personal',
-      groupName: selectedProgram,
+      groupName: selectedGroupBatch || selectedProgram,
       reasonsForJoining: [goal],
       currentProblems: [],
       feeType: 'Monthly',
@@ -103,7 +106,7 @@ export const FreeDemoModal: React.FC<FreeDemoModalProps> = ({
       feeDueDate: '5th',
       membershipPlan: '12 Classes',
       totalClasses: 12,
-      trainerNotes: `Free Demo Lead via Website on ${todayStr}. Program: ${selectedProgram}, Goal: ${goal}, Preferred Time: ${preferredTime}`,
+      trainerNotes: `Free Demo Lead via Website on ${todayStr}. Program: ${selectedProgram}, Batch: ${selectedGroupBatch}, Goal: ${goal}, Preferred Time: ${preferredTime}`,
       goal: goal
     });
 
@@ -269,6 +272,8 @@ export const FreeDemoModal: React.FC<FreeDemoModalProps> = ({
               <option value="Flexible">Flexible</option>
             </select>
           </div>
+
+
 
           {/* Consent Checkbox */}
           <div className="pt-2">

@@ -165,7 +165,11 @@ export const TrainerDreamsView: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || targetAmount <= 0) {
+
+    const cleanTarget = Number(targetAmount) || 100000;
+    const cleanSaved = Number(savedAmount) || 0;
+
+    if (!title.trim() || cleanTarget <= 0) {
       alert('Please enter a valid Dream Title and Target Amount.');
       return;
     }
@@ -173,21 +177,21 @@ export const TrainerDreamsView: React.FC = () => {
     if (editingDream) {
       updateTrainerDream({
         ...editingDream,
-        title,
-        targetAmount,
-        savedAmount,
-        photoUrl,
-        targetDate,
+        title: title.trim(),
+        targetAmount: cleanTarget,
+        savedAmount: cleanSaved,
+        photoUrl: photoUrl || '/hero-group-yoga.jpg',
+        targetDate: targetDate || '2027-12-31',
         category,
         notes
       });
     } else {
       addTrainerDream({
-        title,
-        targetAmount,
-        savedAmount,
-        photoUrl,
-        targetDate,
+        title: title.trim(),
+        targetAmount: cleanTarget,
+        savedAmount: cleanSaved,
+        photoUrl: photoUrl || '/hero-group-yoga.jpg',
+        targetDate: targetDate || '2027-12-31',
         category,
         notes
       });
@@ -237,7 +241,7 @@ export const TrainerDreamsView: React.FC = () => {
             <div className="bg-white/10 p-5 rounded-2xl border border-white/15 space-y-1">
               <span className="text-xs font-bold text-purple-200 block">Total Dreams Target Amount</span>
               <div className="font-serif text-2xl sm:text-3xl font-extrabold text-white">
-                ₹{totalDreamTarget.toLocaleString('en-IN')}
+                ₹{(totalDreamTarget || 0).toLocaleString('en-IN')}
               </div>
               <span className="text-[10px] text-purple-300 font-bold block">{trainerDreams.length} Active Goals Listed</span>
             </div>
@@ -248,7 +252,7 @@ export const TrainerDreamsView: React.FC = () => {
                 <span className="text-emerald-400 font-black">{overallPercent}% FUNDED</span>
               </div>
               <div className="font-serif text-2xl sm:text-3xl font-extrabold text-amber-300">
-                ₹{totalSaved.toLocaleString('en-IN')}
+                ₹{(totalSaved || 0).toLocaleString('en-IN')}
               </div>
               <div className="w-full h-2 rounded-full bg-black/40 overflow-hidden mt-1">
                 <div className="h-full bg-emerald-400 transition-all duration-500" style={{ width: `${overallPercent}%` }} />
@@ -288,8 +292,9 @@ export const TrainerDreamsView: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {trainerDreams.map((dream) => {
-              const saved = dream.savedAmount || 0;
-              const percent = Math.min(100, Math.round((saved / dream.targetAmount) * 100));
+              const targetCost = Number(dream.targetAmount) || 100000;
+              const saved = Number(dream.savedAmount) || 0;
+              const percent = Math.min(100, Math.round((saved / targetCost) * 100)) || 0;
 
               const isAchieved = percent >= 100;
 
@@ -383,7 +388,7 @@ export const TrainerDreamsView: React.FC = () => {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-xs font-extrabold">
                         <span className="text-slate-700 flex items-center gap-1.5">
-                          <span>Saved: <strong className="text-emerald-700">₹{saved.toLocaleString('en-IN')}</strong> / ₹{dream.targetAmount.toLocaleString('en-IN')}</span>
+                          <span>Saved: <strong className="text-emerald-700">₹{(saved || 0).toLocaleString('en-IN')}</strong> / ₹{(targetCost || 0).toLocaleString('en-IN')}</span>
                           <button
                             type="button"
                             onClick={() => handleSetExactBalance(dream)}
@@ -412,7 +417,7 @@ export const TrainerDreamsView: React.FC = () => {
 
                     {/* HARD WORK & EFFORT CALCULATOR CARD ("Kitni Mehnat Karni Hai") */}
                     {!isAchieved && (() => {
-                      const remaining = Math.max(0, dream.targetAmount - saved);
+                      const remaining = Math.max(0, targetCost - saved);
                       const personalMonthsNeeded = Math.ceil(remaining / 10000);
                       const groupMonthsNeeded = Math.ceil(remaining / 3500);
                       const sessionsNeeded = Math.ceil(remaining / 1000);
@@ -425,7 +430,7 @@ export const TrainerDreamsView: React.FC = () => {
                               <span>Required Effort ("Kitni Mehnat & Classes Needed")</span>
                             </div>
                             <span className="text-[10px] font-black text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-200">
-                              ₹{remaining.toLocaleString('en-IN')} Remaining
+                              ₹{(remaining || 0).toLocaleString('en-IN')} Remaining
                             </span>
                           </div>
 
@@ -477,7 +482,7 @@ export const TrainerDreamsView: React.FC = () => {
                             title="Undo last deposit entry"
                           >
                             <RotateCcw className="w-3 h-3 text-white" />
-                            <span>Undo (+₹{lastDeposits[dream.id].toLocaleString('en-IN')})</span>
+                            <span>Undo (+₹{(lastDeposits[dream.id] || 0).toLocaleString('en-IN')})</span>
                           </button>
                         )}
                       </div>
@@ -491,7 +496,7 @@ export const TrainerDreamsView: React.FC = () => {
                             onClick={() => handleDepositMoney(dream, chipAmt)}
                             className="px-2.5 py-1 rounded-xl bg-white border border-amber-300 hover:bg-amber-100 text-amber-900 text-[10px] font-black shrink-0 transition-all shadow-sm active:scale-95"
                           >
-                            + ₹{chipAmt.toLocaleString('en-IN')}
+                            + ₹{(chipAmt || 0).toLocaleString('en-IN')}
                           </button>
                         ))}
                       </div>
@@ -581,8 +586,12 @@ export const TrainerDreamsView: React.FC = () => {
                     type="number"
                     required
                     min={1000}
-                    value={targetAmount}
-                    onChange={(e) => setTargetAmount(Number(e.target.value))}
+                    value={targetAmount === 0 ? '' : targetAmount}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setTargetAmount(val === '' ? 0 : Number(val));
+                    }}
+                    placeholder="e.g. 125000"
                     className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold outline-none"
                   />
                 </div>
@@ -592,8 +601,12 @@ export const TrainerDreamsView: React.FC = () => {
                   <input
                     type="number"
                     min={0}
-                    value={savedAmount}
-                    onChange={(e) => setSavedAmount(Number(e.target.value))}
+                    value={savedAmount === 0 ? '' : savedAmount}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSavedAmount(val === '' ? 0 : Number(val));
+                    }}
+                    placeholder="e.g. 25000"
                     className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold outline-none"
                   />
                 </div>

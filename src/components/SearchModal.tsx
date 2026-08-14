@@ -30,10 +30,10 @@ export const SearchModal: React.FC = () => {
   if (!isSearchOpen) return null;
 
   const searchResults = clients.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.phone.includes(searchQuery) ||
-    c.classTime.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.goal.toLowerCase().includes(searchQuery.toLowerCase())
+    (c.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (c.phone || '').includes(searchQuery) ||
+    (c.classTime || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (c.goal || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (

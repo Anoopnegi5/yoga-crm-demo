@@ -278,11 +278,11 @@ export const ClientWebsite: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FAF7F2] via-[#F3EDE2] to-[#EBE2D3] text-slate-900 font-sans selection:bg-[#4A5D3E]/20 selection:text-[#2D3B27] pb-24 md:pb-12 relative overflow-hidden">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-b from-[#FAF7F2] via-[#F3EDE2] to-[#EBE2D3] text-slate-900 font-sans selection:bg-[#4A5D3E]/20 selection:text-[#2D3B27] pb-24 md:pb-12 relative">
       
       {/* Decorative Background Gradient Orbs */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-emerald-300/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
-      <div className="absolute top-1/3 right-0 w-[600px] h-[600px] bg-amber-200/25 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-0 left-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-emerald-300/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse overflow-hidden" />
+      <div className="absolute top-1/3 right-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-amber-200/25 rounded-full blur-3xl pointer-events-none -z-10 overflow-hidden" />
 
       {/* Share Link Welcome Notice Banner */}
       {isJoinLink && (
@@ -301,7 +301,7 @@ export const ClientWebsite: React.FC = () => {
       {/* ================================================== */}
       {/* 1. TOP HEADER / NAVIGATION */}
       {/* ================================================== */}
-      <header className="sticky top-0 z-40 bg-[#FAF7F2]/90 backdrop-blur-xl border-b border-[#E3D9C6] px-4 sm:px-8 py-3.5 shadow-sm transition-all">
+      <header className="sticky top-0 z-50 bg-[#FAF7F2]/95 backdrop-blur-2xl border-b border-[#E3D9C6] px-4 sm:px-8 py-3 shadow-md transition-all">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
           {/* Brand Logo */}
@@ -334,11 +334,12 @@ export const ClientWebsite: React.FC = () => {
             <a href="#benefits" className="hover:text-[#4A5D3E] transition-colors">Why Yoganjali</a>
             <a href="#goals" className="hover:text-[#4A5D3E] transition-colors">Goal Programs</a>
             <a href="#testimonials" className="hover:text-[#4A5D3E] transition-colors">Reviews</a>
+            <a href="/members" className="hover:text-[#4A5D3E] transition-colors font-extrabold">Our Yogis</a>
             <a href="#faq" className="hover:text-[#4A5D3E] transition-colors">FAQ</a>
           </nav>
 
-          {/* Right Action Buttons */}
-          <div className="hidden sm:flex items-center gap-3">
+          {/* Right Action Buttons (Desktop & Laptop screens only - 1024px+) */}
+          <div className="hidden lg:flex items-center gap-3">
             
             {/* WhatsApp Icon Button */}
             <button
@@ -361,15 +362,9 @@ export const ClientWebsite: React.FC = () => {
           {/* Mobile Menu Controls */}
           <div className="flex items-center gap-2 lg:hidden">
             <button
-              onClick={() => openDemoModal()}
-              className="px-4 py-1.5 rounded-full bg-gradient-to-r from-[#4A5D3E] to-[#2D3B27] text-white font-extrabold text-xs shadow-sm"
-            >
-              FREE DEMO
-            </button>
-
-            <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-2xl bg-white border border-[#E3D9C6] text-slate-700 shadow-sm"
+              aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -386,12 +381,23 @@ export const ClientWebsite: React.FC = () => {
             <a href="#benefits" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Why Choose Yoganjali</a>
             <a href="#goals" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Targeted Goal Programs</a>
             <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Student Reviews</a>
+            <a href="/members" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700 text-emerald-700 font-extrabold">🧘 Our Yogis</a>
             <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">FAQ</a>
             
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-end">
+            <div className="pt-3 border-t border-slate-100 flex items-center gap-2 justify-between">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  openDemoModal();
+                }}
+                className="flex-1 py-2.5 rounded-2xl bg-gradient-to-r from-[#4A5D3E] to-[#2D3B27] text-white font-extrabold text-xs shadow-md text-center"
+              >
+                FREE DEMO CLASS
+              </button>
+
               <button
                 onClick={() => handleDirectWhatsAppChat()}
-                className="px-4 py-2 rounded-2xl bg-emerald-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md"
+                className="px-4 py-2.5 rounded-2xl bg-emerald-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md"
               >
                 <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
               </button>
@@ -755,11 +761,11 @@ export const ClientWebsite: React.FC = () => {
                 </p>
 
                 <div className="pt-4 space-y-3 border-t border-[#E3D9C6]">
-                  <span className="text-[11px] font-black text-[#2D3B27] uppercase tracking-widest block">Batch Highlights:</span>
-                  <div className="space-y-2 text-xs font-semibold text-slate-800">
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-amber-600 shrink-0" /> Morning (6 AM, 7 AM, 8:15 AM)</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-amber-600 shrink-0" /> Evening (5 PM, 6:30 PM)</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-amber-600 shrink-0" /> Small cohort size for direct correction</p>
+                  <span className="text-[11px] font-black text-[#2D3B27] uppercase tracking-widest block">Benefits:</span>
+                  <div className="space-y-2.5 text-xs font-semibold text-slate-800">
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-amber-600 shrink-0" /> Community Motivation & Accountability</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-amber-600 shrink-0" /> Daily Practice Consistency & Discipline</p>
+                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-amber-600 shrink-0" /> Full-Body Strength, Toning & Flexibility</p>
                   </div>
                 </div>
               </div>
@@ -1278,6 +1284,7 @@ export const ClientWebsite: React.FC = () => {
             <a href="#about" className="block text-slate-300 hover:text-white transition-colors">About</a>
             <a href="#classes" className="block text-slate-300 hover:text-white transition-colors">Classes</a>
             <a href="#benefits" className="block text-slate-300 hover:text-white transition-colors">Why Yoganjali</a>
+            <a href="/members" className="block text-amber-300 hover:text-white transition-colors font-bold">🧘 Our Yogis</a>
             <a href="#faq" className="block text-slate-300 hover:text-white transition-colors">FAQ</a>
           </div>
 
@@ -1304,22 +1311,22 @@ export const ClientWebsite: React.FC = () => {
       </footer>
 
       {/* ================================================== */}
-      {/* 18. MOBILE STICKY BOTTOM BAR */}
+      {/* 18. MOBILE STICKY BOTTOM BAR - SLEEK COMPACT FLOATING DESIGN */}
       {/* ================================================== */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 backdrop-blur-xl border-t border-[#E3D9C6] p-3 shadow-2xl flex items-center gap-3">
+      <div className="fixed bottom-3 left-3 right-3 z-40 lg:hidden bg-[#2D3B27]/95 backdrop-blur-xl border border-emerald-800/50 p-2 rounded-2xl shadow-2xl flex items-center gap-2 max-w-md mx-auto">
         <button
           onClick={() => openDemoModal()}
-          className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-[#4A5D3E] to-[#2D3B27] text-white font-extrabold text-xs shadow-md text-center"
+          className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-[#1E271A] font-black text-xs uppercase tracking-wider shadow-sm text-center flex items-center justify-center gap-1 transition-all active:scale-95"
         >
-          FREE DEMO
+          <span>✨ FREE DEMO</span>
         </button>
 
         <button
           onClick={() => handleDirectWhatsAppChat()}
-          className="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold text-xs shadow-md text-center flex items-center justify-center gap-1.5"
+          className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs uppercase tracking-wider shadow-sm text-center flex items-center justify-center gap-1.5 transition-all active:scale-95"
         >
-          <MessageCircle className="w-4 h-4" />
-          WHATSAPP
+          <MessageCircle className="w-4 h-4 text-white" />
+          <span>WHATSAPP</span>
         </button>
       </div>
 

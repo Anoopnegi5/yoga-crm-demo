@@ -5,7 +5,7 @@ import {
   Flame, HeartHandshake, Sparkles, Activity, Target, Zap, DollarSign, Dumbbell 
 } from 'lucide-react';
 import { getClientCurrentMonthPaymentStatus } from '../utils/paymentUtils';
-import { getTodayDateString } from '../utils/dateUtils';
+import { getTodayDateString, isDateInMonth } from '../utils/dateUtils';
 
 export const Reports: React.FC = () => {
   const { clients, payments, attendance, leaves } = useApp();
@@ -16,8 +16,22 @@ export const Reports: React.FC = () => {
   const activeClients = clients.filter(c => c.status !== 'Discontinued');
 
   // 1. Current Month Collected Income (Matching Dashboard!)
-  const currentMonthPayments = payments.filter(p => (p.status === 'Paid' || p.status === 'Partial') && p.date.startsWith(currentMonthStr));
-  const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + p.amount, 0);
+  const currentMonthPayments = payments.filter(p => {
+    if (p.status === 'Pending' || p.status === 'Overdue') return false;
+    return isDateInMonth(p.date, currentMonthStr);
+  });
+  const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
+
+  const paidClientsWithoutLog = activeClients.filter(c => {
+    if (c.paymentStatus !== 'Paid') return false;
+    const hasLog = currentMonthPayments.some(p => p.clientId === c.id);
+    return !hasLog;
+  });
+
+  const implicitPaidRevenue = paidClientsWithoutLog.reduce((acc, c) => {
+    const fee = c.feeType === 'Per Session' ? (c.perSessionFee || 1000) * (c.completedClasses || 1) : (c.monthlyFee || 1200);
+    return acc + fee;
+  }, 0);
 
   const perSessionClients = activeClients.filter(c => c.feeType === 'Per Session' || c.membershipPlan === 'Per Session');
   let unloggedPerSessionEarnedRevenue = 0;
@@ -27,24 +41,26 @@ export const Reports: React.FC = () => {
     const presentClassesThisMonth = attendance.filter(a => 
       a.clientId === client.id && 
       a.status === 'Present' && 
-      a.date.startsWith(currentMonthStr)
+      isDateInMonth(a.date, currentMonthStr)
     ).length;
 
     const effectiveAttended = presentClassesThisMonth > 0 ? presentClassesThisMonth : (client.completedClasses || 0);
     const totalEarnedForClient = effectiveAttended * rate;
     const loggedForClient = currentMonthPayments
       .filter(p => p.clientId === client.id)
-      .reduce((sum, p) => sum + p.amount, 0);
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
 
     unloggedPerSessionEarnedRevenue += Math.max(0, totalEarnedForClient - loggedForClient);
   });
 
-  const totalCollected = loggedPaymentsTotal + unloggedPerSessionEarnedRevenue;
+  const totalCollected = loggedPaymentsTotal + implicitPaidRevenue + unloggedPerSessionEarnedRevenue;
 
   // Total Revenue Sum Across ALL Months (Lifetime Studio Earnings)
-  const totalLifetimeRevenue = payments
+  const explicitLifetimeRevenue = payments
     .filter(p => p.status === 'Paid' || p.status === 'Partial')
-    .reduce((sum, p) => sum + p.amount, 0);
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const totalLifetimeRevenue = Math.max(totalCollected, explicitLifetimeRevenue);
 
   // Current Month Name
   const currentMonthDateObj = new Date();
@@ -58,8 +74,8 @@ export const Reports: React.FC = () => {
 
   // Previous Month Revenue Total
   const prevMonthPaymentsTotal = payments
-    .filter(p => (p.status === 'Paid' || p.status === 'Partial') && p.date.startsWith(prevMonthStr))
-    .reduce((sum, p) => sum + p.amount, 0);
+    .filter(p => (p.status === 'Paid' || p.status === 'Partial') && (p.date || '').startsWith(prevMonthStr))
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
 
   const growthPercentage = prevMonthPaymentsTotal > 0
     ? Math.round(((totalCollected - prevMonthPaymentsTotal) / prevMonthPaymentsTotal) * 100)
@@ -162,8 +178,8 @@ export const Reports: React.FC = () => {
       const mStr = `${y}-${String(m).padStart(2, '0')}`;
       const monthLabel = new Date(y, m - 1, 1).toLocaleDateString('en-US', { month: 'short' });
       
-      const mPayments = payments.filter(p => (p.status === 'Paid' || p.status === 'Partial') && p.date.startsWith(mStr));
-      const mLogged = mPayments.reduce((sum, p) => sum + p.amount, 0);
+      const mPayments = payments.filter(p => (p.status === 'Paid' || p.status === 'Partial') && (p.date || '').startsWith(mStr));
+      const mLogged = mPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
       months.push({
         month: monthLabel,
@@ -205,7 +221,7 @@ export const Reports: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Revenue (All Months)</p>
-              <h3 className="text-3xl font-extrabold text-slate-900 mt-2">₹{totalLifetimeRevenue.toLocaleString('en-IN')}</h3>
+              <h3 className="text-3xl font-extrabold text-slate-900 mt-2">₹{(totalLifetimeRevenue || 0).toLocaleString('en-IN')}</h3>
               <p className="text-xs font-semibold text-emerald-600 mt-1 flex items-center gap-1">
                 <TrendingUp className="w-3.5 h-3.5" /> All months total sum
               </p>
@@ -221,7 +237,7 @@ export const Reports: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Previous Month Earning</p>
-              <h3 className="text-3xl font-extrabold text-amber-600 mt-2">₹{prevMonthPaymentsTotal.toLocaleString('en-IN')}</h3>
+              <h3 className="text-3xl font-extrabold text-amber-600 mt-2">₹{(prevMonthPaymentsTotal || 0).toLocaleString('en-IN')}</h3>
               <p className="text-xs font-semibold text-amber-600 mt-1">{prevMonthName} Revenue</p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold text-xl group-hover:scale-110 transition-transform shrink-0">
@@ -247,7 +263,7 @@ export const Reports: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Avg Revenue / Client</p>
-              <h3 className="text-3xl font-extrabold text-blue-700 mt-2">₹{averageRevenuePerClient.toLocaleString('en-IN')}</h3>
+              <h3 className="text-3xl font-extrabold text-blue-700 mt-2">₹{(averageRevenuePerClient || 0).toLocaleString('en-IN')}</h3>
               <p className="text-xs font-semibold text-blue-600 mt-1">ARPC Index</p>
             </div>
             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xl group-hover:scale-110 transition-transform shrink-0">

@@ -19,39 +19,59 @@ import { SearchModal } from './components/SearchModal';
 import { Toast } from './components/Toast';
 import { LoginScreen } from './components/LoginScreen';
 
+import { PublicClientProfile } from './components/PublicClientProfile';
+import { MemberDirectory } from './components/MemberDirectory';
+import { getSlugFromUrl } from './utils/slugUtils';
+
 const AppShell: React.FC = () => {
   const { activeTab, isClientWebsiteMode, setIsClientWebsiteMode } = useApp();
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return sessionStorage.getItem('yoganjali_auth_token') === 'authenticated_true';
+    if (typeof window === 'undefined') return false;
+    return (
+      sessionStorage.getItem('yoganjali_auth_token') === 'authenticated_true' ||
+      localStorage.getItem('yoganjali_auth_token') === 'authenticated_true'
+    );
   });
 
-  // Check URL query parameters on initial load
-  const isShareLink = React.useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    const search = window.location.search;
-    return search.includes('join=true') || search.includes('mode=client') || search.includes('register=true');
-  }, []);
-
-  const isExplicitPanel = React.useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    const search = window.location.search;
-    return search.includes('view=panel') || search.includes('admin=true') || search.includes('login=true');
-  }, []);
+  // Centralized URL routing — handles clean paths (/panel, /join, /members, /yogi/slug)
+  // and legacy query params (?view=panel, ?join=true, ?view=members, ?yogi=slug)
+  const { isYogiProfile, isMembersDirectory, isPanel, isJoinLink, slug } = React.useMemo(() => getSlugFromUrl(), []);
 
   useEffect(() => {
-    if (isShareLink && !isClientWebsiteMode) {
+    if (isJoinLink && !isClientWebsiteMode) {
       setIsClientWebsiteMode(true);
     }
-  }, [isShareLink, isClientWebsiteMode, setIsClientWebsiteMode]);
+  }, [isJoinLink, isClientWebsiteMode, setIsClientWebsiteMode]);
 
   const handleLogout = () => {
     sessionStorage.removeItem('yoganjali_auth_token');
+    localStorage.removeItem('yoganjali_auth_token');
     setIsAuthenticated(false);
   };
 
-  // 1. PUBLIC CLIENT SELF-REGISTRATION WIZARD MODE (?join=true)
-  if (isShareLink) {
+  // 1. PUBLIC YOGI PROFILE (/yogi/anoop-negi)
+  if (isYogiProfile && slug) {
+    return (
+      <>
+        <PublicClientProfile clientSlug={slug} />
+        <Toast />
+      </>
+    );
+  }
+
+  // 2. PUBLIC MEMBER DIRECTORY (/members)
+  if (isMembersDirectory) {
+    return (
+      <>
+        <MemberDirectory />
+        <Toast />
+      </>
+    );
+  }
+
+  // 3. PUBLIC CLIENT SELF-REGISTRATION (/join)
+  if (isJoinLink) {
     return (
       <>
         <ClientRegistrationWizard />
@@ -60,8 +80,8 @@ const AppShell: React.FC = () => {
     );
   }
 
-  // 2. PUBLIC WEBSITE MODE (Default for website visitors & when clicking Visit Our Website)
-  if (isClientWebsiteMode || !isExplicitPanel) {
+  // 4. PUBLIC WEBSITE (default for visitors, unless /panel is explicitly requested)
+  if (isClientWebsiteMode || !isPanel) {
     return (
       <>
         <ClientWebsite />
@@ -110,28 +130,57 @@ const AppShell: React.FC = () => {
   );
 };
 
-class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: any;
+}
+
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, ErrorBoundaryState> {
   constructor(props: { children: React.ReactNode }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: any, errorInfo: any) {
     console.error("App boundary caught error:", error, errorInfo);
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {}
   }
+
+  handleCleanReload = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {}
+    window.location.href = window.location.origin + '/panel';
+  };
 
   render() {
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 text-center space-y-4 font-sans">
-          <div className="w-16 h-16 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center text-2xl font-black">⚠️</div>
+          <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl font-black">✨</div>
           <h2 className="text-xl font-bold">App Session Recovered</h2>
-          <p className="text-xs text-slate-400 max-w-sm">Click below to refresh Yoganjali Studio cleanly.</p>
-          <button onClick={() => window.location.reload()} className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-extrabold text-xs shadow-md">Reload App</button>
+          
+          <div className="max-w-md w-full p-4 rounded-2xl bg-slate-900/80 border border-slate-800 text-left space-y-2">
+            <div className="text-[11px] font-bold text-rose-400 uppercase tracking-wider">Error Details</div>
+            <pre className="text-xs text-rose-300 font-mono whitespace-pre-wrap break-all bg-rose-950/30 p-3 rounded-xl border border-rose-900/50">
+              {this.state.error ? (this.state.error.stack || this.state.error.toString()) : 'Session reset required.'}
+            </pre>
+          </div>
+
+          <button
+            onClick={this.handleCleanReload}
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-2"
+          >
+            <span>🔄 Reload App Cleanly</span>
+          </button>
         </div>
       );
     }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { EditClientModal } from './Modals/EditClientModal';
 import { getClientCurrentMonthPaymentStatus } from '../utils/paymentUtils';
+import { slugifyName } from '../utils/slugUtils';
 import { 
   X, 
   Phone, 
@@ -22,7 +23,8 @@ import {
   Pencil,
   Activity,
   UserX,
-  UserCheck
+  UserCheck,
+  Globe
 } from 'lucide-react';
 
 export const ClientProfileModal: React.FC = () => {
@@ -201,6 +203,15 @@ export const ClientProfileModal: React.FC = () => {
                 <MessageCircle className="w-4 h-4" />
                 WhatsApp
               </a>
+              <a
+                href={`/yogi/${slugifyName(client.name)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold text-xs transition-colors border border-purple-200"
+              >
+                <Globe className="w-4 h-4 text-purple-600" />
+                Public Page
+              </a>
               <button
                 onClick={() => {
                   setPaymentModalDefaultClientId(client.id);
@@ -286,12 +297,12 @@ export const ClientProfileModal: React.FC = () => {
 
                   <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Total Fee Due</span>
-                    <p className="text-lg font-extrabold text-purple-700 mt-0.5">₹{dueAmount.toLocaleString()}</p>
+                    <p className="text-lg font-extrabold text-purple-700 mt-0.5">₹{(dueAmount || 0).toLocaleString()}</p>
                   </div>
 
                   <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">Total Paid So Far</span>
-                    <p className="text-lg font-extrabold text-emerald-700 mt-0.5">₹{paidAmount.toLocaleString()}</p>
+                    <p className="text-lg font-extrabold text-emerald-700 mt-0.5">₹{(paidAmount || 0).toLocaleString()}</p>
                   </div>
 
                   <div className={`p-3 rounded-2xl border ${
@@ -311,7 +322,7 @@ export const ClientProfileModal: React.FC = () => {
                 <div className="flex items-center justify-between text-xs font-bold">
                   <span className="text-slate-500 uppercase tracking-wider">Billing Model:</span>
                   <span className="text-purple-700 font-extrabold bg-purple-100 px-3 py-1 rounded-xl">
-                    💳 Monthly Fixed Plan (₹{client.monthlyFee.toLocaleString()}/month)
+                    💳 Monthly Fixed Plan (₹{(client.monthlyFee || 0).toLocaleString()}/month)
                   </span>
                 </div>
 

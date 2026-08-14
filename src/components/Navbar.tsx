@@ -11,7 +11,8 @@ import {
   Plus,
   Calendar as CalendarIcon,
   Globe,
-  Trophy
+  Trophy,
+  Cloud
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -25,7 +26,9 @@ export const Navbar: React.FC<NavbarProps> = () => {
     setIsAddClientOpen, 
     setIsSearchOpen,
     setIsClientWebsiteMode,
-    trainerProfile
+    trainerProfile,
+    isSyncingCloud,
+    syncCloudNow
   } = useApp();
 
   const navItems = [
@@ -41,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
   const appSubtitle = trainerProfile.appSubtitle || 'Yoga Journal & Fee Manager';
 
   return (
-    <div className="sticky top-4 z-40 px-4 sm:px-8 max-w-7xl mx-auto mb-6">
+    <div className="sticky top-0 sm:top-2 z-50 px-2 sm:px-8 max-w-7xl mx-auto mb-6 pt-2 sm:pt-0">
       <nav className="glass-nav rounded-full px-4 py-2.5 flex items-center justify-between shadow-soft">
         
         {/* Brand Logo - Custom Logo Image or Default Emblem */}
@@ -96,6 +99,21 @@ export const Navbar: React.FC<NavbarProps> = () => {
         {/* Right Side Actions */}
         <div className="flex items-center gap-2 sm:gap-3 pr-1">
           
+          {/* Cloud Cross-Device Sync Button (Compact Sleek Styling) */}
+          <button
+            onClick={() => syncCloudNow()}
+            disabled={isSyncingCloud}
+            className={`flex items-center gap-1 px-2.5 py-1.5 rounded-full text-[11px] font-extrabold transition-all shadow-xs shrink-0 ${
+              isSyncingCloud 
+                ? 'bg-purple-100 text-purple-700 animate-pulse' 
+                : 'bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 text-emerald-800'
+            }`}
+            title="Sync data across all devices (Phone, Laptop, Tablet)"
+          >
+            <Cloud className={`w-3.5 h-3.5 ${isSyncingCloud ? 'animate-spin text-purple-600' : 'text-emerald-600'}`} />
+            <span className="hidden sm:inline">{isSyncingCloud ? 'Syncing...' : 'Sync'}</span>
+          </button>
+
           {/* Quick Search */}
           <button
             onClick={() => setIsSearchOpen(true)}

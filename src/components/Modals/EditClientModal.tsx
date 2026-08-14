@@ -11,11 +11,8 @@ const REASONS_LIST = [
 
 const DAYS_LIST = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const TIME_PRESETS = [
-  '06:00 AM', '06:30 AM', '07:00 AM', '07:30 AM', 
-  '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', '10:00 AM',
-  '04:30 PM', '05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM'
-];
+const MORNING_TIMES = ['06:00 AM', '06:30 AM', '07:00 AM', '07:30 AM', '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', '10:00 AM'];
+const EVENING_TIMES = ['04:30 PM', '05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM'];
 
 interface EditClientModalProps {
   client: Client | null;
@@ -24,14 +21,10 @@ interface EditClientModalProps {
 }
 
 export const EditClientModal: React.FC<EditClientModalProps> = ({ client, isOpen, onClose }) => {
-  const { updateClient, deleteClient, clients } = useApp();
+  const { updateClient, deleteClient, customGroupBatches, addCustomGroupBatch, deleteCustomGroupBatch } = useApp();
 
-  const existingGroupNames = Array.from(
-    new Set(clients.map(c => c.groupName).filter(Boolean))
-  ) as string[];
-
-  const availableBatches = existingGroupNames.length > 0
-    ? existingGroupNames
+  const availableBatches = (customGroupBatches && customGroupBatches.length > 0)
+    ? customGroupBatches
     : ['General Yoga Batch'];
 
   const [name, setName] = useState('');
@@ -149,10 +142,16 @@ export const EditClientModal: React.FC<EditClientModalProps> = ({ client, isOpen
     }
   };
 
-  const finalGroupName = selectedBatchDropdown === 'CUSTOM' ? customGroupName : selectedBatchDropdown;
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    let finalGroup = selectedBatchDropdown;
+    if (selectedBatchDropdown === 'CUSTOM' && customGroupName.trim()) {
+      finalGroup = customGroupName.trim();
+      addCustomGroupBatch(finalGroup);
+    }
+
+    const autoTimeSlot = (classTime || '').toUpperCase().includes('PM') ? 'Evening' : 'Morning';
 
     updateClient({
       ...client,
@@ -165,9 +164,9 @@ export const EditClientModal: React.FC<EditClientModalProps> = ({ client, isOpen
       photoUrl,
       classTime,
       days: selectedDays,
-      timeSlot,
+      timeSlot: autoTimeSlot,
       sessionType,
-      groupName: finalGroupName.trim() || 'General Yoga Batch',
+      groupName: sessionType === 'Personal' ? '' : (finalGroup === 'CUSTOM' ? '' : finalGroup),
       reasonsForJoining: selectedReasons,
       currentProblems: currentProblems.split(',').map(s => s.trim()).filter(Boolean),
       feeType,
@@ -221,13 +220,7 @@ export const EditClientModal: React.FC<EditClientModalProps> = ({ client, isOpen
                   >
                     🎨 Vector
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => handleVectorAvatarPreset('initials')}
-                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-white text-purple-700 border border-purple-200"
-                  >
-                    🔤 Initials
-                  </button>
+
                   <label className="px-2.5 py-1 rounded-lg text-xs font-bold bg-purple-600 text-white cursor-pointer shadow-sm">
                     <Upload className="w-3 h-3 inline mr-1" />
                     Upload
@@ -322,71 +315,138 @@ export const EditClientModal: React.FC<EditClientModalProps> = ({ client, isOpen
               </span>
             </label>
 
-            <select
-              value={selectedBatchDropdown}
-              onChange={(e) => {
-                setSelectedBatchDropdown(e.target.value);
-                if (e.target.value !== 'CUSTOM') {
-                  setCustomGroupName('');
-                }
-              }}
-              className="w-full px-4 py-3 rounded-2xl bg-white border border-purple-200 text-xs font-bold text-purple-900 outline-none"
-            >
-              {availableBatches.map((batch) => (
-                <option key={batch} value={batch}>👥 {batch}</option>
-              ))}
-              <option value="CUSTOM">➕ + Create New Group Batch...</option>
-            </select>
+            <div className="flex items-center gap-2">
+              <select
+                value={selectedBatchDropdown}
+                onChange={(e) => {
+                  setSelectedBatchDropdown(e.target.value);
+                  if (e.target.value !== 'CUSTOM') {
+                    setCustomGroupName('');
+                  }
+                }}
+                className="flex-1 px-4 py-3 rounded-2xl bg-white border border-purple-200 text-xs font-bold text-purple-900 outline-none shadow-sm"
+              >
+                {availableBatches.map((batch) => (
+                  <option key={batch} value={batch}>👥 {batch}</option>
+                ))}
+                <option value="CUSTOM">➕ + Create New Group Batch...</option>
+              </select>
+
+              {selectedBatchDropdown !== 'CUSTOM' && availableBatches.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    deleteCustomGroupBatch(selectedBatchDropdown);
+                    const remaining = availableBatches.filter(b => b !== selectedBatchDropdown);
+                    setSelectedBatchDropdown(remaining[0] || 'CUSTOM');
+                  }}
+                  title="Delete this Group Batch"
+                  className="px-3.5 py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold text-xs transition-all flex items-center gap-1 shrink-0"
+                >
+                  <Trash2 className="w-4 h-4 text-rose-600" />
+                  <span>Delete</span>
+                </button>
+              )}
+            </div>
 
             {selectedBatchDropdown === 'CUSTOM' && (
-              <input
-                type="text"
-                required
-                value={customGroupName}
-                onChange={(e) => setCustomGroupName(e.target.value)}
-                placeholder="Enter custom group batch name..."
-                className="w-full px-4 py-3 rounded-2xl bg-white border border-purple-300 text-xs font-bold text-purple-950 outline-none"
-              />
+              <div className="space-y-2 pt-1">
+                <input
+                  type="text"
+                  autoFocus
+                  value={customGroupName}
+                  onChange={(e) => setCustomGroupName(e.target.value)}
+                  placeholder="Enter custom group batch name..."
+                  className="w-full px-4 py-3 rounded-2xl bg-white border border-purple-300 text-xs font-bold text-purple-950 outline-none shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const trimmed = customGroupName.trim();
+                    if (trimmed) {
+                      addCustomGroupBatch(trimmed);
+                      setSelectedBatchDropdown(trimmed);
+                      setCustomGroupName('');
+                    } else {
+                      alert('Please enter a batch name first.');
+                    }
+                  }}
+                  className="w-full py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs shadow-md transition-all flex items-center justify-center gap-2"
+                >
+                  <Save className="w-4 h-4 text-amber-300" />
+                  <span>💾 Save & Store Group Batch</span>
+                </button>
+              </div>
             )}
           </div>
 
-          {/* Class Time Picker Presets */}
-          <div className="bg-slate-50 p-4 rounded-3xl border border-slate-200 space-y-3">
+          {/* Class Time Selector - Compact Modern Design */}
+          <div className="bg-gradient-to-br from-slate-50 to-purple-50/40 p-3.5 rounded-2xl border border-slate-200/80 space-y-2.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                <Clock className="w-4 h-4 text-purple-600" />
+              <label className="text-[11px] font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-purple-600" />
                 Class Time Picker *
               </label>
-              <span className="text-xs font-extrabold text-purple-700 bg-purple-100 px-3 py-1 rounded-xl">
+              <span className="text-[11px] font-black text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-lg border border-purple-200">
                 Selected: {classTime}
               </span>
             </div>
 
-            <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1 bg-white rounded-2xl border border-slate-200">
-              {TIME_PRESETS.map((t) => (
-                <button
-                  type="button"
-                  key={t}
-                  onClick={() => setClassTime(t)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                    classTime === t
-                      ? 'bg-purple-600 text-white shadow-sm'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+            {/* Morning Batches */}
+            <div className="space-y-1">
+              <div className="text-[10px] font-extrabold text-amber-700 uppercase tracking-wider flex items-center gap-1">
+                <span>🌅 Morning Batches</span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {MORNING_TIMES.map((t) => (
+                  <button
+                    type="button"
+                    key={t}
+                    onClick={() => setClassTime(t)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                      classTime === t
+                        ? 'bg-purple-600 text-white shadow-sm ring-2 ring-purple-300 scale-105'
+                        : 'bg-white text-slate-700 border border-slate-200 hover:bg-amber-50 hover:border-amber-200'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-1">
-              <span className="text-[11px] font-semibold text-slate-500">Or custom time:</span>
+            {/* Evening Batches */}
+            <div className="space-y-1 pt-1 border-t border-slate-200/60">
+              <div className="text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider flex items-center gap-1">
+                <span>🌆 Evening Batches</span>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {EVENING_TIMES.map((t) => (
+                  <button
+                    type="button"
+                    key={t}
+                    onClick={() => setClassTime(t)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                      classTime === t
+                        ? 'bg-purple-600 text-white shadow-sm ring-2 ring-purple-300 scale-105'
+                        : 'bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50 hover:border-indigo-200'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom Time */}
+            <div className="flex items-center gap-2 pt-1 border-t border-slate-200/60">
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Or Custom:</span>
               <input
                 type="text"
                 value={classTime}
                 onChange={(e) => setClassTime(e.target.value)}
                 placeholder="07:00 AM"
-                className="flex-1 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold outline-none"
+                className="flex-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[11px] font-bold outline-none focus:ring-1 focus:ring-purple-500"
               />
             </div>
           </div>

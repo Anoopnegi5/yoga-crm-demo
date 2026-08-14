@@ -14,8 +14,26 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ isOpen, onClose 
 
   if (!isOpen) return null;
 
-  const shareableUrl = `${window.location.origin}/?join=true`;
-  const fullMessage = `Hi! 👋 Please click this link to complete your Yoga Registration details for Yoganjali Studio with Anjali Negi:\n\n${shareableUrl}\n\nLooking forward to starting your personalized yoga sessions! 🧘‍♀️🌿`;
+  const shareableUrl = `https://www.yoganjaliyoga.com/join`;
+  const fullMessage = `Hi! 😊
+
+I hope you're doing well.
+
+As part of our yoga program, I’d like to update your profile and keep your practice plan aligned with your current goals and progress. Please take a minute to fill in your details using the link below:
+
+✨ Registration & Profile Update Form:
+Hi! 👋 Please click this link to complete your Yoga Registration details for Yoganjali Studio with Anjali Negi:
+
+${shareableUrl}
+
+Looking forward to starting your personalized yoga sessions...☺️🤗🥰
+
+This will help me personalize your sessions better and provide the right guidance for your yoga journey. 🧘‍♀️🌿
+
+If you have any questions, feel free to message me anytime.
+
+Warm regards,
+Anjali Negi`;
 
   const copyToClipboard = (text: string): boolean => {
     try {
@@ -61,11 +79,9 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ isOpen, onClose 
 
   const handleWhatsAppShare = () => {
     copyToClipboard(fullMessage);
-    
-    // Modern universal wa.me link format
-    const waUrl = `https://wa.me/?text=${encodeURIComponent(fullMessage)}`;
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(fullMessage)}`;
     window.open(waUrl, '_blank');
-    showSuccessToast('💬 WhatsApp opened! Full Message also copied to clipboard.');
+    showSuccessToast('💬 WhatsApp opened with full customized message!');
   };
 
   return (
@@ -123,8 +139,26 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ isOpen, onClose 
                 }`}
               >
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                <span>{copied ? 'Copied!' : 'Copy'}</span>
+                <span>{copied ? 'Copied!' : 'Copy Link'}</span>
               </button>
+            </div>
+          </div>
+
+          {/* Customized WhatsApp Message Preview Box */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-slate-700 text-xs">Customized WhatsApp Message</label>
+              <button
+                onClick={handleCopyFullMessage}
+                className="text-[11px] font-bold text-purple-700 hover:underline flex items-center gap-1"
+              >
+                {copiedMsg ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedMsg ? 'Message Copied!' : 'Copy Full Text'}</span>
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200 text-slate-800 font-sans text-[11px] leading-relaxed max-h-36 overflow-y-auto whitespace-pre-wrap shadow-inner">
+              {fullMessage}
             </div>
           </div>
 

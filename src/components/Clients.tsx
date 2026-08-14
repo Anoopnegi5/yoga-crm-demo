@@ -51,28 +51,35 @@ export const Clients: React.FC = () => {
 
   // Filter clients dynamically
   const filteredClients = clients.filter((client) => {
+    if (!client) return false;
     const matchesSearch = 
-      client.name.toLowerCase().includes(search.toLowerCase()) ||
-      client.phone.includes(search) ||
-      (client.groupName && client.groupName.toLowerCase().includes(search.toLowerCase())) ||
-      client.goal.toLowerCase().includes(search.toLowerCase());
+      (client.name || '').toLowerCase().includes((search || '').toLowerCase()) ||
+      (client.phone || '').includes(search) ||
+      (client.groupName || '').toLowerCase().includes((search || '').toLowerCase()) ||
+      (client.goal || '').toLowerCase().includes((search || '').toLowerCase());
 
     const matchesStatus = 
       filterStatus === 'All' ? true :
       filterStatus === 'Discontinued' ? client.status === 'Discontinued' :
       client.status !== 'Discontinued';
 
-    const matchesSlot = filterSlot === 'All' || client.timeSlot === filterSlot;
+    const matchesSlot = filterSlot === 'All' || 
+      client.timeSlot === filterSlot || 
+      (filterSlot === 'Morning' && (client.classTime || '').toUpperCase().includes('AM')) || 
+      (filterSlot === 'Evening' && (client.classTime || '').toUpperCase().includes('PM'));
     const matchesType = filterType === 'All' || client.sessionType === filterType;
     const matchesGroup = filterGroup === 'All' || client.groupName === filterGroup;
 
     return matchesSearch && matchesStatus && matchesSlot && matchesType && matchesGroup;
   });
 
-  // Group clients by groupName for Group Batches View
+  // Group clients by groupName for Group Batches View (Strictly ONLY Group Session clients!)
   const groupedBatchesMap: Record<string, Client[]> = {};
   filteredClients.forEach(client => {
-    const key = client.groupName || 'General Yoga Batch';
+    // Personal 1-on-1 clients are NOT group batches!
+    if (client.sessionType === 'Personal') return;
+    const key = client.groupName || 'Group Yoga Class';
+    if (!key || key.toLowerCase().includes('personal')) return;
     if (!groupedBatchesMap[key]) groupedBatchesMap[key] = [];
     groupedBatchesMap[key].push(client);
   });
@@ -225,12 +232,9 @@ export const Clients: React.FC = () => {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="p-2 rounded-xl bg-purple-100 text-purple-700 font-bold text-xs">
-                        👥 Group Batch
-                      </span>
                       <h3 className="font-extrabold text-slate-900 text-lg">{batchTitle}</h3>
                     </div>
-                    <p className="text-xs text-slate-500 font-medium pl-1">
+                    <p className="text-xs text-slate-500 font-medium">
                       Contains <strong className="text-purple-700">{batchClients.length} enrolled clients</strong>
                     </p>
                   </div>
@@ -364,7 +368,7 @@ export const Clients: React.FC = () => {
                   </div>
 
                   {/* Group Batch Pill Tag */}
-                  {client.groupName && (
+                  {client.groupName && client.groupName !== 'Group Batch' && client.groupName !== 'General Yoga Batch' && client.groupName !== 'Group' && (
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-purple-50 text-purple-900 text-xs font-bold border border-purple-100">
                       <span>👥 {client.groupName}</span>
                     </div>
@@ -377,12 +381,9 @@ export const Clients: React.FC = () => {
                         <Clock className="w-3.5 h-3.5" />
                         {client.classTime}
                       </span>
-                      <span className="px-2 py-0.5 rounded-md bg-white text-[11px] font-semibold text-slate-500 border border-slate-200">
-                        {client.sessionType}
-                      </span>
                     </div>
                     <div className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
-                      <Calendar className="w-3 h-3 text-slate-400" />
+                      <Calendar className="w-3.5 h-3 text-slate-400" />
                       <span>Days: {client.days.join(' • ')}</span>
                     </div>
                   </div>
@@ -404,7 +405,7 @@ export const Clients: React.FC = () => {
                       <span className="text-slate-900 text-sm font-extrabold">
                         {isPerSession
                           ? `₹${client.perSessionFee || 800} / session`
-                          : `₹${client.monthlyFee.toLocaleString()}`}
+                          : `₹${(client.monthlyFee || 0).toLocaleString()}`}
                       </span>
                     </div>
 

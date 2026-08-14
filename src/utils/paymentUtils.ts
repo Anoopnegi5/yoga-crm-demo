@@ -1,6 +1,11 @@
 import { Client, LeaveRecord, PaymentRecord, PaymentStatus } from '../types';
 import { getTodayDateString } from './dateUtils';
 
+export const formatCurrency = (val: number | undefined | null): string => {
+  if (val === undefined || val === null || isNaN(Number(val))) return '0';
+  return Number(val).toLocaleString('en-IN');
+};
+
 export const getMonthsListBetween = (startMonthStr: string, endMonthStr: string): string[] => {
   const months: string[] = [];
   if (!startMonthStr || !endMonthStr || startMonthStr > endMonthStr) {
@@ -45,10 +50,15 @@ export const getClientCurrentMonthPaymentStatus = (
   unpaidMonthsNames: string[];
 } => {
   const currentMonthStr = targetMonthStr || getTodayDateString().slice(0, 7); // e.g. "2026-08"
-  const joiningMonthStr = (client.joiningDate || getTodayDateString()).slice(0, 7);
+  
+  // STRICT RULE: Fee journal and pending fee tracking operates STRICTLY from August 2026 (2026-08) onwards!
+  // Any months prior to August 2026 (July 2026 and earlier) are strictly excluded from pending fee calculations.
+  const MIN_FEE_START_MONTH = '2026-08';
+  let rawJoiningMonthStr = (client.joiningDate || getTodayDateString()).slice(0, 7);
+  let effectiveJoiningMonthStr = rawJoiningMonthStr < MIN_FEE_START_MONTH ? MIN_FEE_START_MONTH : rawJoiningMonthStr;
   
   const activeMonths = getMonthsListBetween(
-    joiningMonthStr <= currentMonthStr ? joiningMonthStr : currentMonthStr, 
+    effectiveJoiningMonthStr <= currentMonthStr ? effectiveJoiningMonthStr : currentMonthStr, 
     currentMonthStr
   );
 
@@ -64,7 +74,7 @@ export const getClientCurrentMonthPaymentStatus = (
       }
       const start = l.startDate || l.date || '';
       const end = l.endDate || start;
-      if (start.startsWith(mStr) && end.startsWith(mStr)) {
+      if ((start || '').startsWith(mStr) && (end || '').startsWith(mStr)) {
         const startDay = parseInt(start.split('-')[2], 10);
         const endDay = parseInt(end.split('-')[2], 10);
         return startDay <= 5 && endDay >= 25;
@@ -87,10 +97,10 @@ export const getClientCurrentMonthPaymentStatus = (
   });
 
   const clientPayments = payments.filter(p => p.clientId === client.id);
-  const totalPaidAllTime = clientPayments.reduce((sum, p) => sum + p.amount, 0);
+  const totalPaidAllTime = clientPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
   const cumulativeRemainingBalance = Math.max(0, totalDueSinceJoining - totalPaidAllTime);
 
-  const currentMonthPayments = clientPayments.filter(p => p.date.startsWith(currentMonthStr));
+  const currentMonthPayments = clientPayments.filter(p => (p.date || '').startsWith(currentMonthStr));
   const paidAmount = currentMonthPayments.reduce((sum, p) => sum + p.amount, 0);
 
   let dueAmount = 0;
@@ -117,7 +127,11 @@ export const getClientCurrentMonthPaymentStatus = (
   let status: PaymentStatus = 'Pending';
   let finalRemainingBalance = cumulativeRemainingBalance;
 
-  if (client.paymentStatus === 'Pending' || client.paymentStatus === 'Overdue') {
+  // STRICT PERSISTENCE: If client is explicitly marked Paid, enforce Paid status & 0 balance!
+  if (client.paymentStatus === 'Paid') {
+    status = 'Paid';
+    finalRemainingBalance = 0;
+  } else if (client.paymentStatus === 'Pending' || client.paymentStatus === 'Overdue') {
     status = client.paymentStatus;
     if (finalRemainingBalance === 0) {
       finalRemainingBalance = client.feeType === 'Per Session' ? (client.perSessionFee || 1000) : (client.monthlyFee || 1200);

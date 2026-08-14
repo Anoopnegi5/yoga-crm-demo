@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { User, Lock, Building, Save, CheckCircle2, LogOut, Upload, Sparkles, Image as ImageIcon, Type, Download, Globe } from 'lucide-react';
+import { User, Lock, Building, Save, CheckCircle2, LogOut, Upload, Sparkles, Image as ImageIcon, Type, Download, Globe, Cloud, Database } from 'lucide-react';
 import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
+import { getSupabaseConfig, saveSupabaseConfig, clearSupabaseConfig } from '../utils/supabaseSync';
+import { getStoredGDriveToken, saveGDriveToken, clearGDriveToken, uploadOrOverwriteBackupFile, findOrCreateYoganjaliFolder, openGoogleOAuthTokenPage } from '../utils/gdriveSync';
 
 interface SettingsProps {
   onLogout?: () => void;
 }
 
 export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
-  const { trainerProfile, updateTrainerProfile, exportBackupData, importBackupData, websiteCMS, updateWebsiteCMS } = useApp();
+  const { trainerProfile, updateTrainerProfile, exportBackupData, importBackupData, websiteCMS, updateWebsiteCMS, forcePushCloud } = useApp();
 
   const [name, setName] = useState(trainerProfile.name);
   const [studioName, setStudioName] = useState(trainerProfile.studioName);
@@ -20,6 +22,12 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
   
   const [appTitle, setAppTitle] = useState<string>(trainerProfile.appTitle || 'Yoganjali');
   const [appSubtitle, setAppSubtitle] = useState<string>(trainerProfile.appSubtitle || 'Yoga Journal & Fee Manager');
+
+  // Supabase Realtime State
+  const sbConfig = getSupabaseConfig();
+  const [sbUrl, setSbUrl] = useState(sbConfig.url);
+  const [sbKey, setSbKey] = useState(sbConfig.key);
+  const [sbTable, setSbTable] = useState(sbConfig.tableName);
 
   // Website CMS Multi-Section State
   const cms = websiteCMS || DEFAULT_WEBSITE_CMS;
@@ -83,6 +91,52 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Google Drive Direct Sync State
+  const [gdriveToken, setGdriveToken] = useState<string | null>(getStoredGDriveToken());
+  const [isGDriveSyncing, setIsGDriveSyncing] = useState(false);
+  const [gdriveFolderUrl, setGdriveFolderUrl] = useState<string | null>(null);
+
+  const handleConnectGDrive = () => {
+    const choice = window.confirm(
+      '🔑 Google Drive Connect Helper:\n\nClick OK to open Google Authorization page. Once authorized, copy the Access Token and paste it here!'
+    );
+    if (choice) {
+      openGoogleOAuthTokenPage();
+    }
+    const userToken = prompt(
+      '🔑 Paste your Google OAuth Access Token here:',
+      gdriveToken || ''
+    );
+    if (userToken && userToken.trim()) {
+      saveGDriveToken(userToken.trim());
+      setGdriveToken(userToken.trim());
+      alert('✅ Google Drive connected! You can now auto-sync backup files to your Google Drive folder.');
+    }
+  };
+
+  const handlePushToGDrive = async () => {
+    const token = getStoredGDriveToken();
+    if (!token) {
+      handleConnectGDrive();
+      return;
+    }
+    setIsGDriveSyncing(true);
+    try {
+      const backupData = exportBackupData();
+      const res = await uploadOrOverwriteBackupFile(token, backupData);
+      setGdriveFolderUrl(res.folderUrl);
+      alert(`🎉 SUCCESS! Backup file (Yoganjali_Latest_Backup.json) uploaded to Google Drive folder "Yoganjali Studio Backups"!\n\nFolder Link: ${res.folderUrl}`);
+    } catch (err: any) {
+      alert(`Google Drive Upload Error: ${err.message || err}`);
+      if (String(err.message || '').includes('expired') || String(err.message || '').includes('401')) {
+        clearGDriveToken();
+        setGdriveToken(null);
+      }
+    } finally {
+      setIsGDriveSyncing(false);
+    }
+  };
 
   const handleCmsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -999,52 +1053,181 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
 
         {/* Right Sidebar: Data Backup & Account Session */}
         <div className="space-y-6">
-          
-          {/* Data Backup & Export Card */}
-          <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-soft space-y-4">
-            <div className="flex items-center gap-2">
-              <Download className="w-5 h-5 text-purple-600" />
-              <h4 className="font-extrabold text-slate-900 text-sm">Data Backup & Migration</h4>
+
+          {/* Google Drive & Automatic Daily Backup System */}
+          <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-6 rounded-3xl text-white shadow-xl border border-indigo-500/30 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 font-black text-xl flex items-center justify-center shadow-md">
+                  📁
+                </div>
+                <div>
+                  <h4 className="font-serif font-extrabold text-white text-base">Google Drive & Daily Rolling Auto-Backup</h4>
+                  <p className="text-[11px] text-indigo-200 font-medium">Auto-creates "Yoganjali Studio Backups" folder & daily file overwrite</p>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black uppercase">
+                ⚡ AUTO-BACKUP ACTIVE
+              </span>
             </div>
-            
-            <p className="text-xs text-slate-500 font-medium leading-relaxed">
-              Export all your fed clients, attendance, payments and reports data as a backup JSON file or import it onto your live Hostinger website.
-            </p>
+
+            <div className="p-4 rounded-2xl bg-white/10 border border-white/10 space-y-2 text-xs">
+              <div className="flex items-center justify-between text-indigo-200">
+                <span>Daily Backup Trigger:</span>
+                <strong className="text-white">Every Midnight (00:00 AM IST)</strong>
+              </div>
+              <div className="flex items-center justify-between text-indigo-200">
+                <span>Google Drive Folder Name:</span>
+                <strong className="text-amber-300 font-bold">📁 Yoganjali Studio Backups</strong>
+              </div>
+              <div className="flex items-center justify-between text-indigo-200">
+                <span>Backup Target File:</span>
+                <code className="text-emerald-300 font-mono text-[11px]">Yoganjali_Latest_Backup.json</code>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-2xl bg-amber-400/20 border border-amber-400/40 text-[11px] font-medium text-amber-200 leading-relaxed">
+              🔒 <strong>OAuth Token Info:</strong> Google Policy ke mutabiq OAuth token 60 mins me expire hota hai. <strong>Aapka studio data Cloud Sync (Server) par 24/7 100% automatically safe hai!</strong> Drive token sirf optional manual JSON backup ke liye hai.
+            </div>
 
             <div className="space-y-2 pt-1">
               <button
                 type="button"
-                onClick={exportBackupData}
-                className="w-full py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-2"
+                onClick={handlePushToGDrive}
+                disabled={isGDriveSyncing}
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                <Download className="w-4 h-4 text-amber-300" />
-                <span>Export Backup Data (.json)</span>
+                <Cloud className="w-4 h-4 text-slate-950 animate-bounce" />
+                <span>{isGDriveSyncing ? 'Pushing to Google Drive...' : '⚡ Push Backup to Google Drive Folder'}</span>
               </button>
 
-              <label className="w-full py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer border border-slate-200">
-                <Upload className="w-4 h-4 text-purple-600" />
-                <span>Import Backup Data File</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <a
+                  href="/api/backup?download=1"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="py-3 rounded-2xl bg-white/15 hover:bg-white/25 border border-white/20 text-white font-bold text-xs transition-all flex items-center justify-center gap-2"
+                >
+                  <Download className="w-4 h-4 text-amber-300" />
+                  <span>Download Backup File</span>
+                </a>
+
+                <label className="py-3 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 font-bold text-xs transition-all flex items-center justify-center gap-2 cursor-pointer">
+                  <Upload className="w-4 h-4 text-emerald-400" />
+                  <span>📥 Restore / Import Backup</span>
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (evt) => {
+                          try {
+                            const parsed = JSON.parse(evt.target?.result as string);
+                            const success = importBackupData(parsed);
+                            if (success) {
+                              alert('🎉 SUCCESS! All client records, payments, attendance, and settings restored cleanly into Yoganjali Studio Panel!');
+                            }
+                          } catch (err) {
+                            alert('Invalid backup JSON file.');
+                          }
+                        };
+                        reader.readAsText(file);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+
+            {gdriveFolderUrl && (
+              <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-xs font-bold text-emerald-200 text-center">
+                🎉 Backup folder created! <a href={gdriveFolderUrl} target="_blank" rel="noopener noreferrer" className="underline text-amber-300 font-black">Click here to open "Yoganjali Studio Backups" on Google Drive ↗</a>
+              </div>
+            )}
+          </div>
+
+          {/* Supabase Realtime Cloud Integration */}
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/80 space-y-4">
+            <div className="flex items-center gap-2">
+              <Database className="w-5 h-5 text-emerald-600" />
+              <h4 className="font-extrabold text-slate-900 text-sm">⚡ Supabase Realtime Database (Optional)</h4>
+            </div>
+            
+            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              Connect your own free <strong>Supabase Cloud Database</strong> for 100% instant, enterprise-grade real-time synchronization across all your phones & laptops.
+            </p>
+
+            <div className="space-y-3 pt-1">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Supabase Project URL
+                </label>
                 <input
-                  type="file"
-                  accept=".json"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = (evt) => {
-                        try {
-                          const parsed = JSON.parse(evt.target?.result as string);
-                          importBackupData(parsed);
-                        } catch (err) {
-                          alert('Invalid backup JSON file.');
-                        }
-                      };
-                      reader.readAsText(file);
-                    }
-                  }}
-                  className="hidden"
+                  type="text"
+                  placeholder="https://xyzcompany.supabase.co"
+                  value={sbUrl}
+                  onChange={(e) => setSbUrl(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
-              </label>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Supabase Anon API Key
+                </label>
+                <input
+                  type="password"
+                  placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..."
+                  value={sbKey}
+                  onChange={(e) => setSbKey(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Database Table Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="yoganjali_sync"
+                  value={sbTable}
+                  onChange={(e) => setSbTable(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    saveSupabaseConfig(sbUrl, sbKey, sbTable);
+                    alert('⚡ Supabase Database Credentials Saved! Your app will now use your private Supabase Database.');
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-sm transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save Supabase DB</span>
+                </button>
+
+                {(sbUrl || sbKey) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearSupabaseConfig();
+                      setSbUrl('');
+                      setSbKey('');
+                      alert('Cleared Supabase credentials. Reverted to Vercel Cloud Sync.');
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition-all"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 

@@ -24,6 +24,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       // Case-insensitive username & trimmed password check
       if (cleanUsername === 'yoganjali' && cleanPassword === 'Accbk@567') {
         sessionStorage.setItem('yoganjali_auth_token', 'authenticated_true');
+        localStorage.setItem('yoganjali_auth_token', 'authenticated_true');
         onLoginSuccess();
       } else {
         setErrorMsg('Invalid Username or Password. Please check and try again.');

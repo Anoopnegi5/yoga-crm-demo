@@ -1,0 +1,257 @@
+import { fetchFromSupabase, pushToSupabase } from './supabaseSync';
+
+export interface CloudDataPayload {
+  clients: any[];
+  payments: any[];
+  trainerDreams: any[];
+  trainerLeaves: any[];
+  attendance: any[];
+  customGroupBatches?: string[];
+  deletedIds?: string[];
+  lastUpdated: string;
+}
+
+// Same-domain Vercel Serverless Sync API Endpoint + Backup Cloud Bins
+const ENDPOINTS = [
+  '/api/sync',
+  'https://jsonblob.com/api/jsonBlob/1271790154030637056'
+];
+
+export const normalizeClient = (c: any): any => {
+  if (!c || typeof c !== 'object') return null;
+
+  let rawMonthly = c.monthlyFee !== undefined ? c.monthlyFee : (c.fee !== undefined ? c.fee : c.amount);
+  if (typeof rawMonthly === 'string') {
+    rawMonthly = Number(rawMonthly.replace(/[^0-9.]/g, ''));
+  }
+  const cleanMonthlyFee = (typeof rawMonthly === 'number' && !isNaN(rawMonthly)) ? rawMonthly : 0;
+
+  let rawPerSession = c.perSessionFee;
+  if (typeof rawPerSession === 'string') {
+    rawPerSession = Number(rawPerSession.replace(/[^0-9.]/g, ''));
+  }
+  const cleanPerSessionFee = (typeof rawPerSession === 'number' && !isNaN(rawPerSession)) ? rawPerSession : 0;
+
+  const rawGroup = c.groupName || '';
+  const cleanGroup = (rawGroup === 'Group Batch' || rawGroup === 'General Yoga Batch' || rawGroup === 'Group') ? '' : rawGroup;
+
+  return {
+    id: c.id || `c${Date.now()}`,
+    name: c.name || 'Yoga Client',
+    gender: c.gender || 'Female',
+    phone: c.phone || '',
+    whatsapp: c.whatsapp || c.phone || '',
+    address: c.address || 'Indiranagar, Bengaluru',
+    joiningDate: c.joiningDate || new Date().toISOString().split('T')[0],
+    photoUrl: c.photoUrl || '',
+    classTime: c.classTime || '07:00 AM',
+    days: Array.isArray(c.days) ? c.days : ['Mon', 'Wed', 'Fri'],
+    timeSlot: c.timeSlot || 'Morning',
+    sessionType: c.sessionType || 'Group',
+    groupName: cleanGroup,
+    reasonsForJoining: Array.isArray(c.reasonsForJoining) ? c.reasonsForJoining : [],
+    currentProblems: Array.isArray(c.currentProblems) ? c.currentProblems : [],
+    feeType: c.feeType || 'Monthly',
+    perSessionFee: cleanPerSessionFee,
+    monthlyFee: cleanMonthlyFee,
+    feeDueDate: c.feeDueDate || '5th',
+    membershipPlan: c.membershipPlan || 'Unlimited',
+    completedClasses: typeof c.completedClasses === 'number' ? c.completedClasses : 0,
+    totalClasses: typeof c.totalClasses === 'number' ? c.totalClasses : 30,
+    paymentStatus: c.paymentStatus || 'Pending',
+    status: c.status || 'Active',
+    trainerNotes: c.trainerNotes || '',
+    goal: c.goal || 'General Yoga'
+  };
+};
+
+export const normalizePayment = (p: any): any => {
+  if (!p || typeof p !== 'object') return null;
+
+  let rawAmount = p.amount !== undefined ? p.amount : (p.paidAmount !== undefined ? p.paidAmount : p.fee);
+  if (typeof rawAmount === 'string') {
+    rawAmount = Number(rawAmount.replace(/[^0-9.]/g, ''));
+  }
+  const cleanAmount = (typeof rawAmount === 'number' && !isNaN(rawAmount)) ? rawAmount : 0;
+
+  const rawName = p.clientName || p.name || p.client || '';
+  const cleanClientName = (rawName && rawName !== 'Yoga Client') ? rawName : '';
+  const cleanDate = p.date || p.paymentDate || p.createdAt || '';
+  const cleanMode = p.paymentMode || p.paymentMethod || p.mode || 'UPI';
+
+  // Discard orphan payments that have no clientId AND no real clientName
+  if (!p.clientId && !cleanClientName) return null;
+
+  return {
+    id: p.id || `p-${Date.now()}`,
+    clientId: p.clientId || p.client_id || '',
+    clientName: cleanClientName,
+    amount: cleanAmount,
+    date: cleanDate,
+    month: p.month || (cleanDate ? cleanDate.slice(0, 7) : ''),
+    paymentMode: cleanMode,
+    paymentMethod: cleanMode,
+    status: p.status || 'Paid',
+    notes: p.notes || ''
+  };
+};
+
+export const normalizeAttendance = (a: any): any => {
+  if (!a || typeof a !== 'object') return null;
+  return {
+    id: a.id || `att-${Date.now()}`,
+    clientId: a.clientId || '',
+    clientName: a.clientName || 'Yoga Client',
+    date: a.date || new Date().toISOString().split('T')[0],
+    status: a.status || 'Present',
+    timeSlot: a.timeSlot || 'Morning'
+  };
+};
+
+export const normalizeTrainerDream = (d: any): any => {
+  if (!d || typeof d !== 'object') return null;
+
+  let rawTarget = d.targetAmount !== undefined ? d.targetAmount : (d.targetCost !== undefined ? d.targetCost : (d.target !== undefined ? d.target : d.cost));
+  if (typeof rawTarget === 'string') {
+    rawTarget = Number(rawTarget.replace(/[^0-9.]/g, ''));
+  }
+  const cleanTargetAmount = (typeof rawTarget === 'number' && !isNaN(rawTarget) && rawTarget > 0) ? rawTarget : 100000;
+
+  let rawSaved = d.savedAmount !== undefined ? d.savedAmount : (d.saved !== undefined ? d.saved : d.currentSaved);
+  if (typeof rawSaved === 'string') {
+    rawSaved = Number(rawSaved.replace(/[^0-9.]/g, ''));
+  }
+  const cleanSavedAmount = (typeof rawSaved === 'number' && !isNaN(rawSaved)) ? rawSaved : 0;
+
+  return {
+    id: d.id || `dream-${Date.now()}`,
+    title: d.title || 'My Financial Vision Goal',
+    targetAmount: cleanTargetAmount,
+    savedAmount: cleanSavedAmount,
+    photoUrl: d.photoUrl || '/hero-group-yoga.jpg',
+    targetDate: d.targetDate || '2027-12-31',
+    category: d.category || 'Medium Term',
+    notes: d.notes || ''
+  };
+};
+
+// Smart Array Merging by Item ID (Deduplication) with Deletion Filtering
+export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedIds: string[] = []): any[] => {
+  const map = new Map<string, any>();
+  const deletedSet = new Set(deletedIds || []);
+
+  // Add local items (skipping deleted)
+  (local || []).forEach(item => {
+    if (item && item.id && !deletedSet.has(item.id)) {
+      map.set(item.id, item);
+    }
+  });
+
+  // Merge remote items (skipping deleted)
+  (remote || []).forEach(item => {
+    if (item && item.id && !deletedSet.has(item.id)) {
+      if (!map.has(item.id)) {
+        map.set(item.id, item);
+      } else {
+        const localItem = map.get(item.id);
+        const merged = { ...localItem, ...item };
+        // Protect local Paid status from being reverted by stale remote cloud payloads
+        if (localItem && localItem.paymentStatus === 'Paid' && item && item.paymentStatus !== 'Paid') {
+          merged.paymentStatus = 'Paid';
+        }
+        map.set(item.id, merged);
+      }
+    }
+  });
+
+  const list = Array.from(map.values()).map(item => {
+    if (item && item.name) return normalizeClient(item);
+    if (item && item.amount !== undefined) return normalizePayment(item);
+    if (item && item.status && item.clientId) return normalizeAttendance(item);
+    return item;
+  }).filter(Boolean);
+
+  // Always sort newest items (highest timestamp ID) FIRST
+  return list.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
+};
+
+// Fetch Cloud Data Across Devices (Supabase First, then Vercel Serverless Endpoint)
+export const fetchCloudSyncData = async (): Promise<CloudDataPayload | null> => {
+  if (typeof window === 'undefined' || !navigator.onLine) return null;
+
+  // 1. Try Supabase First
+  try {
+    const supabaseData = await fetchFromSupabase();
+    if (supabaseData && (Array.isArray(supabaseData.clients) || Array.isArray(supabaseData.payments))) {
+      return supabaseData as CloudDataPayload;
+    }
+  } catch (e) {
+    console.warn('Supabase fetch fallback:', e);
+  }
+
+  // 2. Fallback to Same-domain Vercel Serverless Sync API
+  for (const url of ENDPOINTS) {
+    try {
+      const cacheBustUrl = url.includes('?') ? `${url}&t=${Date.now()}` : `${url}?t=${Date.now()}`;
+      const res = await fetch(cacheBustUrl, {
+        method: 'GET',
+        cache: 'no-store',
+        headers: { 
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const payload = data.data || data;
+        if (payload && (Array.isArray(payload.clients) || Array.isArray(payload.payments))) {
+          return payload as CloudDataPayload;
+        }
+      }
+    } catch (e) {
+      console.warn(`Cloud fetch failed for ${url}:`, e);
+    }
+  }
+  return null;
+};
+
+// Push Local Changes to Cloud (Supabase First + Vercel Serverless Backup)
+export const pushCloudSyncData = async (payload: Omit<CloudDataPayload, 'lastUpdated'>): Promise<boolean> => {
+  if (typeof window === 'undefined' || !navigator.onLine) return false;
+
+  const dataWithTimestamp: CloudDataPayload = {
+    ...payload,
+    lastUpdated: new Date().toISOString()
+  };
+
+  let success = false;
+
+  // 1. Push to Supabase if configured
+  try {
+    const sbSuccess = await pushToSupabase(dataWithTimestamp);
+    if (sbSuccess) success = true;
+  } catch (e) {
+    console.warn('Supabase push error:', e);
+  }
+
+  // 2. Push to Vercel Serverless Endpoint Backup
+  for (const url of ENDPOINTS) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(dataWithTimestamp)
+      });
+      if (res.ok) {
+        success = true;
+      }
+    } catch (e) {
+      console.warn(`Cloud push failed for ${url}:`, e);
+    }
+  }
+  return success;
+};

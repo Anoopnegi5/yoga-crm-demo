@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SessionType, TimeSlot, MembershipPlan, Gender, FeeType } from '../../types';
-import { X, Check, ArrowRight, ArrowLeft, Sparkles, User, Calendar, Heart, CreditCard, FileText, Upload, Image as ImageIcon, Smile, Users, Clock, Trash2 } from 'lucide-react';
+import { X, Check, ArrowRight, ArrowLeft, Sparkles, User, Calendar, Heart, CreditCard, FileText, Upload, Image as ImageIcon, Smile, Users, Clock, Trash2, Save } from 'lucide-react';
 
 const REASONS_LIST = [
   'Weight Loss', 'Weight Gain', 'Back Pain', 'Neck Pain', 
@@ -11,11 +11,8 @@ const REASONS_LIST = [
 
 const DAYS_LIST = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-const TIME_PRESETS = [
-  '06:00 AM', '06:30 AM', '07:00 AM', '07:30 AM', 
-  '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', '10:00 AM',
-  '04:30 PM', '05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM'
-];
+const MORNING_TIMES = ['06:00 AM', '06:30 AM', '07:00 AM', '07:30 AM', '08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', '10:00 AM'];
+const EVENING_TIMES = ['04:30 PM', '05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM'];
 
 export const AddClientWizard: React.FC = () => {
   const { 
@@ -30,10 +27,10 @@ export const AddClientWizard: React.FC = () => {
 
   const [step, setStep] = useState<number>(1);
 
-  // Dynamic Group Batches strictly created by trainer / existing in active clients / saved custom batches
-  const availableBatches = Array.from(
-    new Set([...customGroupBatches, ...clients.map(c => c.groupName).filter(Boolean)])
-  );
+  // Dynamic Group Batches strictly created by trainer
+  const availableBatches = customGroupBatches && customGroupBatches.length > 0 
+    ? customGroupBatches 
+    : ['Morning Vinyasa Batch (07:00 AM)', 'Evening Flow Batch (05:30 PM)'];
 
   // Form State
   const [name, setName] = useState('');
@@ -143,6 +140,7 @@ export const AddClientWizard: React.FC = () => {
 
     // Goal fallback if user didn't type a custom goal
     const effectiveGoal = goal.trim() || (selectedReasons.length > 0 ? selectedReasons.join(', ') : 'General Yoga & Wellness');
+    const autoTimeSlot = (classTime || '').toUpperCase().includes('PM') ? 'Evening' : 'Morning';
 
     addClient({
       name,
@@ -154,9 +152,9 @@ export const AddClientWizard: React.FC = () => {
       photoUrl: activePhotoUrl,
       classTime,
       days: selectedDays,
-      timeSlot,
+      timeSlot: autoTimeSlot,
       sessionType,
-      groupName: finalGroupName.trim() || 'General Yoga Batch',
+      groupName: sessionType === 'Personal' ? '' : (finalGroupName.trim() || 'General Yoga Batch'),
       reasonsForJoining: selectedReasons,
       currentProblems: currentProblems.split(',').map(s => s.trim()).filter(Boolean),
       feeType,
@@ -260,29 +258,7 @@ export const AddClientWizard: React.FC = () => {
                       🎨 Notion Illustration
                     </button>
 
-                    <button
-                      type="button"
-                      onClick={() => setAvatarStyle('initials')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                        avatarStyle === 'initials'
-                          ? 'bg-purple-600 text-white shadow-sm'
-                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-purple-50'
-                      }`}
-                    >
-                      🔤 Initials Badge
-                    </button>
 
-                    <button
-                      type="button"
-                      onClick={() => setAvatarStyle('bottts')}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                        avatarStyle === 'bottts'
-                          ? 'bg-purple-600 text-white shadow-sm'
-                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-purple-50'
-                      }`}
-                    >
-                      🤖 Abstract Vector
-                    </button>
 
                     <label className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white border border-purple-200 text-purple-700 hover:bg-purple-100 cursor-pointer text-xs font-bold transition-all shadow-sm">
                       <Upload className="w-3.5 h-3.5" />
@@ -415,99 +391,84 @@ export const AddClientWizard: React.FC = () => {
           {step === 2 && (
             <div className="space-y-5 animate-fadeIn">
               
-              {/* Group Batch Selection - Trainer Created Groups Only */}
-              <div className="bg-purple-50/60 p-4 rounded-3xl border border-purple-100 space-y-3">
-                <label className="block text-xs font-bold text-purple-950 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Users className="w-4 h-4 text-purple-600" />
-                    Select or Create Group Batch *
-                  </span>
-                </label>
-
-                <div className="flex items-center gap-2">
-                  <select
-                    value={selectedBatchDropdown}
-                    onChange={(e) => {
-                      setSelectedBatchDropdown(e.target.value);
-                      if (e.target.value !== 'CUSTOM') {
-                        setCustomGroupName('');
-                      }
-                    }}
-                    className="flex-1 px-4 py-3 rounded-2xl bg-white border border-purple-200 text-xs font-bold text-purple-900 focus:ring-2 focus:ring-purple-500/20 outline-none shadow-sm"
-                  >
-                    {availableBatches.map((batch) => (
-                      <option key={batch} value={batch}>👥 {batch}</option>
-                    ))}
-                    <option value="CUSTOM">➕ + Create New Group Batch...</option>
-                  </select>
-
-                  {selectedBatchDropdown !== 'CUSTOM' && availableBatches.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        deleteCustomGroupBatch(selectedBatchDropdown);
-                        const remaining = availableBatches.filter(b => b !== selectedBatchDropdown);
-                        setSelectedBatchDropdown(remaining[0] || 'CUSTOM');
-                      }}
-                      title="Delete this Group Batch"
-                      className="px-3.5 py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 font-bold text-xs transition-all flex items-center gap-1 shrink-0"
-                    >
-                      <Trash2 className="w-4 h-4 text-rose-600" />
-                      <span>Delete</span>
-                    </button>
-                  )}
-                </div>
-
-                {selectedBatchDropdown === 'CUSTOM' && (
-                  <input
-                    type="text"
-                    autoFocus
-                    required
-                    value={customGroupName}
-                    onChange={(e) => setCustomGroupName(e.target.value)}
-                    placeholder="Enter custom group batch name..."
-                    className="w-full px-4 py-3 rounded-2xl bg-white border border-purple-300 text-xs font-bold text-purple-950 outline-none shadow-sm"
-                  />
-                )}
-              </div>
-
-              {/* Class Time Selector / Picker Presets */}
-              <div className="bg-slate-50 p-4 rounded-3xl border border-slate-200 space-y-3">
+              {/* 1. Class Time Selector - Compact Modern Design */}
+              <div className="bg-gradient-to-br from-slate-50 to-purple-50/40 p-3.5 rounded-2xl border border-slate-200/80 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <Clock className="w-4 h-4 text-purple-600" />
+                  <label className="text-[11px] font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-purple-600" />
                     Class Time Picker *
                   </label>
-                  <span className="text-xs font-extrabold text-purple-700 bg-purple-100 px-3 py-1 rounded-xl">
+                  <span className="text-[11px] font-black text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-lg border border-purple-200">
                     Selected: {classTime}
                   </span>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1 bg-white rounded-2xl border border-slate-200">
-                  {TIME_PRESETS.map((t) => (
-                    <button
-                      type="button"
-                      key={t}
-                      onClick={() => setClassTime(t)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                        classTime === t
-                          ? 'bg-purple-600 text-white shadow-sm'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
+                {/* Morning Batches */}
+                <div className="space-y-1">
+                  <div className="text-[10px] font-extrabold text-amber-700 uppercase tracking-wider flex items-center gap-1">
+                    <span>🌅 Morning Batches</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {MORNING_TIMES.map((t) => (
+                      <button
+                        type="button"
+                        key={t}
+                        onClick={() => {
+                          setClassTime(t);
+                          setTimeSlot('Morning');
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                          classTime === t
+                            ? 'bg-purple-600 text-white shadow-sm ring-2 ring-purple-300 scale-105'
+                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-amber-50 hover:border-amber-200'
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-1">
-                  <span className="text-[11px] font-semibold text-slate-500">Or custom time:</span>
+                {/* Evening Batches */}
+                <div className="space-y-1 pt-1 border-t border-slate-200/60">
+                  <div className="text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider flex items-center gap-1">
+                    <span>🌆 Evening Batches</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {EVENING_TIMES.map((t) => (
+                      <button
+                        type="button"
+                        key={t}
+                        onClick={() => {
+                          setClassTime(t);
+                          setTimeSlot('Evening');
+                        }}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                          classTime === t
+                            ? 'bg-purple-600 text-white shadow-sm ring-2 ring-purple-300 scale-105'
+                            : 'bg-white text-slate-700 border border-slate-200 hover:bg-indigo-50 hover:border-indigo-200'
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom Time */}
+                <div className="flex items-center gap-2 pt-1 border-t border-slate-200/60">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase">Or Custom:</span>
                   <input
                     type="text"
                     value={classTime}
-                    onChange={(e) => setClassTime(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setClassTime(val);
+                      if (val.toUpperCase().includes('PM')) setTimeSlot('Evening');
+                      else if (val.toUpperCase().includes('AM')) setTimeSlot('Morning');
+                    }}
                     placeholder="07:00 AM"
-                    className="flex-1 px-3 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold outline-none"
+                    className="flex-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-[11px] font-bold outline-none focus:ring-1 focus:ring-purple-500"
                   />
                 </div>
               </div>

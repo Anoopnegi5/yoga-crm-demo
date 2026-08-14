@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { getTodayDateString } from '../utils/dateUtils';
+import { getTodayDateString, isDateInMonth } from '../utils/dateUtils';
 import { getClientCurrentMonthPaymentStatus } from '../utils/paymentUtils';
 import { EditClientModal } from './Modals/EditClientModal';
 import { 
@@ -39,7 +39,7 @@ import {
   PlusCircle
 } from 'lucide-react';
 import { ShareLinkModal } from './Modals/ShareLinkModal';
-import { Client } from '../types';
+import { Client, PaymentRecord } from '../types';
 
 interface TopEntity {
   type: 'Group' | 'Personal';
@@ -140,7 +140,7 @@ export const Dashboard: React.FC = () => {
 
   const todaysScheduledClients = activeClients.filter(c => {
     const hasJoined = !c.joiningDate || c.joiningDate <= todayDateStr;
-    const isScheduledToday = c.days.includes(todayDayShort);
+    const isScheduledToday = Array.isArray(c.days) && c.days.includes(todayDayShort);
     const hasAttendanceToday = attendance.some(a => a.clientId === c.id && a.date === todayDateStr);
     
     // Check if client is currently on leave today
@@ -177,9 +177,39 @@ export const Dashboard: React.FC = () => {
 
   const todaysClasses = todaysScheduledClients.length;
 
-  // Payments received in current month
-  const currentMonthPayments = payments.filter(p => (p.status === 'Paid' || p.status === 'Partial') && p.date.startsWith(currentMonthStr));
-  const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + p.amount, 0);
+  // Payments received in current month (robust date format parsing)
+  const currentMonthPayments = payments.filter(p => {
+    if (p.status === 'Pending' || p.status === 'Overdue') return false;
+    return isDateInMonth(p.date, currentMonthStr);
+  });
+  const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
+
+  // Also include monthly fee for clients explicitly marked 'Paid' in current month without explicit payment log
+  const paidClientsWithoutLog = activeClients.filter(c => {
+    if (c.paymentStatus !== 'Paid') return false;
+    const hasLog = currentMonthPayments.some(p => p.clientId === c.id);
+    return !hasLog;
+  });
+
+  const implicitPaidRevenue = paidClientsWithoutLog.reduce((acc, c) => {
+    const fee = c.feeType === 'Per Session' ? (c.perSessionFee || 1000) * (c.completedClasses || 1) : (c.monthlyFee || 1200);
+    return acc + fee;
+  }, 0);
+
+  // Synthesize payment records for any active client marked 'Paid' on profile card without explicit log
+  const synthesizedCurrentMonthPayments: PaymentRecord[] = paidClientsWithoutLog.map(c => ({
+    id: `syn-dash-${c.id}`,
+    clientId: c.id,
+    clientName: c.name,
+    amount: c.feeType === 'Per Session' ? (c.perSessionFee || 1000) * (c.completedClasses || 1) : (c.monthlyFee || 1200),
+    date: c.joiningDate || todayDateStr,
+    month: currentMonthStr,
+    paymentMode: 'UPI',
+    status: c.paymentStatus as any,
+    notes: 'Paid status on client profile'
+  }));
+
+  const allDisplayableMonthPayments = [...currentMonthPayments, ...synthesizedCurrentMonthPayments];
 
   // Per Session (Pay-As-You-Go) Auto-Earned Revenue on Class Days
   const perSessionClients = activeClients.filter(c => c.feeType === 'Per Session' || c.membershipPlan === 'Per Session');
@@ -190,19 +220,19 @@ export const Dashboard: React.FC = () => {
     const presentClassesThisMonth = attendance.filter(a => 
       a.clientId === client.id && 
       a.status === 'Present' && 
-      a.date.startsWith(currentMonthStr)
+      isDateInMonth(a.date, currentMonthStr)
     ).length;
 
     const effectiveAttended = presentClassesThisMonth > 0 ? presentClassesThisMonth : (client.completedClasses || 0);
     const totalEarnedForClient = effectiveAttended * rate;
     const loggedForClient = currentMonthPayments
       .filter(p => p.clientId === client.id)
-      .reduce((sum, p) => sum + p.amount, 0);
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
 
     unloggedPerSessionEarnedRevenue += Math.max(0, totalEarnedForClient - loggedForClient);
   });
 
-  const monthlyIncome = loggedPaymentsTotal + unloggedPerSessionEarnedRevenue;
+  const monthlyIncome = loggedPaymentsTotal + implicitPaidRevenue + unloggedPerSessionEarnedRevenue;
 
   // Clients with pending fees in current month (Excluding Per Session clients like Chetna)
   const pendingFeeClients = activeClients.filter(c => {
@@ -429,9 +459,9 @@ export const Dashboard: React.FC = () => {
                 <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap shrink-0">{currentMonthShortUpper} INCOME</p>
                 <span className="text-[9px] sm:text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0">Click list ↗</span>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900">₹{monthlyIncome.toLocaleString()}</h3>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900">₹{(monthlyIncome || 0).toLocaleString()}</h3>
               <p className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
-                <span>View {currentMonthPayments.length} payment records</span>
+                <span>View {allDisplayableMonthPayments.length} payment records</span>
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform shrink-0" />
               </p>
             </div>
@@ -452,7 +482,7 @@ export const Dashboard: React.FC = () => {
                 <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap shrink-0">Pending Fees</p>
                 <span className="text-[9px] sm:text-[10px] font-extrabold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0">Click list ↗</span>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-rose-600">₹{pendingFees.toLocaleString()}</h3>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-rose-600">₹{(pendingFees || 0).toLocaleString()}</h3>
               <p className="text-xs font-semibold text-rose-500 flex items-center gap-1">
                 <span>View {pendingFeeClients.length} pending clients</span>
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform shrink-0" />
@@ -663,8 +693,8 @@ export const Dashboard: React.FC = () => {
                 {/* Progress bar */}
                 <div>
                   <div className="flex justify-between text-xs font-bold text-purple-200 mb-1.5">
-                    <span>Collected: ₹{monthlyIncome.toLocaleString()}</span>
-                    <span>Pending: ₹{pendingFees.toLocaleString()}</span>
+                    <span>Collected: ₹{(monthlyIncome || 0).toLocaleString()}</span>
+                    <span>Pending: ₹{(pendingFees || 0).toLocaleString()}</span>
                   </div>
                   <div className="w-full h-4 bg-white/20 rounded-full overflow-hidden flex p-0.5">
                     <div style={{ width: `${collectionRatePercent}%` }} className="bg-emerald-400 h-full rounded-full transition-all duration-500 shadow-sm" />
@@ -690,7 +720,7 @@ export const Dashboard: React.FC = () => {
                     <span className="flex items-center gap-1">
                       <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Avg Revenue / Client:
                     </span>
-                    <strong className="text-emerald-300 font-extrabold">₹{avgRevenuePerClient.toLocaleString()}</strong>
+                    <strong className="text-emerald-300 font-extrabold">₹{(avgRevenuePerClient || 0).toLocaleString()}</strong>
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] font-bold text-purple-200">
@@ -1111,36 +1141,36 @@ export const Dashboard: React.FC = () => {
 
             {/* Total Income Summary */}
             {(() => {
-              const monthlySubCollected = currentMonthPayments
+              const monthlySubCollected = allDisplayableMonthPayments
                 .filter(p => {
                   const c = clients.find(cl => cl.id === p.clientId);
                   return c?.feeType !== 'Per Session';
                 })
-                .reduce((acc, p) => acc + p.amount, 0);
+                .reduce((acc, p) => acc + (p.amount || 0), 0);
 
-              const perSessionCollected = currentMonthPayments
+              const perSessionCollected = allDisplayableMonthPayments
                 .filter(p => {
                   const c = clients.find(cl => cl.id === p.clientId);
                   return c?.feeType === 'Per Session';
                 })
-                .reduce((acc, p) => acc + p.amount, 0);
+                .reduce((acc, p) => acc + (p.amount || 0), 0);
 
               return (
                 <div className="p-5 bg-emerald-50/80 border-b border-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Total Received Income (This Month)</p>
-                    <h4 className="text-2xl font-black text-emerald-950">₹{monthlyIncome.toLocaleString()}</h4>
+                    <h4 className="text-2xl font-black text-emerald-950">₹{(monthlyIncome || 0).toLocaleString()}</h4>
                     <div className="flex flex-wrap gap-2 mt-1.5 text-[10px] sm:text-[11px] font-bold">
                       <span className="bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full">
-                        💳 Monthly Fixed: ₹{monthlySubCollected.toLocaleString()}
+                        💳 Monthly Fixed: ₹{(monthlySubCollected || 0).toLocaleString()}
                       </span>
                       <span className="bg-purple-100 text-purple-900 px-2.5 py-0.5 rounded-full">
-                        🧘 Per Session (Pay-As-You-Go): ₹{perSessionCollected.toLocaleString()}
+                        🧘 Per Session (Pay-As-You-Go): ₹{(perSessionCollected || 0).toLocaleString()}
                       </span>
                     </div>
                   </div>
                   <span className="px-3 py-1 rounded-full bg-emerald-600 text-white font-extrabold text-xs self-start sm:self-auto">
-                    {currentMonthPayments.length} Transactions
+                    {allDisplayableMonthPayments.length} Transactions
                   </span>
                 </div>
               );
@@ -1148,12 +1178,12 @@ export const Dashboard: React.FC = () => {
 
             {/* Payments List */}
             <div className="p-6 overflow-y-auto flex-1 space-y-3">
-              {currentMonthPayments.length === 0 ? (
+              {allDisplayableMonthPayments.length === 0 ? (
                 <div className="text-center py-8 text-xs font-medium text-slate-400">
                   No payments recorded for this month yet.
                 </div>
               ) : (
-                currentMonthPayments.map((p) => {
+                allDisplayableMonthPayments.map((p) => {
                   const client = clients.find(c => c.id === p.clientId);
                   return (
                     <div key={p.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
@@ -1181,7 +1211,7 @@ export const Dashboard: React.FC = () => {
 
                       <div className="text-right">
                         <span className="text-sm font-extrabold text-emerald-700 block">
-                          +₹{p.amount.toLocaleString()}
+                          +₹{(p.amount || 0).toLocaleString()}
                         </span>
                         <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full inline-block mt-0.5">
                           ✓ Paid
@@ -1236,7 +1266,7 @@ export const Dashboard: React.FC = () => {
             <div className="p-5 bg-rose-50/80 border-b border-rose-100 flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold text-rose-800 uppercase tracking-wider">Total Uncollected Pending Fee</p>
-                <h4 className="text-2xl font-black text-rose-950">₹{pendingFees.toLocaleString()}</h4>
+                <h4 className="text-2xl font-black text-rose-950">₹{(pendingFees || 0).toLocaleString()}</h4>
               </div>
               <span className="px-3 py-1 rounded-full bg-rose-600 text-white font-extrabold text-xs">
                 {pendingFeeClients.length} Pending Clients
@@ -1284,7 +1314,7 @@ export const Dashboard: React.FC = () => {
                       <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/60">
                         <div className="text-left sm:text-right pr-2">
                           <span className="text-sm font-extrabold text-rose-600 block">
-                            ₹{remainingBalance.toLocaleString()}
+                            ₹{(remainingBalance || 0).toLocaleString()}
                           </span>
                           <span className="text-[10px] font-bold text-rose-800 bg-rose-100 px-2 py-0.5 rounded-full inline-block mt-0.5">
                             {status}

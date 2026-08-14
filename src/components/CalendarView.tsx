@@ -87,7 +87,7 @@ export const CalendarView: React.FC = () => {
   // Clients scheduled for selected date
   const scheduledClients = activeClients.filter(c => {
     const hasJoined = !c.joiningDate || c.joiningDate <= selectedDateStr;
-    const isScheduled = c.days.includes(selectedDayShort);
+    const isScheduled = Array.isArray(c.days) && c.days.includes(selectedDayShort);
     const hasAtt = attendance.some(a => a.clientId === c.id && a.date === selectedDateStr);
     return hasJoined && (isScheduled || hasAtt);
   });

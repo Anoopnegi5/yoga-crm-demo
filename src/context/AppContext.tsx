@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Client, PaymentRecord, LeaveRecord, AttendanceRecord, TrainerProfile, TrainerLeave, AttendanceStatus, WebsiteCMS, TrainerDreamGoal } from '../types';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { Client, PaymentRecord, LeaveRecord, AttendanceRecord, TrainerProfile, TrainerLeave, AttendanceStatus, WebsiteCMS, TrainerDreamGoal, PaymentStatus } from '../types';
 import { INITIAL_CLIENTS, INITIAL_PAYMENTS, INITIAL_LEAVES, INITIAL_ATTENDANCE, DEFAULT_TRAINER_PROFILE, INITIAL_TRAINER_LEAVES, INITIAL_TRAINER_DREAMS } from '../data/mockData';
 import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
 import { getTodayDateString } from '../utils/dateUtils';
+import { fetchCloudSyncData, pushCloudSyncData, mergeArraysById, normalizeClient, normalizePayment, normalizeAttendance, normalizeTrainerDream } from '../utils/cloudSync';
 
 interface AppContextType {
   trainerProfile: TrainerProfile;
@@ -21,7 +22,7 @@ interface AppContextType {
   deleteTrainerDream: (id: string) => void;
 
   clients: Client[];
-  addClient: (client: Omit<Client, 'id' | 'completedClasses' | 'paymentStatus'>) => void;
+  addClient: (client: Omit<Client, 'id' | 'completedClasses' | 'paymentStatus'> & Partial<Pick<Client, 'id'>>) => void;
   updateClient: (client: Client) => void;
   deleteClient: (id: string) => void;
   toggleClientStatus: (id: string, status: 'Active' | 'Discontinued', reason?: string) => void;
@@ -77,10 +78,17 @@ interface AppContextType {
   addCustomGroupBatch: (name: string) => void;
   deleteCustomGroupBatch: (name: string) => void;
 
+  isSyncingCloud: boolean;
+  lastCloudSyncTime: string | null;
+  syncCloudNow: () => Promise<void>;
+  forcePushCloud: () => Promise<void>;
+
   startNewMonthCycle: () => void;
   resetToSampleData: () => void;
   exportBackupData: () => void;
   importBackupData: (data: any) => boolean;
+
+  deletedIds: string[];
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -89,23 +97,31 @@ const LOCAL_STORAGE_KEY = 'yoganjali_app_state_v1';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [trainerProfile, setTrainerProfile] = useState<TrainerProfile>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_trainer_profile`);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (!parsed.photoUrl || parsed.photoUrl.includes('dicebear')) {
-        parsed.photoUrl = '/anjali-hero.jpg';
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_trainer_profile`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          if (!parsed.photoUrl || parsed.photoUrl.includes('dicebear')) parsed.photoUrl = '/anjali-hero.jpg';
+          if (!parsed.studioLogoUrl || parsed.studioLogoUrl.includes('dicebear')) parsed.studioLogoUrl = '/yoganjali-logo.png';
+          return { ...DEFAULT_TRAINER_PROFILE, ...parsed };
+        }
       }
-      if (!parsed.studioLogoUrl || parsed.studioLogoUrl.includes('dicebear')) {
-        parsed.studioLogoUrl = '/yoganjali-logo.png';
-      }
-      return parsed;
-    }
+    } catch (e) {}
     return DEFAULT_TRAINER_PROFILE;
   });
 
   const [websiteCMS, setWebsiteCMS] = useState<WebsiteCMS>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_website_cms`);
-    return saved ? JSON.parse(saved) : DEFAULT_WEBSITE_CMS;
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_website_cms`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          return { ...DEFAULT_WEBSITE_CMS, ...parsed };
+        }
+      }
+    } catch (e) {}
+    return DEFAULT_WEBSITE_CMS;
   });
 
   const updateWebsiteCMS = (newCMS: WebsiteCMS) => {
@@ -119,13 +135,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [trainerLeaves, setTrainerLeaves] = useState<TrainerLeave[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_trainer_leaves`);
-    return saved ? JSON.parse(saved) : INITIAL_TRAINER_LEAVES;
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_trainer_leaves`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {}
+    return INITIAL_TRAINER_LEAVES;
   });
 
   const [trainerDreams, setTrainerDreams] = useState<TrainerDreamGoal[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`);
-    return saved ? JSON.parse(saved) : INITIAL_TRAINER_DREAMS;
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed.map(normalizeTrainerDream).filter(Boolean);
+      }
+    } catch (e) {}
+    return INITIAL_TRAINER_DREAMS.map(normalizeTrainerDream).filter(Boolean);
   });
 
   const addTrainerDream = (dream: Omit<TrainerDreamGoal, 'id'>) => {
@@ -133,18 +161,111 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...dream,
       id: `dream-${Date.now()}`
     };
-    setTrainerDreams(prev => [newDream, ...prev]);
+    const updatedDreams = [newDream, ...trainerDreams];
+    setTrainerDreams(updatedDreams);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(updatedDreams));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainerDreams`, JSON.stringify(updatedDreams));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients,
+      payments,
+      trainerDreams: updatedDreams,
+      trainerLeaves,
+      attendance,
+      customGroupBatches,
+      deletedIds,
+      action: 'overwrite'
+    } as any);
+
     showSuccessToast('🎯 New Financial Vision Goal Added!');
   };
 
   const updateTrainerDream = (updated: TrainerDreamGoal) => {
-    setTrainerDreams(prev => prev.map(d => d.id === updated.id ? updated : d));
+    const updatedDreams = trainerDreams.map(d => d.id === updated.id ? updated : d);
+    setTrainerDreams(updatedDreams);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(updatedDreams));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainerDreams`, JSON.stringify(updatedDreams));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients,
+      payments,
+      trainerDreams: updatedDreams,
+      trainerLeaves,
+      attendance,
+      customGroupBatches,
+      deletedIds,
+      action: 'overwrite'
+    } as any);
+
     showSuccessToast('✨ Dream Goal Updated!');
   };
 
+  const deletePayment = (id: string) => {
+    // If the payment is a synthesized record (id format "syn-<clientId>")
+    if (id.startsWith('syn-')) {
+      const clientId = id.replace('syn-', '');
+      // Update the client paymentStatus to empty (or appropriate) to prevent regeneration
+      const updatedClients = clients.map(c => c.id === clientId ? { ...c, paymentStatus: 'Pending' as PaymentStatus } : c);
+      setClients(updatedClients);
+      try {
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
+      } catch (e) {}
+    }
+
+    const nextDeletedIds = Array.from(new Set([...deletedIds, id]));
+    const updatedPayments = payments.filter(p => p.id !== id);
+
+    setDeletedIds(nextDeletedIds);
+    setPayments(updatedPayments);
+
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients,
+      payments: updatedPayments,
+      trainerDreams,
+      trainerLeaves,
+      attendance,
+      customGroupBatches,
+      deletedIds: nextDeletedIds,
+      action: 'overwrite'
+    } as any);
+
+    showSuccessToast('🗑️ Payment record deleted permanently across all devices!');
+  };
+
   const deleteTrainerDream = (id: string) => {
-    setTrainerDreams(prev => prev.filter(d => d.id !== id));
-    showSuccessToast('🗑️ Goal Removed');
+    const nextDeletedIds = Array.from(new Set([...deletedIds, id]));
+    const updatedDreams = trainerDreams.filter(d => d.id !== id);
+
+    setDeletedIds(nextDeletedIds);
+    setTrainerDreams(updatedDreams);
+
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(updatedDreams));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainerDreams`, JSON.stringify(updatedDreams));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients,
+      payments,
+      trainerDreams: updatedDreams,
+      trainerLeaves,
+      attendance,
+      customGroupBatches,
+      deletedIds: nextDeletedIds,
+      action: 'overwrite'
+    } as any);
+
+    showSuccessToast('🗑️ Vision Goal removed permanently across all devices!');
   };
 
   const [customGroupBatches, setCustomGroupBatches] = useState<string[]>(() => {
@@ -152,40 +273,111 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : ['Morning Vinyasa Batch (07:00 AM)', 'Evening Flow Batch (05:30 PM)'];
   });
 
+  const [deletedGroupBatches, setDeletedGroupBatches] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_deleted_group_batches`);
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
   useEffect(() => {
     localStorage.setItem(`${LOCAL_STORAGE_KEY}_custom_group_batches`, JSON.stringify(customGroupBatches));
   }, [customGroupBatches]);
 
+  useEffect(() => {
+    localStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_group_batches`, JSON.stringify(deletedGroupBatches));
+  }, [deletedGroupBatches]);
+
   const addCustomGroupBatch = (name: string) => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    setCustomGroupBatches(prev => Array.from(new Set([...prev, trimmed])));
-    showSuccessToast(`✨ New group batch '${trimmed}' created`);
+    const next = Array.from(new Set([...customGroupBatches, trimmed]));
+    const nextDeleted = deletedGroupBatches.filter(b => b !== trimmed);
+    setCustomGroupBatches(next);
+    setDeletedGroupBatches(nextDeleted);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_custom_group_batches`, JSON.stringify(next));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_group_batches`, JSON.stringify(nextDeleted));
+    } catch (e) {}
+    pushCloudSyncData({
+      clients,
+      payments,
+      trainerDreams,
+      trainerLeaves,
+      attendance,
+      customGroupBatches: next,
+      deletedGroupBatches: nextDeleted,
+      deletedIds,
+      action: 'overwrite'
+    } as any);
+    showSuccessToast(`✨ New group batch '${trimmed}' created & synced across all forms!`);
   };
 
   const deleteCustomGroupBatch = (name: string) => {
-    setCustomGroupBatches(prev => prev.filter(b => b !== name));
-    showSuccessToast(`🗑️ Group batch '${name}' deleted`);
+    const next = customGroupBatches.filter(b => b !== name);
+    const nextDeleted = Array.from(new Set([...deletedGroupBatches, name]));
+    setCustomGroupBatches(next);
+    setDeletedGroupBatches(nextDeleted);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_custom_group_batches`, JSON.stringify(next));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_group_batches`, JSON.stringify(nextDeleted));
+    } catch (e) {}
+    pushCloudSyncData({
+      clients,
+      payments,
+      trainerDreams,
+      trainerLeaves,
+      attendance,
+      customGroupBatches: next,
+      deletedGroupBatches: nextDeleted,
+      deletedIds,
+      action: 'overwrite'
+    } as any);
+    showSuccessToast(`🗑️ Group batch '${name}' deleted permanently`);
   };
 
   const [clients, setClients] = useState<Client[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_clients`);
-    return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_clients`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map(normalizeClient).filter(Boolean) as Client[];
+        }
+      }
+    } catch (e) {
+      console.warn('Failed parsing local storage clients:', e);
+    }
+    return INITIAL_CLIENTS;
   });
 
   const [payments, setPayments] = useState<PaymentRecord[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_payments`);
-    return saved ? JSON.parse(saved) : INITIAL_PAYMENTS;
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_payments`);
+      return saved ? JSON.parse(saved) : INITIAL_PAYMENTS;
+    } catch (e) {
+      return INITIAL_PAYMENTS;
+    }
   });
 
   const [leaves, setLeaves] = useState<LeaveRecord[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_leaves`);
-    return saved ? JSON.parse(saved) : INITIAL_LEAVES;
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_leaves`);
+      return saved ? JSON.parse(saved) : INITIAL_LEAVES;
+    } catch (e) {
+      return INITIAL_LEAVES;
+    }
   });
 
   const [attendance, setAttendance] = useState<AttendanceRecord[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_attendance`);
-    return saved ? JSON.parse(saved) : INITIAL_ATTENDANCE;
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_attendance`);
+      return saved ? JSON.parse(saved) : INITIAL_ATTENDANCE;
+    } catch (e) {
+      return INITIAL_ATTENDANCE;
+    }
   });
 
   const [activeTab, setActiveTab] = useState<string>('dashboard');
@@ -226,6 +418,162 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(`${LOCAL_STORAGE_KEY}_last_active_month`, currentMonthStr);
   }, []);
 
+  const [deletedIds, setDeletedIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_deleted_ids`);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(deletedIds));
+  }, [deletedIds]);
+
+  const [isSyncingCloud, setIsSyncingCloud] = useState<boolean>(false);
+  const [lastCloudSyncTime, setLastCloudSyncTime] = useState<string | null>(null);
+
+  const syncCloudNow = async () => {
+    setIsSyncingCloud(true);
+    try {
+      const remote = await fetchCloudSyncData();
+
+      const allDeleted = Array.from(new Set([...deletedIds, ...(remote?.deletedIds || [])]));
+      setDeletedIds(allDeleted);
+
+      // Smart Deduplicated Array Merging across Phone and Laptop with Deletion Tracking
+      const mergedClients = mergeArraysById(clients, remote?.clients || [], allDeleted);
+      const mergedPayments = mergeArraysById(payments, remote?.payments || [], allDeleted);
+      const mergedDreams = mergeArraysById(trainerDreams, remote?.trainerDreams || [], allDeleted);
+      const mergedLeaves = mergeArraysById(trainerLeaves, remote?.trainerLeaves || [], allDeleted);
+      const mergedAttendance = mergeArraysById(attendance, remote?.attendance || [], allDeleted);
+      const mergedBatches = Array.from(new Set([...customGroupBatches, ...(remote?.customGroupBatches || [])]));
+
+      setClients(mergedClients);
+      setPayments(mergedPayments);
+      setTrainerDreams(mergedDreams);
+      setTrainerLeaves(mergedLeaves);
+      setAttendance(mergedAttendance);
+      setCustomGroupBatches(mergedBatches);
+
+      await pushCloudSyncData({
+        clients: mergedClients,
+        payments: mergedPayments,
+        trainerDreams: mergedDreams,
+        trainerLeaves: mergedLeaves,
+        attendance: mergedAttendance,
+        customGroupBatches: mergedBatches,
+        deletedIds: allDeleted
+      });
+
+      setLastCloudSyncTime(new Date().toISOString());
+      showSuccessToast(`☁️ Cloud Synced! Total ${mergedClients.length} Clients Merged Across All Devices.`);
+    } catch (e) {
+      console.warn('Cloud sync error:', e);
+    } finally {
+      setIsSyncingCloud(false);
+    }
+  };
+
+  const isInitialFetchDoneRef = useRef(false);
+
+  const forcePushCloud = async () => {
+    setIsSyncingCloud(true);
+    try {
+      await pushCloudSyncData({
+        clients,
+        payments,
+        trainerDreams,
+        trainerLeaves,
+        attendance,
+        customGroupBatches,
+        deletedIds,
+        action: 'overwrite'
+      } as any);
+      setLastCloudSyncTime(new Date().toISOString());
+      showSuccessToast('⚡ Current screen clients force-pushed to Cloud! Other devices will sync to this.');
+    } catch (e) {
+      console.warn('Force push failed:', e);
+    } finally {
+      setIsSyncingCloud(false);
+    }
+  };
+
+  // Initial Startup & 10-Second Background Real-Time Cloud Polling with Smart Push
+  useEffect(() => {
+    const runSync = () => {
+      fetchCloudSyncData().then(remote => {
+        if (remote) {
+          const allDeleted = Array.from(new Set([...deletedIds, ...(remote.deletedIds || [])]));
+          setDeletedIds(allDeleted);
+
+          setClients(prev => {
+            const merged = mergeArraysById(prev, remote.clients || [], allDeleted);
+            // If local device has clients that are not yet in Cloud, auto-push to Cloud!
+            if (prev.length > (remote.clients?.length || 0)) {
+              pushCloudSyncData({
+                clients: merged,
+                payments,
+                trainerDreams,
+                trainerLeaves,
+                attendance,
+                customGroupBatches,
+                deletedIds: allDeleted
+              });
+            }
+            return merged;
+          });
+
+          setPayments(prev => {
+            const rawRemote = Array.isArray(remote.payments) ? remote.payments.map(normalizePayment).filter(Boolean) : [];
+            const merged = mergeArraysById(prev, rawRemote, allDeleted);
+            return merged.map(normalizePayment).filter(Boolean);
+          });
+          setTrainerDreams(prev => {
+            const rawRemote = Array.isArray(remote.trainerDreams) ? remote.trainerDreams.map(normalizeTrainerDream).filter(Boolean) : [];
+            const merged = mergeArraysById(prev, rawRemote, allDeleted);
+            return merged.map(normalizeTrainerDream).filter(Boolean);
+          });
+          setTrainerLeaves(prev => mergeArraysById(prev, remote.trainerLeaves || [], allDeleted));
+          setAttendance(prev => {
+            const rawRemote = Array.isArray(remote.attendance) ? remote.attendance.map(normalizeAttendance).filter(Boolean) : [];
+            const merged = mergeArraysById(prev, rawRemote, allDeleted);
+            return merged.map(normalizeAttendance).filter(Boolean);
+          });
+
+          if (Array.isArray(remote.customGroupBatches)) {
+            setCustomGroupBatches(prev => {
+              const cleanRemote = remote.customGroupBatches!.filter(b => !deletedGroupBatches.includes(b));
+              const cleanPrev = prev.filter(b => !deletedGroupBatches.includes(b));
+              return Array.from(new Set([...cleanPrev, ...cleanRemote]));
+            });
+          }
+          if (remote.lastUpdated) setLastCloudSyncTime(remote.lastUpdated);
+        }
+        isInitialFetchDoneRef.current = true;
+      });
+    };
+
+    runSync();
+    // 10-Second Background Polling for Multi-Device Realtime Sync
+    const interval = setInterval(runSync, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Instant Real-time Tab-to-Tab Synchronization (Same Device)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === `${LOCAL_STORAGE_KEY}_clients` && e.newValue) {
+        try { setClients(JSON.parse(e.newValue)); } catch (err) {}
+      }
+      if (e.key === `${LOCAL_STORAGE_KEY}_payments` && e.newValue) {
+        try { setPayments(JSON.parse(e.newValue)); } catch (err) {}
+      }
+      if (e.key === `${LOCAL_STORAGE_KEY}_trainer_dreams` && e.newValue) {
+        try { setTrainerDreams(JSON.parse(e.newValue)); } catch (err) {}
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   // Sync to local storage
   useEffect(() => {
     localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_profile`, JSON.stringify(trainerProfile));
@@ -247,11 +595,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(payments));
   }, [payments]);
 
-
-
   useEffect(() => {
     localStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(leaves));
   }, [leaves]);
+
+  useEffect(() => {
+    localStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(attendance));
+  }, [attendance]);
+
+  // Explicit Cloud Push happens strictly inside user actions (addClient, updateClient, deleteClient, forcePushCloud)
+  // Background polling only FETCHES from cloud to avoid race-condition overwrites.
 
   useEffect(() => {
     localStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(attendance));
@@ -276,34 +629,95 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showSuccessToast('Instructor leave record removed.');
   };
 
-  const addClient = (newClientData: Omit<Client, 'id' | 'completedClasses' | 'paymentStatus'>) => {
-    const newId = `c${Date.now()}`;
+  const addClient = (newClientData: Omit<Client, 'id' | 'completedClasses' | 'paymentStatus'> & Partial<Pick<Client, 'id'>>) => {
+    const newId = newClientData.id || `c${Date.now()}`;
+    const defaults: Omit<Client, 'id' | 'completedClasses' | 'paymentStatus'> = {
+      name: '',
+      gender: 'Female',
+      phone: '',
+      whatsapp: '',
+      address: '',
+      joiningDate: getTodayDateString(),
+      photoUrl: '',
+      classTime: '07:00 AM',
+      days: ['Mon', 'Wed', 'Fri'],
+      timeSlot: 'Morning',
+      sessionType: 'Group',
+      reasonsForJoining: [],
+      currentProblems: [],
+      monthlyFee: 0,
+      feeDueDate: '5th',
+      membershipPlan: 'Unlimited',
+      totalClasses: 30,
+      trainerNotes: '',
+      goal: 'General Yoga'
+    };
+
     const newClient: Client = {
+      ...defaults,
       ...newClientData,
       id: newId,
       completedClasses: 0,
       paymentStatus: 'Pending',
       status: 'Active'
     };
-    setClients(prev => [newClient, ...prev]);
+
+    setClients(prev => {
+      const filtered = prev.filter(c => c.id !== newId);
+      const updated = [newClient, ...filtered].sort((a, b) => b.id.localeCompare(a.id));
+      pushCloudSyncData({
+        clients: updated,
+        payments,
+        trainerDreams,
+        trainerLeaves,
+        attendance,
+        customGroupBatches,
+        deletedIds
+      });
+      return updated;
+    });
+
     showSuccessToast(`Added new client: ${newClient.name}`);
   };
 
   const updateClient = (updatedClient: Client) => {
-    setClients(prev => prev.map(c => c.id === updatedClient.id ? updatedClient : c));
+    setClients(prev => {
+      const updated = prev.map(c => c.id === updatedClient.id ? updatedClient : c);
+      pushCloudSyncData({ clients: updated, payments, trainerDreams, trainerLeaves, attendance, customGroupBatches, deletedIds });
+      return updated;
+    });
     showSuccessToast(`Updated profile for ${updatedClient.name}`);
   };
 
   const deleteClient = (id: string) => {
     const target = clients.find(c => c.id === id);
-    setClients(prev => prev.filter(c => c.id !== id));
-    setPayments(prev => prev.filter(p => p.clientId !== id));
-    setLeaves(prev => prev.filter(l => l.clientId !== id));
-    setAttendance(prev => prev.filter(a => a.clientId !== id));
+    const newDeletedIds = Array.from(new Set([...deletedIds, id]));
+    setDeletedIds(newDeletedIds);
+
+    const updatedClients = clients.filter(c => c.id !== id);
+    const updatedPayments = payments.filter(p => p.clientId !== id);
+    const updatedLeaves = leaves.filter(l => l.clientId !== id);
+    const updatedAttendance = attendance.filter(a => a.clientId !== id);
+
+    setClients(updatedClients);
+    setPayments(updatedPayments);
+    setLeaves(updatedLeaves);
+    setAttendance(updatedAttendance);
     
     if (selectedClientId === id) {
       setSelectedClientId(null);
     }
+
+    pushCloudSyncData({
+      clients: updatedClients,
+      payments: updatedPayments,
+      trainerDreams,
+      trainerLeaves,
+      attendance: updatedAttendance,
+      customGroupBatches,
+      deletedIds: newDeletedIds
+    });
+
     showSuccessToast(`Deleted client profile: ${target?.name || ''}`);
   };
 
@@ -333,14 +747,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (paymentData.status === 'Pending' || paymentData.status === 'Overdue') {
       // If marked Pending / Overdue, clear any paid records for this month and set client paymentStatus to Pending
-      setPayments(prev => prev.filter(p => !(p.clientId === paymentData.clientId && p.date.startsWith(paymentMonth))));
-
-      setClients(prev => prev.map(c => {
+      const updatedPayments = payments.filter(p => !(p.clientId === paymentData.clientId && (p.date || '').startsWith(paymentMonth)));
+      const updatedClients = clients.map(c => {
         if (c.id === paymentData.clientId) {
-          return { ...c, paymentStatus: 'Pending' };
+          return { ...c, paymentStatus: 'Pending' as PaymentStatus };
         }
         return c;
-      }));
+      });
+
+      setPayments(updatedPayments);
+      setClients(updatedClients);
+      try {
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
+      } catch (e) {}
+
+      pushCloudSyncData({
+        clients: updatedClients,
+        payments: updatedPayments,
+        trainerDreams,
+        trainerLeaves,
+        attendance,
+        customGroupBatches,
+        deletedIds,
+        action: 'overwrite'
+      } as any);
 
       showSuccessToast(`⚠️ Updated ${paymentData.clientName}'s status to Pending in Dashboard checklist!`);
       return;
@@ -351,27 +782,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: `p${Date.now()}`
     };
 
-    setPayments(prev => [newPayment, ...prev]);
-
-    setClients(prev => prev.map(c => {
+    const updatedPayments = [newPayment, ...payments];
+    const updatedClients = clients.map(c => {
       if (c.id === paymentData.clientId) {
         return { ...c, paymentStatus: paymentData.status };
       }
       return c;
-    }));
+    });
+
+    setPayments(updatedPayments);
+    setClients(updatedClients);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients: updatedClients,
+      payments: updatedPayments,
+      trainerDreams,
+      trainerLeaves,
+      attendance,
+      customGroupBatches,
+      deletedIds,
+      action: 'overwrite'
+    } as any);
 
     showSuccessToast(`Recorded fee payment for ${paymentData.clientName}`);
   };
 
   const updatePayment = (updatedPayment: PaymentRecord) => {
-    setPayments(prev => prev.map(p => p.id === updatedPayment.id ? updatedPayment : p));
+    const updatedPayments = payments.map(p => p.id === updatedPayment.id ? updatedPayment : p);
+    setPayments(updatedPayments);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients,
+      payments: updatedPayments,
+      trainerDreams,
+      trainerLeaves,
+      attendance,
+      customGroupBatches,
+      deletedIds,
+      action: 'overwrite'
+    } as any);
+
     showSuccessToast(`Updated payment record for ${updatedPayment.clientName}`);
   };
 
-  const deletePayment = (id: string) => {
-    setPayments(prev => prev.filter(p => p.id !== id));
-    showSuccessToast('Payment log deleted.');
-  };
 
   const quickMarkPaid = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
@@ -406,16 +866,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       photoUrl: client.photoUrl
     };
 
-    setLeaves(prev => [newLeave, ...prev]);
-    
-    markAttendance(client.id, 'Leave');
+    const updatedLeaves = [newLeave, ...leaves];
+    setLeaves(updatedLeaves);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(updatedLeaves));
+    } catch (e) {}
+
+    markAttendance(client.id, 'Leave', leaveData.startDate || leaveData.date);
 
     showSuccessToast(`Logged leave for ${client.name}`);
   };
 
   const deleteLeave = (id: string) => {
-    setLeaves(prev => prev.filter(l => l.id !== id));
-    showSuccessToast('Leave entry removed.');
+    const nextDeletedIds = Array.from(new Set([...deletedIds, id]));
+    const updatedLeaves = leaves.filter(l => l.id !== id);
+
+    setDeletedIds(nextDeletedIds);
+    setLeaves(updatedLeaves);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(updatedLeaves));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients,
+      payments,
+      trainerDreams,
+      trainerLeaves,
+      attendance,
+      customGroupBatches,
+      deletedIds: nextDeletedIds,
+      action: 'overwrite'
+    } as any);
+
+    showSuccessToast('Leave entry removed permanently across all devices!');
   };
 
   const markAttendance = (clientId: string, status: AttendanceStatus, targetDateStr?: string) => {
@@ -424,18 +908,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const dateToUse = targetDateStr || getTodayDateString();
 
-    const existingIndex = attendance.findIndex(
+    const existingRecord = attendance.find(
       a => a.clientId === clientId && a.date === dateToUse
     );
 
-    let updatedAttendance = [...attendance];
+    // If already marked with the exact same status today, notify user & prevent duplicate clicks
+    if (existingRecord && existingRecord.status === status) {
+      showSuccessToast(`Already marked ${status} for ${client.name} today!`);
+      return;
+    }
 
-    if (existingIndex >= 0) {
-      updatedAttendance[existingIndex] = {
-        ...updatedAttendance[existingIndex],
-        status
-      };
+    let updatedAttendance = [...attendance];
+    let classDelta = 0;
+
+    if (existingRecord) {
+      // Record exists, updating status for today
+      const prevStatus = existingRecord.status;
+      if (prevStatus !== 'Present' && status === 'Present') {
+        classDelta = 1;
+      } else if (prevStatus === 'Present' && status !== 'Present') {
+        classDelta = -1;
+      }
+
+      updatedAttendance = updatedAttendance.map(a => 
+        (a.clientId === clientId && a.date === dateToUse) 
+          ? { ...a, status, clientName: client.name } 
+          : a
+      );
     } else {
+      // New record for today
+      if (status === 'Present') {
+        classDelta = 1;
+      }
       updatedAttendance.push({
         id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
         clientId,
@@ -445,27 +949,65 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
 
-    setAttendance(updatedAttendance);
-
-    if (status === 'Present') {
-      setClients(prev => prev.map(c => {
+    let updatedClients = clients;
+    if (classDelta !== 0) {
+      updatedClients = clients.map(c => {
         if (c.id === clientId) {
-          const nextCompleted = c.completedClasses + 1;
           return {
             ...c,
-            completedClasses: nextCompleted,
+            completedClasses: Math.max(0, (c.completedClasses || 0) + classDelta)
           };
         }
         return c;
-      }));
+      });
+      setClients(updatedClients);
     }
+
+    setAttendance(updatedAttendance);
+
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(updatedAttendance));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients: updatedClients,
+      payments,
+      trainerDreams,
+      trainerLeaves,
+      attendance: updatedAttendance,
+      customGroupBatches,
+      deletedIds,
+      action: 'overwrite'
+    } as any);
 
     showSuccessToast(`Recorded ${status} for ${client.name}!`);
   };
 
   const deleteAttendanceRecord = (id: string) => {
-    setAttendance(prev => prev.filter(a => a.id !== id));
-    showSuccessToast('Removed attendance record.');
+    const nextDeletedIds = Array.from(new Set([...deletedIds, id]));
+    const updatedAttendance = attendance.filter(a => a.id !== id);
+
+    setDeletedIds(nextDeletedIds);
+    setAttendance(updatedAttendance);
+
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(updatedAttendance));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients,
+      payments,
+      trainerDreams,
+      trainerLeaves,
+      attendance: updatedAttendance,
+      customGroupBatches,
+      deletedIds: nextDeletedIds,
+      action: 'overwrite'
+    } as any);
+
+    showSuccessToast('Attendance record deleted permanently across all devices!');
   };
 
   const startNewMonthCycle = () => {
@@ -480,11 +1022,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const resetToSampleData = () => {
     setTrainerProfile(DEFAULT_TRAINER_PROFILE);
     setTrainerLeaves([]);
-    setClients(INITIAL_CLIENTS);
-    setPayments(INITIAL_PAYMENTS);
-    setLeaves(INITIAL_LEAVES);
-    setAttendance(INITIAL_ATTENDANCE);
-    showSuccessToast('Reset all data to fresh sample dataset.');
+    setClients([]);
+    setPayments([]);
+    setLeaves([]);
+    setAttendance([]);
+    setDeletedIds([]);
+    pushCloudSyncData({
+      clients: [],
+      payments: [],
+      trainerDreams,
+      trainerLeaves,
+      attendance: [],
+      customGroupBatches,
+      deletedIds: []
+    });
+    showSuccessToast('🧹 Studio database wiped clean to 0 clients! Ready for real entries.');
   };
 
   const exportBackupData = () => {
@@ -508,19 +1060,116 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showSuccessToast('Exported complete data backup JSON!');
   };
 
-  const importBackupData = (data: any): boolean => {
+  const importBackupData = (rawJson: any): boolean => {
     try {
-      if (data.trainerProfile) setTrainerProfile(data.trainerProfile);
-      if (data.trainerLeaves) setTrainerLeaves(data.trainerLeaves);
-      if (data.clients) setClients(data.clients);
-      if (data.payments) setPayments(data.payments);
-      if (data.leaves) setLeaves(data.leaves);
-      if (data.attendance) setAttendance(data.attendance);
+      if (!rawJson) return false;
 
-      showSuccessToast('Successfully imported backup dataset!');
+      // Deep recursive search for clients array
+      const findArrayWithProp = (obj: any, propName: string): any[] => {
+        if (!obj || typeof obj !== 'object') return [];
+        if (Array.isArray(obj)) {
+          if (obj.length > 0 && typeof obj[0] === 'object' && obj[0] !== null && propName in obj[0]) {
+            return obj;
+          }
+          return [];
+        }
+        // Direct key check
+        for (const k of Object.keys(obj)) {
+          if (Array.isArray(obj[k]) && obj[k].length > 0) {
+            const first = obj[k][0];
+            if (typeof first === 'object' && first !== null && propName in first) {
+              return obj[k];
+            }
+          }
+        }
+        // Deep nested search
+        for (const k of Object.keys(obj)) {
+          if (typeof obj[k] === 'object' && obj[k] !== null) {
+            const found = findArrayWithProp(obj[k], propName);
+            if (found.length > 0) return found;
+          }
+        }
+        return [];
+      };
+
+      const rawClients = findArrayWithProp(rawJson, 'name');
+      const rawPayments = findArrayWithProp(rawJson, 'amount');
+      const rawAtt = findArrayWithProp(rawJson, 'status');
+      const rawDreams = findArrayWithProp(rawJson, 'targetAmount');
+
+      // CRITICAL: Wipe old deletedIds so restored client IDs are never filtered out by background polling!
+      setDeletedIds([]);
+      try {
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, '[]');
+      } catch (e) {}
+
+      let importedClients: Client[] = [];
+      let importedPayments: PaymentRecord[] = [];
+      let importedAttendance: AttendanceRecord[] = [];
+      let importedDreams: TrainerDreamGoal[] = [];
+
+      if (rawClients.length > 0) {
+        importedClients = rawClients.map(normalizeClient).filter(Boolean) as Client[];
+        setClients(importedClients);
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(importedClients));
+      }
+
+      if (rawPayments.length > 0) {
+        importedPayments = rawPayments.map(normalizePayment).filter(Boolean) as PaymentRecord[];
+        setPayments(importedPayments);
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(importedPayments));
+      }
+
+      if (rawAtt.length > 0) {
+        importedAttendance = rawAtt.map(normalizeAttendance).filter(Boolean);
+        setAttendance(importedAttendance);
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(importedAttendance));
+      }
+
+      if (rawDreams.length > 0) {
+        importedDreams = rawDreams;
+        setTrainerDreams(importedDreams);
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(importedDreams));
+      }
+
+      let payload = rawJson?.data || rawJson?.backup?.data || rawJson?.backup || rawJson;
+      if (payload.trainerLeaves && Array.isArray(payload.trainerLeaves)) {
+        setTrainerLeaves(payload.trainerLeaves);
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_leaves`, JSON.stringify(payload.trainerLeaves));
+      }
+
+      if (payload.trainerProfile) {
+        setTrainerProfile(payload.trainerProfile);
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_profile`, JSON.stringify(payload.trainerProfile));
+      }
+
+      if (payload.websiteCMS) {
+        setWebsiteCMS(payload.websiteCMS);
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_website_cms`, JSON.stringify(payload.websiteCMS));
+      }
+
+      const finalClients = importedClients.length > 0 ? importedClients : clients;
+      const finalPayments = importedPayments.length > 0 ? importedPayments : payments;
+      const finalDreams = importedDreams.length > 0 ? importedDreams : trainerDreams;
+
+      // CRITICAL: Overwrite Cloud Store so all connected devices adopt the restored master dataset!
+      pushCloudSyncData({
+        clients: finalClients,
+        payments: finalPayments,
+        trainerDreams: finalDreams,
+        trainerLeaves,
+        attendance: importedAttendance.length > 0 ? importedAttendance : attendance,
+        customGroupBatches,
+        deletedIds: [],
+        action: 'overwrite'
+      } as any);
+
+      const totalCount = finalClients.length;
+      showSuccessToast(`🎉 Restored & synchronized ${totalCount} client records across all devices!`);
       return true;
-    } catch (e) {
-      alert('Invalid backup file format!');
+    } catch (e: any) {
+      console.error('Import error:', e);
+      alert(`Import error: ${e.message || 'Invalid backup file format'}`);
       return false;
     }
   };
@@ -549,6 +1198,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updatePayment,
         deletePayment,
         quickMarkPaid,
+        deletedIds,
         leaves,
         addLeave,
         deleteLeave,
@@ -580,6 +1230,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         customGroupBatches,
         addCustomGroupBatch,
         deleteCustomGroupBatch,
+        isSyncingCloud,
+        lastCloudSyncTime,
+        syncCloudNow,
+        forcePushCloud,
         startNewMonthCycle,
         resetToSampleData,
         exportBackupData,

@@ -1,0 +1,32 @@
+{
+  "crons": [
+    {
+      "path": "/api/backup",
+      "schedule": "0 0 * * *"
+    }
+  ],
+  "rewrites": [
+    { "source": "/yogi/:slug", "destination": "/index.html" },
+    { "source": "/member/:slug", "destination": "/index.html" },
+    { "source": "/members", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
+        }
+      ]
+    }
+  ]
+}

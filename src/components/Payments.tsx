@@ -4,10 +4,10 @@ import { PaymentRecord } from '../types';
 import { EditPaymentModal } from './Modals/EditPaymentModal';
 import { CreditCard, Plus, IndianRupee, CheckCircle2, Clock, Filter, Search, Trash2, Calendar, Pencil } from 'lucide-react';
 import { getClientCurrentMonthPaymentStatus } from '../utils/paymentUtils';
-import { getTodayDateString } from '../utils/dateUtils';
+import { getTodayDateString, isDateInMonth } from '../utils/dateUtils';
 
 export const Payments: React.FC = () => {
-  const { payments, clients, attendance, leaves, setIsAddPaymentOpen, setPaymentModalDefaultClientId, deletePayment } = useApp();
+  const { payments, clients, attendance, leaves, setIsAddPaymentOpen, setPaymentModalDefaultClientId, deletePayment, deletedIds } = useApp();
 
   const [filterMode, setFilterMode] = useState<string>('All');
   const [filterStatus, setFilterStatus] = useState<string>('All');
@@ -21,9 +21,79 @@ export const Payments: React.FC = () => {
 
   const activeClients = clients.filter(c => c.status !== 'Discontinued');
 
+  // Synthesize payment records for any active client marked 'Paid' or 'Partial' if missing from explicit payments list
+  const synthesizedPaymentsFromClients: PaymentRecord[] = activeClients
+    .filter(c => c.paymentStatus === 'Paid' || c.paymentStatus === 'Partial')
+    .filter(c => !payments.some(p => p.clientId === c.id))
+    .map(c => ({
+      id: `syn-${c.id}`,
+      clientId: c.id,
+      clientName: c.name,
+      amount: c.feeType === 'Per Session' ? (c.perSessionFee || 1000) * (c.completedClasses || 1) : (c.monthlyFee || 1200),
+      date: c.joiningDate || todayDateStr,
+      month: currentMonthStr,
+      paymentMode: 'UPI',
+      status: c.paymentStatus as any,
+      notes: 'Paid status on client profile'
+    }));
+
+  const combinedPaymentSources = [...payments, ...synthesizedPaymentsFromClients];
+
+  // Auto-enrich payments that have missing clientName, amount or date by matching clientId with clients array, filtering out orphan/ghost dummy records!
+  const enrichedPayments = combinedPaymentSources
+    .filter(p => {
+      // Filter out deleted records
+      if (deletedIds.includes(p.id)) return false;
+
+      // Drop any payment with no clientId and no valid clientName
+      if (!p.clientId && (!p.clientName || p.clientName === 'Yoga Client')) return false;
+
+      // Drop any payment whose clientId does NOT exist in active clients array AND has no real clientName
+      const matchedClient = clients.find(c => c.id === p.clientId);
+      if (!matchedClient && (!p.clientName || p.clientName === 'Yoga Client')) return false;
+
+      return true;
+    })
+    .map(p => {
+      const matchedClient = clients.find(c => c.id === p.clientId);
+      const rawName = p.clientName && p.clientName !== 'Yoga Client' ? p.clientName : (matchedClient?.name || '');
+
+      if (!rawName) return null;
+
+      const defaultFee = matchedClient?.feeType === 'Per Session'
+        ? (matchedClient.perSessionFee || 1000)
+        : (matchedClient?.monthlyFee || 1200);
+      const amount = (p.amount && Number(p.amount) > 0) ? Number(p.amount) : defaultFee;
+      const date = p.date || matchedClient?.joiningDate || todayDateStr;
+      const paymentMode = p.paymentMode || 'UPI';
+
+      return {
+        ...p,
+        clientName: rawName,
+        amount,
+        date,
+        paymentMode
+      };
+    })
+    .filter(Boolean) as PaymentRecord[];
+
   // 1. Current Month Total Collected (Matching Dashboard & Reports!)
-  const currentMonthPayments = payments.filter(p => (p.status === 'Paid' || p.status === 'Partial') && p.date.startsWith(currentMonthStr));
-  const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + p.amount, 0);
+  const currentMonthPayments = enrichedPayments.filter(p => {
+    if (p.status === 'Pending' || p.status === 'Overdue') return false;
+    return isDateInMonth(p.date, currentMonthStr);
+  });
+  const loggedPaymentsTotal = currentMonthPayments.reduce((acc, p) => acc + (p.amount || 0), 0);
+
+  const paidClientsWithoutLog = activeClients.filter(c => {
+    if (c.paymentStatus !== 'Paid') return false;
+    const hasLog = currentMonthPayments.some(p => p.clientId === c.id);
+    return !hasLog;
+  });
+
+  const implicitPaidRevenue = paidClientsWithoutLog.reduce((acc, c) => {
+    const fee = c.feeType === 'Per Session' ? (c.perSessionFee || 1000) * (c.completedClasses || 1) : (c.monthlyFee || 0);
+    return acc + fee;
+  }, 0);
 
   const perSessionClients = activeClients.filter(c => c.feeType === 'Per Session' || c.membershipPlan === 'Per Session');
   let unloggedPerSessionEarnedRevenue = 0;
@@ -33,19 +103,19 @@ export const Payments: React.FC = () => {
     const presentClassesThisMonth = attendance.filter(a => 
       a.clientId === client.id && 
       a.status === 'Present' && 
-      a.date.startsWith(currentMonthStr)
+      isDateInMonth(a.date, currentMonthStr)
     ).length;
 
     const effectiveAttended = presentClassesThisMonth > 0 ? presentClassesThisMonth : (client.completedClasses || 0);
     const totalEarnedForClient = effectiveAttended * rate;
     const loggedForClient = currentMonthPayments
       .filter(p => p.clientId === client.id)
-      .reduce((sum, p) => sum + p.amount, 0);
+      .reduce((sum, p) => sum + (p.amount || 0), 0);
 
     unloggedPerSessionEarnedRevenue += Math.max(0, totalEarnedForClient - loggedForClient);
   });
 
-  const totalCollected = loggedPaymentsTotal + unloggedPerSessionEarnedRevenue;
+  const totalCollected = loggedPaymentsTotal + implicitPaidRevenue + unloggedPerSessionEarnedRevenue;
 
   // 2. Pending Fee Amount & Pending Clients (Matching Dashboard & Reports!)
   const pendingFeeClients = activeClients.filter(c => {
@@ -61,8 +131,8 @@ export const Payments: React.FC = () => {
 
   const pendingCount = pendingFeeClients.length;
 
-  const filteredPayments = payments.filter((p) => {
-    const matchesSearch = p.clientName.toLowerCase().includes(search.toLowerCase());
+  const filteredPayments = enrichedPayments.filter((p) => {
+    const matchesSearch = (p.clientName || '').toLowerCase().includes((search || '').toLowerCase());
     const matchesMode = filterMode === 'All' || p.paymentMode === filterMode;
     const matchesStatus = filterStatus === 'All' || p.status === filterStatus;
     return matchesSearch && matchesMode && matchesStatus;
@@ -100,7 +170,7 @@ export const Payments: React.FC = () => {
         <div className="bg-white rounded-3xl p-6 shadow-soft border border-slate-100 flex items-center justify-between">
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase">{currentMonthShortUpper} COLLECTED</p>
-            <h3 className="text-3xl font-extrabold text-slate-900 mt-1">₹{totalCollected.toLocaleString()}</h3>
+            <h3 className="text-3xl font-extrabold text-slate-900 mt-1">₹{(totalCollected || 0).toLocaleString()}</h3>
             <p className="text-xs font-semibold text-emerald-600 mt-0.5">Collected + Earned</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
@@ -111,7 +181,7 @@ export const Payments: React.FC = () => {
         <div className="bg-white rounded-3xl p-6 shadow-soft border border-slate-100 flex items-center justify-between">
           <div>
             <p className="text-xs font-bold text-slate-400 uppercase">Pending Fee Amount</p>
-            <h3 className="text-3xl font-extrabold text-rose-600 mt-1">₹{totalPendingAmount.toLocaleString()}</h3>
+            <h3 className="text-3xl font-extrabold text-rose-600 mt-1">₹{(totalPendingAmount || 0).toLocaleString()}</h3>
             <p className="text-xs font-semibold text-rose-500 mt-0.5">{pendingCount} pending clients</p>
           </div>
           <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
@@ -218,7 +288,7 @@ export const Payments: React.FC = () => {
 
                 <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100">
                   <div className="text-right">
-                    <div className="text-lg font-extrabold text-slate-900">₹{p.amount.toLocaleString()}</div>
+                    <div className="text-lg font-extrabold text-slate-900">₹{(p.amount || 0).toLocaleString()}</div>
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
                       p.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
                     }`}>
