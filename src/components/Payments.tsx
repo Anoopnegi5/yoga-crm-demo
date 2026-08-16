@@ -22,12 +22,19 @@ export const Payments: React.FC = () => {
   const activeClients = clients.filter(c => c.status !== 'Discontinued');
 
   // Clients who are on full month leave this month — hide from payments
+  const currentMonthStart = `${currentMonthStr}-01`;
+  const currentMonthEnd = new Date(new Date(currentMonthStart).getFullYear(), new Date(currentMonthStart).getMonth() + 1, 0)
+    .toISOString().slice(0, 10);
+
   const fullMonthLeaveClientIds = new Set(
     leaves
-      .filter(l => l.isFullMonthLeave && (
-        (l.startDate && l.startDate.slice(0, 7) === currentMonthStr) ||
-        (l.date && l.date.slice(0, 7) === currentMonthStr)
-      ))
+      .filter(l => {
+        const start = l.startDate || l.date || '';
+        const end = l.endDate || start;
+        if (l.isFullMonthLeave && (start.slice(0, 7) === currentMonthStr || end.slice(0, 7) === currentMonthStr)) return true;
+        if (start <= currentMonthStart && end >= currentMonthEnd) return true;
+        return false;
+      })
       .map(l => l.clientId)
   );
 

@@ -123,12 +123,22 @@ export const Dashboard: React.FC = () => {
   const activeClients = clients.filter(c => c.status !== 'Discontinued');
 
   // Clients on full month leave this month — exclude from fee reminders & pending fees
+  // Matches: (1) isFullMonthLeave flag, OR (2) leave range covers entire current month
+  const currentMonthStart = `${currentMonthStr}-01`;
+  const currentMonthEnd = new Date(new Date(currentMonthStart).getFullYear(), new Date(currentMonthStart).getMonth() + 1, 0)
+    .toISOString().slice(0, 10);
+
   const fullMonthLeaveClientIds = new Set(
     leaves
-      .filter(l => l.isFullMonthLeave && (
-        (l.startDate && l.startDate.slice(0, 7) === currentMonthStr) ||
-        (l.date && l.date.slice(0, 7) === currentMonthStr)
-      ))
+      .filter(l => {
+        const start = l.startDate || l.date || '';
+        const end = l.endDate || start;
+        // Flag-based: explicitly marked full month leave
+        if (l.isFullMonthLeave && (start.slice(0, 7) === currentMonthStr || end.slice(0, 7) === currentMonthStr)) return true;
+        // Range-based: leave covers the entire current month
+        if (start <= currentMonthStart && end >= currentMonthEnd) return true;
+        return false;
+      })
       .map(l => l.clientId)
   );
 
