@@ -15,25 +15,11 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ isOpen, onClose 
   if (!isOpen) return null;
 
   const shareableUrl = `https://www.yoganjaliyoga.com/join`;
-  const fullMessage = `Hi! 😊
-
-I hope you're doing well.
-
-As part of our yoga program, I’d like to update your profile and keep your practice plan aligned with your current goals and progress. Please take a minute to fill in your details using the link below:
-
-✨ Registration & Profile Update Form:
-Hi! 👋 Please click this link to complete your Yoga Registration details for Yoganjali Studio with Anjali Negi:
+  const fullMessage = `Hi! 👋 Please fill in your Yoga Registration details for Yoganjali Studio:
 
 ${shareableUrl}
 
-Looking forward to starting your personalized yoga sessions...☺️🤗🥰
-
-This will help me personalize your sessions better and provide the right guidance for your yoga journey. 🧘‍♀️🌿
-
-If you have any questions, feel free to message me anytime.
-
-Warm regards,
-Anjali Negi`;
+— Anjali Negi 🧘‍♀️`;
 
   const copyToClipboard = (text: string): boolean => {
     try {
