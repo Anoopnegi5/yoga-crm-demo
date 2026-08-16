@@ -21,7 +21,7 @@ export function getSlugFromUrl(): UrlRouteInfo {
   const empty: UrlRouteInfo = { isYogiProfile: false, isMembersDirectory: false, isPanel: false, isJoinLink: false, slug: null };
   if (typeof window === 'undefined') return empty;
 
-  const pathname = window.location.pathname;
+  const pathname = window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
   const search = window.location.search;
   const params = new URLSearchParams(search);
 
@@ -48,22 +48,26 @@ export function getSlugFromUrl(): UrlRouteInfo {
     return { ...empty, isYogiProfile: true, slug: pathParts[1] };
   }
 
-  // --- Legacy query parameter fallbacks (backward compatibility) ---
+  // --- Legacy query parameter fallbacks (backward compatibility) + Instant URL Bar Clean-up ---
 
   if (search.includes('view=panel') || search.includes('admin=true') || search.includes('login=true')) {
+    try { window.history.replaceState({}, '', '/panel'); } catch (e) {}
     return { ...empty, isPanel: true };
   }
 
   if (search.includes('join=true') || search.includes('register=true') || search.includes('mode=client')) {
+    try { window.history.replaceState({}, '', '/join'); } catch (e) {}
     return { ...empty, isJoinLink: true };
   }
 
   if (params.get('view') === 'members' || params.get('members') === 'true') {
+    try { window.history.replaceState({}, '', '/members'); } catch (e) {}
     return { ...empty, isMembersDirectory: true };
   }
 
   const querySlug = params.get('yogi') || params.get('member');
   if (querySlug) {
+    try { window.history.replaceState({}, '', `/yogi/${querySlug}`); } catch (e) {}
     return { ...empty, isYogiProfile: true, slug: querySlug };
   }
 

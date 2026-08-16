@@ -1286,6 +1286,7 @@ export const ClientWebsite: React.FC = () => {
             <a href="#benefits" className="block text-slate-300 hover:text-white transition-colors">Why Yoganjali</a>
             <a href="/members" className="block text-amber-300 hover:text-white transition-colors font-bold">🧘 Our Yogis</a>
             <a href="#faq" className="block text-slate-300 hover:text-white transition-colors">FAQ</a>
+            <a href="/panel" className="block text-slate-400 hover:text-white transition-colors text-[11px] pt-1">🔐 Trainer Panel</a>
           </div>
 
           <div className="space-y-2">
