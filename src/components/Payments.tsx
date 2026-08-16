@@ -21,6 +21,16 @@ export const Payments: React.FC = () => {
 
   const activeClients = clients.filter(c => c.status !== 'Discontinued');
 
+  // Clients who are on full month leave this month — hide from payments
+  const fullMonthLeaveClientIds = new Set(
+    leaves
+      .filter(l => l.isFullMonthLeave && (
+        (l.startDate && l.startDate.slice(0, 7) === currentMonthStr) ||
+        (l.date && l.date.slice(0, 7) === currentMonthStr)
+      ))
+      .map(l => l.clientId)
+  );
+
   // Synthesize payment records for any active client marked 'Paid' or 'Partial' if missing from explicit payments list
   const synthesizedPaymentsFromClients: PaymentRecord[] = activeClients
     .filter(c => c.paymentStatus === 'Paid' || c.paymentStatus === 'Partial')
@@ -44,6 +54,9 @@ export const Payments: React.FC = () => {
     .filter(p => {
       // Filter out deleted records
       if (deletedIds.includes(p.id)) return false;
+
+      // Hide clients who are on full month leave this month
+      if (p.clientId && fullMonthLeaveClientIds.has(p.clientId)) return false;
 
       // Drop any payment with no clientId and no valid clientName
       if (!p.clientId && (!p.clientName || p.clientName === 'Yoga Client')) return false;

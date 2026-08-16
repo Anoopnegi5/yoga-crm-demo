@@ -1,10 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/backup",
-      "schedule": "0 0 * * *"
-    }
-  ],
   "rewrites": [
     { "source": "/yogi/:slug", "destination": "/index.html" },
     { "source": "/member/:slug", "destination": "/index.html" },
