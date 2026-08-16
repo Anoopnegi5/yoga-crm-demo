@@ -122,6 +122,16 @@ export const Dashboard: React.FC = () => {
 
   const activeClients = clients.filter(c => c.status !== 'Discontinued');
 
+  // Clients on full month leave this month — exclude from fee reminders & pending fees
+  const fullMonthLeaveClientIds = new Set(
+    leaves
+      .filter(l => l.isFullMonthLeave && (
+        (l.startDate && l.startDate.slice(0, 7) === currentMonthStr) ||
+        (l.date && l.date.slice(0, 7) === currentMonthStr)
+      ))
+      .map(l => l.clientId)
+  );
+
   // Filter leaves that actively cover today's date
   const activeLeaves = leaves.filter(l => {
     const isClientActive = activeClients.some(c => c.id === l.clientId);
@@ -237,6 +247,8 @@ export const Dashboard: React.FC = () => {
   // Clients with pending fees in current month (Excluding Per Session clients like Chetna)
   const pendingFeeClients = activeClients.filter(c => {
     if (c.feeType === 'Per Session' || c.membershipPlan === 'Per Session') return false;
+    // Skip clients on full month leave this month
+    if (fullMonthLeaveClientIds.has(c.id)) return false;
     const { status } = getClientCurrentMonthPaymentStatus(c, payments, currentMonthStr, leaves);
     return status === 'Pending' || status === 'Overdue' || status === 'Partial';
   });
