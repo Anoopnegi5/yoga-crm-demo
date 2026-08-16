@@ -3,7 +3,7 @@ import { Client, PaymentRecord, LeaveRecord, AttendanceRecord, TrainerProfile, T
 import { INITIAL_CLIENTS, INITIAL_PAYMENTS, INITIAL_LEAVES, INITIAL_ATTENDANCE, DEFAULT_TRAINER_PROFILE, INITIAL_TRAINER_LEAVES, INITIAL_TRAINER_DREAMS } from '../data/mockData';
 import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
 import { getTodayDateString } from '../utils/dateUtils';
-import { fetchCloudSyncData, pushCloudSyncData, mergeArraysById, normalizeClient, normalizePayment, normalizeAttendance, normalizeTrainerDream } from '../utils/cloudSync';
+import { fetchCloudSyncData, pushCloudSyncData, mergeArraysById, normalizeClient, normalizePayment, normalizeAttendance, normalizeTrainerDream, normalizeLeave } from '../utils/cloudSync';
 
 interface AppContextType {
   trainerProfile: TrainerProfile;
@@ -173,6 +173,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments,
       trainerDreams: updatedDreams,
       trainerLeaves,
+      leaves,
       attendance,
       customGroupBatches,
       deletedIds,
@@ -195,6 +196,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments,
       trainerDreams: updatedDreams,
       trainerLeaves,
+      leaves,
       attendance,
       customGroupBatches,
       deletedIds,
@@ -232,6 +234,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments: updatedPayments,
       trainerDreams,
       trainerLeaves,
+      leaves,
       attendance,
       customGroupBatches,
       deletedIds: nextDeletedIds,
@@ -259,6 +262,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments,
       trainerDreams: updatedDreams,
       trainerLeaves,
+      leaves,
       attendance,
       customGroupBatches,
       deletedIds: nextDeletedIds,
@@ -306,6 +310,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments,
       trainerDreams,
       trainerLeaves,
+      leaves,
       attendance,
       customGroupBatches: next,
       deletedGroupBatches: nextDeleted,
@@ -329,6 +334,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments,
       trainerDreams,
       trainerLeaves,
+      leaves,
       attendance,
       customGroupBatches: next,
       deletedGroupBatches: nextDeleted,
@@ -442,14 +448,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const mergedClients = mergeArraysById(clients, remote?.clients || [], allDeleted);
       const mergedPayments = mergeArraysById(payments, remote?.payments || [], allDeleted);
       const mergedDreams = mergeArraysById(trainerDreams, remote?.trainerDreams || [], allDeleted);
-      const mergedLeaves = mergeArraysById(trainerLeaves, remote?.trainerLeaves || [], allDeleted);
+      const mergedTrainerLeaves = mergeArraysById(trainerLeaves, remote?.trainerLeaves || [], allDeleted);
+      const mergedLeaves = mergeArraysById(leaves, remote?.leaves || [], allDeleted);
       const mergedAttendance = mergeArraysById(attendance, remote?.attendance || [], allDeleted);
       const mergedBatches = Array.from(new Set([...customGroupBatches, ...(remote?.customGroupBatches || [])]));
 
       setClients(mergedClients);
       setPayments(mergedPayments);
       setTrainerDreams(mergedDreams);
-      setTrainerLeaves(mergedLeaves);
+      setTrainerLeaves(mergedTrainerLeaves);
+      setLeaves(mergedLeaves);
       setAttendance(mergedAttendance);
       setCustomGroupBatches(mergedBatches);
 
@@ -457,7 +465,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         clients: mergedClients,
         payments: mergedPayments,
         trainerDreams: mergedDreams,
-        trainerLeaves: mergedLeaves,
+        trainerLeaves: mergedTrainerLeaves,
+        leaves: mergedLeaves,
         attendance: mergedAttendance,
         customGroupBatches: mergedBatches,
         deletedIds: allDeleted
@@ -482,6 +491,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         payments,
         trainerDreams,
         trainerLeaves,
+        leaves,
         attendance,
         customGroupBatches,
         deletedIds,
@@ -513,6 +523,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 payments,
                 trainerDreams,
                 trainerLeaves,
+                leaves,
                 attendance,
                 customGroupBatches,
                 deletedIds: allDeleted
@@ -532,6 +543,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return merged.map(normalizeTrainerDream).filter(Boolean);
           });
           setTrainerLeaves(prev => mergeArraysById(prev, remote.trainerLeaves || [], allDeleted));
+          setLeaves(prev => {
+            const rawRemote = Array.isArray(remote.leaves) ? remote.leaves.map(normalizeLeave).filter(Boolean) : [];
+            const merged = mergeArraysById(prev, rawRemote, allDeleted);
+            return merged.map(normalizeLeave).filter(Boolean);
+          });
           setAttendance(prev => {
             const rawRemote = Array.isArray(remote.attendance) ? remote.attendance.map(normalizeAttendance).filter(Boolean) : [];
             const merged = mergeArraysById(prev, rawRemote, allDeleted);
@@ -670,6 +686,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         payments,
         trainerDreams,
         trainerLeaves,
+        leaves,
         attendance,
         customGroupBatches,
         deletedIds
@@ -683,7 +700,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateClient = (updatedClient: Client) => {
     setClients(prev => {
       const updated = prev.map(c => c.id === updatedClient.id ? updatedClient : c);
-      pushCloudSyncData({ clients: updated, payments, trainerDreams, trainerLeaves, attendance, customGroupBatches, deletedIds });
+      pushCloudSyncData({ clients: updated, payments, trainerDreams, trainerLeaves, leaves, attendance, customGroupBatches, deletedIds });
       return updated;
     });
     showSuccessToast(`Updated profile for ${updatedClient.name}`);
@@ -713,6 +730,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments: updatedPayments,
       trainerDreams,
       trainerLeaves,
+      leaves: updatedLeaves,
       attendance: updatedAttendance,
       customGroupBatches,
       deletedIds: newDeletedIds
@@ -767,6 +785,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         payments: updatedPayments,
         trainerDreams,
         trainerLeaves,
+        leaves,
         attendance,
         customGroupBatches,
         deletedIds,
@@ -802,6 +821,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments: updatedPayments,
       trainerDreams,
       trainerLeaves,
+      leaves,
       attendance,
       customGroupBatches,
       deletedIds,
@@ -823,6 +843,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments: updatedPayments,
       trainerDreams,
       trainerLeaves,
+      leaves,
       attendance,
       customGroupBatches,
       deletedIds,
@@ -872,6 +893,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(updatedLeaves));
     } catch (e) {}
 
+    pushCloudSyncData({
+      clients,
+      payments,
+      trainerDreams,
+      trainerLeaves,
+      leaves: updatedLeaves,
+      attendance,
+      customGroupBatches,
+      deletedIds,
+      action: 'overwrite'
+    } as any);
+
     markAttendance(client.id, 'Leave', leaveData.startDate || leaveData.date);
 
     showSuccessToast(`Logged leave for ${client.name}`);
@@ -893,6 +926,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments,
       trainerDreams,
       trainerLeaves,
+      leaves: updatedLeaves,
       attendance,
       customGroupBatches,
       deletedIds: nextDeletedIds,
@@ -926,7 +960,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const prevStatus = existingRecord.status;
       if (prevStatus !== 'Present' && status === 'Present') {
         classDelta = 1;
-      } else if (prevStatus === 'Present' && status !== 'Present') {
+      } else if (prevStatus !== 'Present' && status !== 'Present') {
         classDelta = -1;
       }
 
@@ -975,6 +1009,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments,
       trainerDreams,
       trainerLeaves,
+      leaves,
       attendance: updatedAttendance,
       customGroupBatches,
       deletedIds,
@@ -1001,6 +1036,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments,
       trainerDreams,
       trainerLeaves,
+      leaves,
       attendance: updatedAttendance,
       customGroupBatches,
       deletedIds: nextDeletedIds,
@@ -1032,6 +1068,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments: [],
       trainerDreams,
       trainerLeaves,
+      leaves: [],
       attendance: [],
       customGroupBatches,
       deletedIds: []
@@ -1096,6 +1133,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const rawPayments = findArrayWithProp(rawJson, 'amount');
       const rawAtt = findArrayWithProp(rawJson, 'status');
       const rawDreams = findArrayWithProp(rawJson, 'targetAmount');
+      const rawLeaves = findArrayWithProp(rawJson, 'reason');
 
       // CRITICAL: Wipe old deletedIds so restored client IDs are never filtered out by background polling!
       setDeletedIds([]);
@@ -1107,6 +1145,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       let importedPayments: PaymentRecord[] = [];
       let importedAttendance: AttendanceRecord[] = [];
       let importedDreams: TrainerDreamGoal[] = [];
+      let importedLeaves: LeaveRecord[] = [];
 
       if (rawClients.length > 0) {
         importedClients = rawClients.map(normalizeClient).filter(Boolean) as Client[];
@@ -1132,6 +1171,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(importedDreams));
       }
 
+      if (rawLeaves.length > 0) {
+        importedLeaves = rawLeaves.map(normalizeLeave).filter(Boolean) as LeaveRecord[];
+        setLeaves(importedLeaves);
+        localStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(importedLeaves));
+      }
+
       let payload = rawJson?.data || rawJson?.backup?.data || rawJson?.backup || rawJson;
       if (payload.trainerLeaves && Array.isArray(payload.trainerLeaves)) {
         setTrainerLeaves(payload.trainerLeaves);
@@ -1151,6 +1196,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const finalClients = importedClients.length > 0 ? importedClients : clients;
       const finalPayments = importedPayments.length > 0 ? importedPayments : payments;
       const finalDreams = importedDreams.length > 0 ? importedDreams : trainerDreams;
+      const finalLeaves = importedLeaves.length > 0 ? importedLeaves : leaves;
 
       // CRITICAL: Overwrite Cloud Store so all connected devices adopt the restored master dataset!
       pushCloudSyncData({
@@ -1158,6 +1204,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         payments: finalPayments,
         trainerDreams: finalDreams,
         trainerLeaves,
+        leaves: finalLeaves,
         attendance: importedAttendance.length > 0 ? importedAttendance : attendance,
         customGroupBatches,
         deletedIds: [],

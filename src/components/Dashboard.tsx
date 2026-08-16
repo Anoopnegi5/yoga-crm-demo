@@ -229,13 +229,15 @@ export const Dashboard: React.FC = () => {
     notes: 'Paid status on client profile'
   }));
 
-  const allDisplayableMonthPayments = [...currentMonthPayments, ...synthesizedCurrentMonthPayments];
-
   // Per Session (Pay-As-You-Go) Auto-Earned Revenue on Class Days
   const perSessionClients = activeClients.filter(c => c.feeType === 'Per Session' || c.membershipPlan === 'Per Session');
   let unloggedPerSessionEarnedRevenue = 0;
+  const perSessionSyntheticPayments: PaymentRecord[] = [];
 
   perSessionClients.forEach(client => {
+    // Skip if on full month leave
+    if (fullMonthLeaveClientIds.has(client.id)) return;
+
     const rate = client.perSessionFee || 1000;
     const presentClassesThisMonth = attendance.filter(a => 
       a.clientId === client.id && 
@@ -249,8 +251,31 @@ export const Dashboard: React.FC = () => {
       .filter(p => p.clientId === client.id)
       .reduce((sum, p) => sum + (p.amount || 0), 0);
 
-    unloggedPerSessionEarnedRevenue += Math.max(0, totalEarnedForClient - loggedForClient);
+    const unloggedAmount = Math.max(0, totalEarnedForClient - loggedForClient);
+    unloggedPerSessionEarnedRevenue += unloggedAmount;
+
+    // If client has earned sessions not already in explicit logs, add to displayable payments for Income Breakdown
+    if (unloggedAmount > 0 || (effectiveAttended > 0 && loggedForClient === 0)) {
+      const sessionCount = effectiveAttended > 0 ? effectiveAttended : 1;
+      perSessionSyntheticPayments.push({
+        id: `syn-persession-${client.id}`,
+        clientId: client.id,
+        clientName: client.name,
+        amount: unloggedAmount > 0 ? unloggedAmount : (sessionCount * rate),
+        date: todayDateStr,
+        month: currentMonthStr,
+        paymentMode: 'UPI',
+        status: 'Paid',
+        notes: `Pay-As-You-Go (${sessionCount} ${sessionCount === 1 ? 'session' : 'sessions'} completed @ ₹${rate}/session)`
+      });
+    }
   });
+
+  const allDisplayableMonthPayments = [
+    ...currentMonthPayments, 
+    ...synthesizedCurrentMonthPayments,
+    ...perSessionSyntheticPayments
+  ];
 
   const monthlyIncome = loggedPaymentsTotal + implicitPaidRevenue + unloggedPerSessionEarnedRevenue;
 

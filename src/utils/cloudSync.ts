@@ -5,6 +5,7 @@ export interface CloudDataPayload {
   payments: any[];
   trainerDreams: any[];
   trainerLeaves: any[];
+  leaves?: any[];
   attendance: any[];
   customGroupBatches?: string[];
   deletedIds?: string[];
@@ -135,6 +136,24 @@ export const normalizeTrainerDream = (d: any): any => {
   };
 };
 
+export const normalizeLeave = (l: any): any => {
+  if (!l || typeof l !== 'object') return null;
+  const start = l.startDate || l.date || new Date().toISOString().split('T')[0];
+  const end = l.endDate || start;
+  return {
+    id: l.id || `leave-${Date.now()}`,
+    clientId: l.clientId || '',
+    clientName: l.clientName || 'Yoga Client',
+    photoUrl: l.photoUrl || '',
+    date: start,
+    startDate: start,
+    endDate: end,
+    reason: l.reason || 'Leave / Rest Day',
+    duration: l.duration || '1 Day',
+    isFullMonthLeave: !!l.isFullMonthLeave
+  };
+};
+
 // Smart Array Merging by Item ID (Deduplication) with Deletion Filtering
 export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedIds: string[] = []): any[] => {
   const map = new Map<string, any>();
@@ -168,6 +187,7 @@ export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedId
     if (item && item.name) return normalizeClient(item);
     if (item && item.amount !== undefined) return normalizePayment(item);
     if (item && item.status && item.clientId) return normalizeAttendance(item);
+    if (item && item.reason && item.clientId) return normalizeLeave(item);
     return item;
   }).filter(Boolean);
 

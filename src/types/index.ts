@@ -98,7 +98,9 @@ export interface PaymentRecord {
   clientName: string;
   amount: number;
   date: string;
+  month?: string;
   paymentMode: PaymentMode;
+  paymentMethod?: string;
   status: PaymentStatus;
   notes?: string;
 }

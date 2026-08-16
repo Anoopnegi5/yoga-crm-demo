@@ -36,6 +36,32 @@ export const formatMonthName = (monthStr: string): string => {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 };
 
+export const isClientOnFullMonthLeave = (
+  clientId: string,
+  monthStr: string,
+  leaves?: LeaveRecord[]
+): boolean => {
+  if (!leaves || !Array.isArray(leaves)) return false;
+  return leaves.some(l => {
+    if (l.clientId !== clientId) return false;
+    const start = l.startDate || l.date || '';
+    const end = l.endDate || start;
+    if (l.isFullMonthLeave) {
+      if ((start || '').slice(0, 7) === monthStr || (end || '').slice(0, 7) === monthStr) return true;
+    }
+    if (start && end) {
+      const monthStart = `${monthStr}-01`;
+      if (start <= monthStart && end >= `${monthStr}-25`) return true;
+      if (start.startsWith(monthStr) && end.startsWith(monthStr)) {
+        const sDay = parseInt(start.split('-')[2], 10) || 1;
+        const eDay = parseInt(end.split('-')[2], 10) || 30;
+        if (sDay <= 5 && eDay >= 25) return true;
+      }
+    }
+    return false;
+  });
+};
+
 export const getClientCurrentMonthPaymentStatus = (
   client: Client,
   payments: PaymentRecord[],
@@ -48,8 +74,11 @@ export const getClientCurrentMonthPaymentStatus = (
   remainingBalance: number;
   unpaidMonthsCount: number;
   unpaidMonthsNames: string[];
+  isOnFullMonthLeave?: boolean;
 } => {
   const currentMonthStr = targetMonthStr || getTodayDateString().slice(0, 7); // e.g. "2026-08"
+
+  const isOnCurrentMonthLeave = isClientOnFullMonthLeave(client.id, currentMonthStr, leaves);
   
   // STRICT RULE: Fee journal and pending fee tracking operates STRICTLY from August 2026 (2026-08) onwards!
   // Any months prior to August 2026 (July 2026 and earlier) are strictly excluded from pending fee calculations.
@@ -66,23 +95,9 @@ export const getClientCurrentMonthPaymentStatus = (
   const unpaidMonthsNames: string[] = [];
 
   activeMonths.forEach(mStr => {
-    const isOnFullMonthLeave = leaves ? leaves.some(l => {
-      if (l.clientId !== client.id) return false;
-      if (l.isFullMonthLeave) {
-        const leaveMonth = (l.startDate || l.date || '').slice(0, 7);
-        return leaveMonth === mStr;
-      }
-      const start = l.startDate || l.date || '';
-      const end = l.endDate || start;
-      if ((start || '').startsWith(mStr) && (end || '').startsWith(mStr)) {
-        const startDay = parseInt(start.split('-')[2], 10);
-        const endDay = parseInt(end.split('-')[2], 10);
-        return startDay <= 5 && endDay >= 25;
-      }
-      return false;
-    }) : false;
+    const isLeaveInMonth = isClientOnFullMonthLeave(client.id, mStr, leaves);
 
-    if (!isOnFullMonthLeave) {
+    if (!isLeaveInMonth) {
       if (client.feeType === 'Per Session') {
         const perSessionRate = client.perSessionFee || 1000;
         if (mStr === currentMonthStr) {
@@ -104,7 +119,9 @@ export const getClientCurrentMonthPaymentStatus = (
   const paidAmount = currentMonthPayments.reduce((sum, p) => sum + p.amount, 0);
 
   let dueAmount = 0;
-  if (client.feeType === 'Per Session') {
+  if (isOnCurrentMonthLeave) {
+    dueAmount = 0;
+  } else if (client.feeType === 'Per Session') {
     dueAmount = (client.completedClasses || 0) * (client.perSessionFee || 1000);
   } else {
     dueAmount = client.monthlyFee || 0;
@@ -112,6 +129,9 @@ export const getClientCurrentMonthPaymentStatus = (
 
   let tempPaid = totalPaidAllTime;
   activeMonths.forEach(mStr => {
+    const isLeaveInMonth = isClientOnFullMonthLeave(client.id, mStr, leaves);
+    if (isLeaveInMonth) return;
+
     let mDue = client.monthlyFee || 0;
     if (client.feeType === 'Per Session') {
       mDue = mStr === currentMonthStr ? (client.completedClasses || 0) * (client.perSessionFee || 1000) : 8 * (client.perSessionFee || 1000);
@@ -127,8 +147,12 @@ export const getClientCurrentMonthPaymentStatus = (
   let status: PaymentStatus = 'Pending';
   let finalRemainingBalance = cumulativeRemainingBalance;
 
-  // STRICT PERSISTENCE: If client is explicitly marked Paid, enforce Paid status & 0 balance!
-  if (client.paymentStatus === 'Paid') {
+  // If client is on full month leave this month, waive fee and set 0 balance & Paid status
+  if (isOnCurrentMonthLeave) {
+    status = 'Paid';
+    finalRemainingBalance = 0;
+  } else if (client.paymentStatus === 'Paid') {
+    // STRICT PERSISTENCE: If client is explicitly marked Paid, enforce Paid status & 0 balance!
     status = 'Paid';
     finalRemainingBalance = 0;
   } else if (client.paymentStatus === 'Pending' || client.paymentStatus === 'Overdue') {
@@ -158,6 +182,7 @@ export const getClientCurrentMonthPaymentStatus = (
     dueAmount,
     remainingBalance: finalRemainingBalance,
     unpaidMonthsCount: unpaidMonthsNames.length,
-    unpaidMonthsNames
+    unpaidMonthsNames,
+    isOnFullMonthLeave: isOnCurrentMonthLeave
   };
 };
