@@ -296,7 +296,7 @@ export const ClientProfileModal: React.FC = () => {
                   </div>
 
                   <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">Total Fee Due</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">Total Billed</span>
                     <p className="text-lg font-extrabold text-purple-700 mt-0.5">₹{(dueAmount || 0).toLocaleString()}</p>
                   </div>
 
@@ -306,13 +306,13 @@ export const ClientProfileModal: React.FC = () => {
                   </div>
 
                   <div className={`p-3 rounded-2xl border ${
-                    dueAmount - paidAmount > 0 ? 'bg-rose-50 border-rose-200' : 'bg-emerald-100 border-emerald-300'
+                    Math.max(0, dueAmount - paidAmount) > 0 ? 'bg-rose-50 border-rose-200' : 'bg-emerald-100 border-emerald-300'
                   }`}>
-                    <span className="text-[10px] font-bold uppercase text-slate-500">Unpaid Balance</span>
+                    <span className="text-[10px] font-bold uppercase text-slate-500">{Math.max(0, dueAmount - paidAmount) > 0 ? 'Unpaid Balance' : '✅ Fully Paid'}</span>
                     <p className={`text-lg font-extrabold mt-0.5 ${
-                      dueAmount - paidAmount > 0 ? 'text-rose-700' : 'text-emerald-800'
+                      Math.max(0, dueAmount - paidAmount) > 0 ? 'text-rose-700' : 'text-emerald-800'
                     }`}>
-                      ₹{Math.max(0, dueAmount - paidAmount).toLocaleString()}
+                      {Math.max(0, dueAmount - paidAmount) > 0 ? `₹${Math.max(0, dueAmount - paidAmount).toLocaleString()}` : '₹0'}
                     </p>
                   </div>
                 </div>
