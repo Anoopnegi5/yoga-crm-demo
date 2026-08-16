@@ -46,16 +46,28 @@ export const isClientOnFullMonthLeave = (
     if (l.clientId !== clientId) return false;
     const start = l.startDate || l.date || '';
     const end = l.endDate || start;
-    if (l.isFullMonthLeave) {
-      if ((start || '').slice(0, 7) === monthStr || (end || '').slice(0, 7) === monthStr) return true;
+    const dur = (l.duration || '').toLowerCase();
+    const reason = (l.reason || '').toLowerCase();
+
+    // 1. Explicit flag or full month keywords in duration / reason
+    if (
+      l.isFullMonthLeave ||
+      dur.includes('full month') ||
+      dur.includes('month leave') ||
+      reason.includes('full month') ||
+      reason.includes('month leave')
+    ) {
+      if (!start || (start || '').slice(0, 7) === monthStr || (end || '').slice(0, 7) === monthStr) return true;
     }
+
+    // 2. Date range covering full or majority of the month
     if (start && end) {
       const monthStart = `${monthStr}-01`;
-      if (start <= monthStart && end >= `${monthStr}-25`) return true;
+      if (start <= monthStart && end >= `${monthStr}-20`) return true;
       if (start.startsWith(monthStr) && end.startsWith(monthStr)) {
         const sDay = parseInt(start.split('-')[2], 10) || 1;
         const eDay = parseInt(end.split('-')[2], 10) || 30;
-        if (sDay <= 5 && eDay >= 25) return true;
+        if (sDay <= 10 && eDay >= 20) return true;
       }
     }
     return false;

@@ -29,6 +29,9 @@ export const AddLeaveModal: React.FC = () => {
       finalEndDate = finalStartDate;
       durationText = `1 Day (${finalStartDate})`;
     } else if (leaveMode === 'fullMonth' || isFullMonthLeave) {
+      const monthStr = (startDate || todayStr).slice(0, 7);
+      finalStartDate = `${monthStr}-01`;
+      finalEndDate = `${monthStr}-31`;
       durationText = `Full Month Leave (Fee Paused/Waived)`;
     } else {
       durationText = `${finalStartDate} to ${finalEndDate}`;
