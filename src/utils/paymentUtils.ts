@@ -128,12 +128,16 @@ export const getClientCurrentMonthPaymentStatus = (
   const cumulativeRemainingBalance = Math.max(0, totalDueSinceJoining - totalPaidAllTime);
 
   const currentMonthPayments = clientPayments.filter(p => (p.date || '').startsWith(currentMonthStr));
-  const paidAmount = currentMonthPayments.reduce((sum, p) => sum + p.amount, 0);
+  // For per-session clients: show total paid all-time (running account), not just current month
+  const paidAmount = client.feeType === 'Per Session'
+    ? totalPaidAllTime
+    : currentMonthPayments.reduce((sum, p) => sum + p.amount, 0);
 
   let dueAmount = 0;
   if (isOnCurrentMonthLeave) {
     dueAmount = 0;
   } else if (client.feeType === 'Per Session') {
+    // Due = total sessions fee - already paid (show actual outstanding)
     dueAmount = (client.completedClasses || 0) * (client.perSessionFee || 1000);
   } else {
     dueAmount = client.monthlyFee || 0;
