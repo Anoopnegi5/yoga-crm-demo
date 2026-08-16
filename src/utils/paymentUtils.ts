@@ -125,12 +125,23 @@ export const getClientCurrentMonthPaymentStatus = (
 
   const clientPayments = payments.filter(p => p.clientId === client.id);
   const totalPaidAllTime = clientPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-  const cumulativeRemainingBalance = Math.max(0, totalDueSinceJoining - totalPaidAllTime);
+
+  // Per-session model: each Present mark = auto-collected payment for that session.
+  // So effective paid = max(real payments recorded, sessions-attended × rate).
+  // This keeps profile in sync with Payments tab which also treats per-session as auto-paid.
+  const perSessionAutoCollected = client.feeType === 'Per Session'
+    ? (client.completedClasses || 0) * (client.perSessionFee || 1000)
+    : 0;
+  const effectiveTotalPaid = client.feeType === 'Per Session'
+    ? Math.max(totalPaidAllTime, perSessionAutoCollected)
+    : totalPaidAllTime;
+
+  const cumulativeRemainingBalance = Math.max(0, totalDueSinceJoining - effectiveTotalPaid);
 
   const currentMonthPayments = clientPayments.filter(p => (p.date || '').startsWith(currentMonthStr));
-  // For per-session clients: show total paid all-time (running account), not just current month
+  // For per-session clients: use effective (auto-collected) paid amount
   const paidAmount = client.feeType === 'Per Session'
-    ? totalPaidAllTime
+    ? effectiveTotalPaid
     : currentMonthPayments.reduce((sum, p) => sum + p.amount, 0);
 
   let dueAmount = 0;
@@ -143,20 +154,26 @@ export const getClientCurrentMonthPaymentStatus = (
     dueAmount = client.monthlyFee || 0;
   }
 
-  let tempPaid = totalPaidAllTime;
+  let tempPaid = effectiveTotalPaid;
   activeMonths.forEach(mStr => {
     const isLeaveInMonth = isClientOnFullMonthLeave(client.id, mStr, leaves);
     if (isLeaveInMonth) return;
 
     let mDue = client.monthlyFee || 0;
     if (client.feeType === 'Per Session') {
-      mDue = mStr === currentMonthStr ? (client.completedClasses || 0) * (client.perSessionFee || 1000) : 8 * (client.perSessionFee || 1000);
+      // Per-session past months: assume same sessions as completedClasses (not a fixed 8)
+      mDue = mStr === currentMonthStr
+        ? (client.completedClasses || 0) * (client.perSessionFee || 1000)
+        : (client.completedClasses || 0) * (client.perSessionFee || 1000);
     }
     if (tempPaid >= mDue) {
       tempPaid -= mDue;
     } else {
       tempPaid = 0;
-      unpaidMonthsNames.push(formatMonthName(mStr));
+      if (client.feeType !== 'Per Session') {
+        // Per-session clients never have "unpaid months" — each session auto-collects
+        unpaidMonthsNames.push(formatMonthName(mStr));
+      }
     }
   });
 
