@@ -62,10 +62,10 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({ onSelectClient
           <div className="flex items-center gap-2">
             <a
               href="/join"
-              className="px-4 py-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-extrabold shadow-sm transition-all flex items-center gap-1.5"
+              className="px-4 py-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-extrabold shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
             >
-              <UserPlus className="w-3.5 h-3.5 text-slate-950" />
-              <span>Join Studio</span>
+              <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+              <span>Book Free Demo</span>
             </a>
           </div>
         </div>
@@ -220,12 +220,21 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({ onSelectClient
       </main>
 
       {/* Footer */}
-      <footer className="mt-16 border-t border-slate-200 bg-white py-8 px-4 text-center space-y-2">
-        <p className="text-xs font-bold text-slate-800">
-          Yoganjali Studio & Fee Manager • Official Member Directory
-        </p>
+      <footer className="mt-16 border-t border-slate-200 bg-white py-10 px-4 text-center space-y-4">
+        <div className="max-w-md mx-auto space-y-2">
+          <p className="text-xs font-bold text-slate-800">
+            Want to start your own yoga journey with Trainer Anjali Negi?
+          </p>
+          <a
+            href="/join"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white text-xs font-extrabold shadow-md hover:scale-105 transition-all"
+          >
+            <Sparkles className="w-4 h-4 text-amber-300" />
+            <span>Book Free Demo Class</span>
+          </a>
+        </div>
         <p className="text-[11px] text-slate-400 font-medium">
-          Click any practitioner card to inspect their public achievements, streak analytics & progress.
+          © {new Date().getFullYear()} Yoganjali Studio & Fee Manager • Official Member Directory
         </p>
       </footer>
 

@@ -82,14 +82,14 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   const totalClassesTarget = targetClient.totalClasses || 30;
   const attendanceRate = Math.min(100, Math.round((classesAttended / Math.max(1, classesAttended + absentCount)) * 100));
 
-  // Streak Calculation
+  // Streak Calculation (100% Real data from actual attendance records)
   const sortedAtt = [...clientAtt].sort((a, b) => b.date.localeCompare(a.date));
   let streak = 0;
   for (const a of sortedAtt) {
     if (a.status === 'Present') streak++;
-    else break;
+    else if (a.status === 'Absent') break;
   }
-  const displayStreak = Math.max(streak, classesAttended > 0 ? Math.min(7, classesAttended) : 5);
+  const displayStreak = streak;
 
   // Consistency Score
   let consistencyScore = 'Outstanding 🏆';
@@ -111,8 +111,8 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
       id: 'warrior',
       title: 'Attendance Warrior',
       icon: '🔥',
-      earned: displayStreak >= 5 || classesAttended >= 10,
-      desc: 'Maintained 5+ consecutive attended classes'
+      earned: displayStreak >= 3 || classesAttended >= 5,
+      desc: 'Maintained consecutive attended yoga classes'
     },
     {
       id: 'champion',
@@ -125,8 +125,8 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
       id: 'star',
       title: 'Monthly Star',
       icon: '🥇',
-      earned: classesAttended >= 12,
-      desc: 'Completed 12+ guided yoga sessions this cycle'
+      earned: classesAttended >= 8,
+      desc: 'Completed regular guided yoga sessions'
     },
     {
       id: 'yogi',
@@ -137,12 +137,23 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
     }
   ];
 
-  // Leaderboard History
-  const currentMonthStr = new Date().toISOString().slice(0, 7);
+  // Real August 2026 Leaderboard (June/July removed as per studio data availability)
+  const rankedClients = [...activeClients].sort((a, b) => {
+    const aAtt = Math.max(a.completedClasses || 0, attendance.filter(x => x.clientId === a.id && x.status === 'Present').length);
+    const bAtt = Math.max(b.completedClasses || 0, attendance.filter(x => x.clientId === b.id && x.status === 'Present').length);
+    return bAtt - aAtt;
+  });
+
+  const clientRankIndex = rankedClients.findIndex(c => c.id === targetClient.id);
+  const currentRank = clientRankIndex >= 0 ? clientRankIndex + 1 : 1;
+  const rankMedal = currentRank === 1 ? '🥇' : currentRank === 2 ? '🥈' : currentRank === 3 ? '🥉' : '⭐';
+
   const leaderboardHistory = [
-    { month: 'August 2026', rank: 'Rank #1 🥇', badge: 'Top Performer' },
-    { month: 'July 2026', rank: 'Rank #2 🥈', badge: 'Consistency Star' },
-    { month: 'June 2026', rank: 'Rank #3 🥉', badge: 'Regular Practitioner' }
+    { 
+      month: 'August 2026 (Current Cycle)', 
+      rank: `Rank #${currentRank} ${rankMedal}`, 
+      badge: currentRank <= 3 ? 'Top Performer' : 'Active Practitioner' 
+    }
   ];
 
   // Profile URL & Sharing
@@ -163,8 +174,20 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
   };
 
-  const instructorConductedClasses = 22;
-  const instructorLeavesCount = trainerLeaves.length || 2;
+  // Real Instructor Stats from Studio Journal
+  const instructorLeavesCount = trainerLeaves.reduce((acc, leave) => {
+    if (leave.startDate && leave.endDate) {
+      const s = new Date(leave.startDate);
+      const e = new Date(leave.endDate);
+      const diff = Math.max(1, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+      return acc + diff;
+    }
+    return acc + 1;
+  }, 0);
+
+  const presentAttendanceRecords = attendance.filter(a => a.status === 'Present');
+  const distinctConductedDates = new Set(presentAttendanceRecords.map(a => a.date)).size;
+  const instructorConductedClasses = distinctConductedDates > 0 ? distinctConductedDates : presentAttendanceRecords.length;
 
   const { status: currentMonthStatus, dueAmount, paidAmount } = getClientCurrentMonthPaymentStatus(targetClient, payments, undefined, leaves);
   const isPaid = currentMonthStatus === 'Paid';
@@ -386,7 +409,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                 </div>
               </div>
               <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-black text-xs border border-amber-200">
-                8 Appearances
+                August 2026 Ranking
               </span>
             </div>
 
@@ -549,7 +572,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
             className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white text-xs font-extrabold shadow-md hover:scale-105 transition-all"
           >
             <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Join Yoganjali Studio Today</span>
+            <span>Book Free Demo Class</span>
           </a>
         </div>
         <p className="text-[11px] text-slate-400 font-medium">
