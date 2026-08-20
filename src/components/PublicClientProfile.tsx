@@ -24,6 +24,7 @@ import {
   Globe, 
   Lock,
   Zap,
+  CreditCard,
   CalendarDays,
   CalendarX,
   XCircle,
@@ -195,6 +196,17 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   const totalOutstandingDue = pendingCycles.reduce((sum, c) => sum + Math.max(0, c.dueAmount - c.paidAmount), 0);
   const hasOutstandingDue = totalOutstandingDue > 0;
 
+  const scrollToBilling = () => {
+    const el = document.getElementById('billing-cycle-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-4', 'ring-amber-400', 'transition-all', 'duration-500');
+      setTimeout(() => {
+        el.classList.remove('ring-4', 'ring-amber-400');
+      }, 2500);
+    }
+  };
+
   // --- MONTHLY ATTENDANCE & LEAVE CALENDAR STATE & DATA ---
   const [calDate, setCalDate] = useState(() => new Date(2026, 7, 1)); // Default to August 2026
 
@@ -278,19 +290,19 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={handleCopyLink}
-              className="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-extrabold shadow-sm transition-all flex items-center gap-1.5"
+              onClick={scrollToBilling}
+              className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all flex items-center gap-2 hover:scale-105 active:scale-95 ${
+                hasOutstandingDue
+                  ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 ring-2 ring-amber-300/80 animate-pulse'
+                  : 'bg-emerald-500 hover:bg-emerald-400 text-white border border-emerald-400/40'
+              }`}
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-emerald-900" /> : <Copy className="w-3.5 h-3.5 text-slate-950" />}
-              <span>{copied ? 'Link Copied!' : 'Copy Link'}</span>
-            </button>
-
-            <button
-              onClick={handleShareWhatsApp}
-              className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-extrabold shadow-sm transition-all flex items-center gap-1.5"
-            >
-              <MessageCircle className="w-3.5 h-3.5 text-white" />
-              <span className="hidden sm:inline">Share on WhatsApp</span>
+              <CreditCard className={`w-4 h-4 ${hasOutstandingDue ? 'text-slate-950' : 'text-white'}`} />
+              <span>
+                {hasOutstandingDue 
+                  ? `💳 Pay Pending Fee (₹${totalOutstandingDue.toLocaleString()})` 
+                  : '✓ Fee Paid • View Status'}
+              </span>
             </button>
           </div>
 
@@ -350,32 +362,23 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                 </span>
               </div>
 
-              {/* Action Bar inside card */}
-              <div className="pt-3 flex flex-wrap items-center justify-center md:justify-start gap-2.5">
+              {/* Action Bar inside card — Big Prominent Payment & Billing Status Button */}
+              <div className="pt-3 flex flex-wrap items-center justify-center md:justify-start">
                 <button
-                  onClick={handleCopyLink}
-                  className="px-4 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-xs font-bold transition-all flex items-center gap-1.5"
-                >
-                  <Copy className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Copy Profile URL</span>
-                </button>
-                <button
-                  onClick={handleShareWhatsApp}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-extrabold transition-all flex items-center gap-1.5 shadow-sm"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span>Share Progress</span>
-                </button>
-                <button
-                  onClick={() => setIsPaymentCheckoutOpen(true)}
-                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md active:scale-95 ${
-                    !isPaid 
-                      ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 ring-2 ring-amber-300/60' 
-                      : 'bg-white/20 hover:bg-white/30 text-white border border-white/20'
+                  onClick={scrollToBilling}
+                  className={`w-full sm:w-auto px-7 py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2.5 shadow-xl hover:scale-105 active:scale-95 ${
+                    hasOutstandingDue
+                      ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-slate-950 ring-4 ring-amber-400/40 hover:ring-amber-300'
+                      : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white ring-2 ring-emerald-400/30'
                   }`}
                 >
-                  <Zap className={`w-3.5 h-3.5 ${!isPaid ? 'fill-slate-950 text-slate-950' : 'text-amber-300'}`} />
-                  <span>{isPaid ? 'Pay Studio Fee' : '⚡ Pay Pending Fee'}</span>
+                  <CreditCard className={`w-5 h-5 ${hasOutstandingDue ? 'text-slate-950' : 'text-white'}`} />
+                  <span>
+                    {hasOutstandingDue 
+                      ? `💳 Pay Pending Studio Fee & View Billing History (₹${totalOutstandingDue.toLocaleString()})` 
+                      : '✓ Studio Fee Paid • View Billing Cycle Records'}
+                  </span>
+                  <ChevronRight className="w-4 h-4 opacity-75" />
                 </button>
               </div>
 
@@ -746,7 +749,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* Payment & Continuous Billing Cycles Card (Strict Privacy Enforced!) */}
-          <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+          <div id="billing-cycle-section" className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 transition-all scroll-mt-24">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
