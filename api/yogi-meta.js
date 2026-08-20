@@ -68,7 +68,12 @@ async function fetchClients() {
 }
 
 export default async function handler(req, res) {
-  const slug = (req.query?.slug || '').toLowerCase().trim();
+  let rawSlug = req.query?.slug || '';
+  if (!rawSlug && req.url) {
+    const urlParts = req.url.split('?')[0].split('/');
+    rawSlug = urlParts[urlParts.length - 1] || '';
+  }
+  const slug = (rawSlug || '').toLowerCase().trim();
   const formattedSlugName = formatNameFromSlug(slug);
 
   let clientName = formattedSlugName;
