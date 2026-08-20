@@ -185,7 +185,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   };
 
   const handleShareWhatsApp = () => {
-    const message = `Hi ${targetClient.name}! 🙏\n\nHere is your official Yoganjali yoga practice & progress journal:\n\n${publicProfileUrl}\n\nTrack your attendance record, practice consistency streak, and fee status. 🧘🌿\n\n— Anjali Negi, Yoganjali`;
+    const message = `Namaste ${targetClient.name}! 🙏\n\nHere is your personal Yoganjali Yoga Profile & Progress Portal link:\n${publicProfileUrl}\n\nIn this link, you can track:\n✨ Monthly Attendance & Regularity Record\n💳 Fee Payment Status & Billing History\n🧘 Batch Schedule & Personal Health Goals\n\nKeep up your dedication and practice on the mat! 🌿🧘‍♀️\n— Trainer Anjali Negi, Yoganjali Yoga Studio`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
   };
 
