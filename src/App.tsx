@@ -43,6 +43,21 @@ const AppShell: React.FC = () => {
     }
   }, [isJoinLink, isRegisterLink, isClientWebsiteMode, setIsClientWebsiteMode]);
 
+  // Google Crawl & Indexing prevention for private/client routes
+  useEffect(() => {
+    let metaRobots = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
+    if (!metaRobots) {
+      metaRobots = document.createElement('meta');
+      metaRobots.name = 'robots';
+      document.head.appendChild(metaRobots);
+    }
+    if (isYogiProfile || isMembersDirectory || isPanel || isRegisterLink) {
+      metaRobots.content = 'noindex, nofollow, noarchive, nosnippet';
+    } else {
+      metaRobots.content = 'index, follow';
+    }
+  }, [isYogiProfile, isMembersDirectory, isPanel, isRegisterLink]);
+
   const handleLogout = () => {
     sessionStorage.removeItem('yoganjali_auth_token');
     localStorage.removeItem('yoganjali_auth_token');

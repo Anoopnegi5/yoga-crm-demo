@@ -1,0 +1,27 @@
+# Robots.txt for Yoganjali Yoga Studio
+# Prevent crawling and indexing of private studio panels, member directories, and individual client profile pages
+
+User-agent: *
+Disallow: /panel
+Disallow: /panel/
+Disallow: /admin
+Disallow: /admin/
+Disallow: /members
+Disallow: /members/
+Disallow: /member/
+Disallow: /yogi/
+Disallow: /register
+Disallow: /register/
+Disallow: /api/
+
+# Allow crawling of public website and booking pages
+Allow: /$
+Allow: /join
+Allow: /join/
+Allow: /demo
+Allow: /demo/
+Allow: /assets/
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.svg
+

@@ -117,8 +117,8 @@ export default async function handler(req, res) {
   }
 
   if (html) {
-    // Replace default meta tags with dynamic client metadata
-    html = html.replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(pageTitle)}</title>`);
+    // Replace default meta tags with dynamic client metadata and strict noindex robots tag for search engines
+    html = html.replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(pageTitle)}</title>\n    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />\n    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />`);
     html = html.replace(/<meta property="og:title" content=".*?" \/>/i, `<meta property="og:title" content="${escapeHtml(ogTitle)}" />`);
     html = html.replace(/<meta property="og:description" content=".*?" \/>/i, `<meta property="og:description" content="${escapeHtml(ogDescription)}" />`);
     html = html.replace(/<meta property="og:image" content=".*?" \/>/i, `<meta property="og:image" content="${escapeHtml(photoUrl)}" />\n    <meta property="og:image:secure_url" content="${escapeHtml(photoUrl)}" />\n    <meta property="og:image:width" content="600" />\n    <meta property="og:image:height" content="600" />\n    <meta property="og:url" content="${escapeHtml(profileUrl)}" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:title" content="${escapeHtml(ogTitle)}" />\n    <meta name="twitter:description" content="${escapeHtml(ogDescription)}" />\n    <meta name="twitter:image" content="${escapeHtml(photoUrl)}" />`);
@@ -132,6 +132,8 @@ export default async function handler(req, res) {
     <link rel="icon" type="image/png" href="/yoganjali-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(pageTitle)}</title>
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />
     <meta name="description" content="${escapeHtml(ogDescription)}" />
     <meta property="og:type" content="profile" />
     <meta property="og:url" content="${escapeHtml(profileUrl)}" />
@@ -153,6 +155,7 @@ export default async function handler(req, res) {
   }
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
   res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300');
   return res.status(200).send(html);
 }
