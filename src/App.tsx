@@ -59,8 +59,11 @@ const AppShell: React.FC = () => {
     );
   }
 
-  // 2. PUBLIC MEMBER DIRECTORY (/members)
+  // 2. MEMBER DIRECTORY (/members) — PRIVATE TO TRAINER ONLY
   if (isMembersDirectory) {
+    if (!isAuthenticated) {
+      return <LoginScreen onLoginSuccess={() => setIsAuthenticated(true)} />;
+    }
     return (
       <>
         <MemberDirectory />

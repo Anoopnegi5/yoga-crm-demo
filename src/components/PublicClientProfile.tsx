@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Client } from '../types';
 import { slugifyName } from '../utils/slugUtils';
@@ -165,15 +165,21 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
     ? `${window.location.origin}/yogi/${currentSlug}`
     : `https://www.yoganjaliyoga.com/yogi/${currentSlug}`;
 
+  useEffect(() => {
+    if (targetClient?.name) {
+      document.title = `🧘 ${targetClient.name} • Official Yogi Profile | Yoganjali`;
+    }
+  }, [targetClient]);
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(publicProfileUrl);
     setCopied(true);
-    showSuccessToast('Public Profile Link copied to clipboard!');
+    showSuccessToast('📋 Yogi Profile Link copied to clipboard!');
     setTimeout(() => setCopied(false), 2500);
   };
 
   const handleShareWhatsApp = () => {
-    const message = `🙏 Check my Yoganjali progress profile\n\n${publicProfileUrl}\n\nView my attendance, achievements, leaderboard rankings and yoga journey. 🧘🌿`;
+    const message = `Hi ${targetClient.name}! 🙏\n\nHere is your official Yoganjali yoga practice & progress journal:\n\n${publicProfileUrl}\n\nTrack your attendance record, practice consistency streak, and fee status. 🧘🌿\n\n— Anjali Negi, Yoganjali`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -231,19 +237,34 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
           
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                if (onBackToDirectory) onBackToDirectory();
-                else window.location.href = '/members';
-              }}
-              className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center gap-1.5 text-xs font-bold"
-            >
-              <ChevronLeft className="w-4 h-4" />
-              <span>Yogi Directory</span>
-            </button>
+            {onBackToDirectory ? (
+              <button
+                onClick={onBackToDirectory}
+                className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors flex items-center gap-1.5 text-xs font-bold"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>Back to Directory</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-2.5">
+                <img
+                  src="/yoganjali-logo.png"
+                  alt="Yoganjali Logo"
+                  className="w-8 h-8 rounded-full bg-white object-contain p-0.5 shadow-sm ring-1 ring-amber-400"
+                />
+                <div>
+                  <h2 className="font-serif font-extrabold text-sm sm:text-base text-white tracking-tight leading-tight">
+                    Yoganjali Studio
+                  </h2>
+                  <p className="text-[10px] text-emerald-200 font-medium leading-none">
+                    Official Member Practice Portal
+                  </p>
+                </div>
+              </div>
+            )}
             <div className="hidden sm:block h-4 w-px bg-emerald-700/60" />
             <span className="hidden sm:inline text-xs font-bold text-amber-300 tracking-wider uppercase">
-              Official Yogi Progress Journal
+              {targetClient.name}'s Profile
             </span>
           </div>
 

@@ -199,7 +199,7 @@ export const ClientProfileModal: React.FC = () => {
                 Call
               </a>
               <a
-                href={`https://api.whatsapp.com/send?phone=${client.whatsapp.replace(/[^0-9]/g, '')}`}
+                href={`https://api.whatsapp.com/send?phone=${client.whatsapp.replace(/[^0-9]/g, '')}&text=${encodeURIComponent(`Hi ${client.name}! 🙏\n\nHere is your official Yoganjali yoga practice & progress journal:\n\nhttps://www.yoganjaliyoga.com/yogi/${slugifyName(client.name)}\n\nTrack your attendance record, practice consistency streak, and fee status. 🧘🌿\n\n— Anjali Negi, Yoganjali`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700 font-bold text-xs transition-colors shadow-sm"

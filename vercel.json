@@ -4,8 +4,8 @@
     { "source": "/join", "destination": "/index.html" },
     { "source": "/register", "destination": "/index.html" },
     { "source": "/members", "destination": "/index.html" },
-    { "source": "/yogi/:slug", "destination": "/index.html" },
-    { "source": "/member/:slug", "destination": "/index.html" }
+    { "source": "/yogi/:slug", "destination": "/api/yogi-meta?slug=:slug" },
+    { "source": "/member/:slug", "destination": "/api/yogi-meta?slug=:slug" }
   ],
   "headers": [
     {
