@@ -1131,6 +1131,7 @@ export const ClientWebsite: React.FC = () => {
           {(blogs || [])
             .filter(b => b.isPublished)
             .filter(b => blogFilterCategory === 'All' || b.category === blogFilterCategory)
+            .slice(0, 3)
             .map((post) => (
               <div
                 key={post.id}
