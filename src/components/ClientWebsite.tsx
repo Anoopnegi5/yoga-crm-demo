@@ -1103,7 +1103,7 @@ export const ClientWebsite: React.FC = () => {
 
           {/* Category Filter Pills */}
           <div className="flex flex-wrap items-center justify-center gap-2 pt-3">
-            {['All', 'Posture & Back Pain', 'Yoga Asanas', 'Weight Management', 'Pranayama & Meditation'].map((cat) => {
+            {Array.from(new Set(['All', ...(blogs || []).filter(b => b.isPublished).map(b => b.category).filter(Boolean)])).map((cat) => {
               const count = cat === 'All' 
                 ? (blogs || []).filter(b => b.isPublished).length 
                 : (blogs || []).filter(b => b.isPublished && b.category === cat).length;

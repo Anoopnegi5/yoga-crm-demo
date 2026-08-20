@@ -22,7 +22,7 @@ import {
   Search
 } from 'lucide-react';
 
-const CATEGORIES: BlogCategory[] = [
+const DEFAULT_CATEGORIES = [
   'Yoga Asanas',
   'Posture & Back Pain',
   'Weight Management',
@@ -47,10 +47,18 @@ export const BlogManagerCMS: React.FC = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
 
+  // Dynamic available categories
+  const allCategories = Array.from(new Set([
+    ...DEFAULT_CATEGORIES,
+    ...(blogs || []).map(b => b.category).filter(Boolean)
+  ]));
+
   // Editor Form State
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
-  const [category, setCategory] = useState<BlogCategory>('Yoga Asanas');
+  const [category, setCategory] = useState<string>('Yoga Asanas');
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
+  const [customCategoryInput, setCustomCategoryInput] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [content, setContent] = useState('');
   const [coverImage, setCoverImage] = useState('/about-anjali.jpg');
@@ -75,6 +83,8 @@ export const BlogManagerCMS: React.FC = () => {
     setTitle('');
     setSlug('');
     setCategory('Yoga Asanas');
+    setIsCustomCategory(false);
+    setCustomCategoryInput('');
     setExcerpt('');
     setContent('');
     setCoverImage('/about-anjali.jpg');
@@ -90,6 +100,8 @@ export const BlogManagerCMS: React.FC = () => {
     setTitle(post.title);
     setSlug(post.slug);
     setCategory(post.category);
+    setIsCustomCategory(false);
+    setCustomCategoryInput('');
     setExcerpt(post.excerpt);
     setContent(post.content);
     setCoverImage(post.coverImage);
@@ -162,10 +174,14 @@ export const BlogManagerCMS: React.FC = () => {
       .map(t => t.trim())
       .filter(Boolean);
 
+    const finalCategory = isCustomCategory 
+      ? (customCategoryInput.trim() || 'Yoga Asanas')
+      : (category || 'Yoga Asanas');
+
     const postPayload = {
       title: title.trim(),
       slug: cleanSlug,
-      category,
+      category: finalCategory,
       excerpt: excerpt.trim() || content.slice(0, 160) + '...',
       content: content.trim(),
       coverImage,
@@ -250,7 +266,7 @@ export const BlogManagerCMS: React.FC = () => {
           >
             All ({blogs.length})
           </button>
-          {CATEGORIES.map(cat => {
+          {allCategories.map(cat => {
             const count = blogs.filter(b => b.category === cat).length;
             return (
               <button
@@ -467,18 +483,59 @@ export const BlogManagerCMS: React.FC = () => {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700 block">
-                    Category <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value as BlogCategory)}
-                    className="w-full px-3.5 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-purple-500 focus:outline-none transition-colors"
-                  >
-                    {CATEGORIES.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700 block">
+                      Category <span className="text-rose-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomCategory(!isCustomCategory);
+                        if (!isCustomCategory) {
+                          setCustomCategoryInput('');
+                        }
+                      }}
+                      className="text-[11px] font-extrabold text-purple-700 hover:text-purple-900 flex items-center gap-1 transition-colors bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-lg border border-purple-200"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>{isCustomCategory ? 'Pick Existing' : '+ New Category'}</span>
+                    </button>
+                  </div>
+
+                  {isCustomCategory ? (
+                    <div className="space-y-1">
+                      <input
+                        type="text"
+                        autoFocus
+                        required
+                        value={customCategoryInput}
+                        onChange={(e) => setCustomCategoryInput(e.target.value)}
+                        placeholder="Type new category (e.g. Prenatal Yoga, Sound Bath)"
+                        className="w-full px-3.5 py-2.5 text-xs font-bold rounded-2xl bg-amber-50/80 border-2 border-amber-400 focus:bg-white focus:border-purple-500 focus:outline-none transition-colors text-slate-900"
+                      />
+                      <p className="text-[10px] text-amber-700 font-semibold pl-1">
+                        ✨ New category will automatically appear across filters & website.
+                      </p>
+                    </div>
+                  ) : (
+                    <select
+                      value={category}
+                      onChange={(e) => {
+                        if (e.target.value === '__custom__') {
+                          setIsCustomCategory(true);
+                          setCustomCategoryInput('');
+                        } else {
+                          setCategory(e.target.value);
+                        }
+                      }}
+                      className="w-full px-3.5 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 border border-slate-200 focus:bg-white focus:border-purple-500 focus:outline-none transition-colors"
+                    >
+                      {allCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                      <option value="__custom__">✨ + Create New Category...</option>
+                    </select>
+                  )}
                 </div>
               </div>
 

@@ -199,7 +199,8 @@ export type BlogCategory =
   | 'Weight Management' 
   | 'Pranayama & Meditation' 
   | 'Holistic Wellness' 
-  | 'Mindful Living';
+  | 'Mindful Living'
+  | string;
 
 export interface BlogPost {
   id: string;
@@ -208,7 +209,7 @@ export interface BlogPost {
   excerpt: string;
   content: string;
   coverImage: string;
-  category: BlogCategory;
+  category: string;
   author: string;
   authorRole: string;
   authorPhoto?: string;
