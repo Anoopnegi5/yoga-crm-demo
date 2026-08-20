@@ -1,9 +1,6 @@
-// api/generate-payment-link.js
-// Vercel Serverless Function — generates a Razorpay Payment Link for WhatsApp sharing
+import Razorpay from 'razorpay';
 
-const Razorpay = require('razorpay');
-
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -26,12 +23,10 @@ module.exports = async function handler(req, res) {
     }
 
     const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
-
-    // Set expiry to 7 days from now
     const expiryTimestamp = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60);
 
     const paymentLink = await razorpay.paymentLink.create({
-      amount: Math.round(amount * 100), // paise
+      amount: Math.round(amount * 100),
       currency: 'INR',
       accept_partial: false,
       description: description || `Yoganjali Yoga Studio — ${purpose || 'Class Fee'}`,
@@ -63,4 +58,4 @@ module.exports = async function handler(req, res) {
     console.error('Payment link creation failed:', err);
     return res.status(500).json({ error: 'Failed to create payment link', details: err.message });
   }
-};
+}

@@ -1,9 +1,6 @@
-// api/verify-payment.js
-// Vercel Serverless Function — verifies Razorpay payment signature to prevent fraud
+import crypto from 'crypto';
 
-const crypto = require('crypto');
-
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -24,7 +21,6 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Missing payment details' });
     }
 
-    // Verify HMAC signature
     const expectedSignature = crypto
       .createHmac('sha256', keySecret)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
@@ -44,4 +40,4 @@ module.exports = async function handler(req, res) {
     console.error('Payment verification error:', err);
     return res.status(500).json({ error: 'Verification failed', details: err.message });
   }
-};
+}
