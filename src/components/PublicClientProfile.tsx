@@ -167,10 +167,9 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
 
   // Profile URL & Sharing
   const currentSlug = slugifyName(targetClient.name);
-  const clientPhotoHash = targetClient.photoUrl ? (String(targetClient.photoUrl.length) + (targetClient.photoUrl.slice(-6).replace(/[^a-zA-Z0-9]/g, '') || '1')) : '1';
   const publicProfileUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/yogi/${currentSlug}?v=${clientPhotoHash}`
-    : `https://www.yoganjaliyoga.com/yogi/${currentSlug}?v=${clientPhotoHash}`;
+    ? `${window.location.origin}/yogi/${currentSlug}`
+    : `https://www.yoganjaliyoga.com/yogi/${currentSlug}`;
 
   useEffect(() => {
     if (targetClient?.name) {

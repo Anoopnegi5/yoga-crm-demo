@@ -9,7 +9,7 @@
   ],
   "headers": [
     {
-      "source": "/(panel|members|yogi|member|register|api)(.*)",
+      "source": "/(panel|members|register|admin)(.*)",
       "headers": [
         {
           "key": "X-Robots-Tag",

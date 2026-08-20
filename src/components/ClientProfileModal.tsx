@@ -211,7 +211,7 @@ export const ClientProfileModal: React.FC = () => {
               </div>
 
               <a
-                href={`https://api.whatsapp.com/send?phone=${(client.whatsapp || client.phone || '').replace(/[^0-9]/g, '')}&text=${encodeURIComponent(`Namaste ${client.name}! 🙏\n\nHere is your personal Yoganjali Yoga Profile & Progress Portal link:\nhttps://www.yoganjaliyoga.com/yogi/${slugifyName(client.name)}?v=${client.photoUrl ? String(client.photoUrl.length) + (client.photoUrl.slice(-6).replace(/[^a-zA-Z0-9]/g, '') || '1') : '1'}\n\nIn this link, you can track:\n✨ Monthly Attendance & Regularity Record\n💳 Fee Payment Status & Billing History\n🧘 Batch Schedule & Personal Health Goals\n\nKeep up your dedication and practice on the mat! 🌿🧘‍♀️\n— Trainer Anjali Negi, Yoganjali Yoga Studio`)}`}
+                href={`https://api.whatsapp.com/send?phone=${(client.whatsapp || client.phone || '').replace(/[^0-9]/g, '')}&text=${encodeURIComponent(`Namaste ${client.name}! 🙏\n\nHere is your personal Yoganjali Yoga Profile & Progress Portal link:\nhttps://www.yoganjaliyoga.com/yogi/${slugifyName(client.name)}\n\nIn this link, you can track:\n✨ Monthly Attendance & Regularity Record\n💳 Fee Payment Status & Billing History\n🧘 Batch Schedule & Personal Health Goals\n\nKeep up your dedication and practice on the mat! 🌿🧘‍♀️\n— Trainer Anjali Negi, Yoganjali Yoga Studio`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 shrink-0 self-stretch sm:self-auto"
@@ -231,7 +231,7 @@ export const ClientProfileModal: React.FC = () => {
                 Call
               </a>
               <a
-                href={`https://api.whatsapp.com/send?phone=${(client.whatsapp || client.phone || '').replace(/[^0-9]/g, '')}&text=${encodeURIComponent(`Namaste ${client.name}! 🙏\n\nHere is your personal Yoganjali Yoga Profile & Progress Portal link:\nhttps://www.yoganjaliyoga.com/yogi/${slugifyName(client.name)}?v=${client.photoUrl ? String(client.photoUrl.length) + (client.photoUrl.slice(-6).replace(/[^a-zA-Z0-9]/g, '') || '1') : '1'}\n\nIn this link, you can track:\n✨ Monthly Attendance & Regularity Record\n💳 Fee Payment Status & Billing History\n🧘 Batch Schedule & Personal Health Goals\n\nKeep up your dedication and practice on the mat! 🌿🧘‍♀️\n— Trainer Anjali Negi, Yoganjali Yoga Studio`)}`}
+                href={`https://api.whatsapp.com/send?phone=${(client.whatsapp || client.phone || '').replace(/[^0-9]/g, '')}&text=${encodeURIComponent(`Namaste ${client.name}! 🙏\n\nHere is your personal Yoganjali Yoga Profile & Progress Portal link:\nhttps://www.yoganjaliyoga.com/yogi/${slugifyName(client.name)}\n\nIn this link, you can track:\n✨ Monthly Attendance & Regularity Record\n💳 Fee Payment Status & Billing History\n🧘 Batch Schedule & Personal Health Goals\n\nKeep up your dedication and practice on the mat! 🌿🧘‍♀️\n— Trainer Anjali Negi, Yoganjali Yoga Studio`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700 font-bold text-xs transition-colors shadow-sm"

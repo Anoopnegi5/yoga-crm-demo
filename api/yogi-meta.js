@@ -76,6 +76,7 @@ export default async function handler(req, res) {
   const slug = (rawSlug || '').toLowerCase().trim();
   const formattedSlugName = formatNameFromSlug(slug);
 
+  let clientName = formattedSlugName;
   let photoVersion = '1';
   try {
     const clients = await fetchClients();
