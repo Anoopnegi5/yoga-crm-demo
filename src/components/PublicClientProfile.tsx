@@ -298,16 +298,18 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
             <button
               onClick={scrollToBilling}
               className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all flex items-center gap-2 hover:scale-105 active:scale-95 ${
-                hasOutstandingDue
+                (isPerSession ? !isPaid : hasOutstandingDue)
                   ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 ring-2 ring-amber-300/80 animate-pulse'
                   : 'bg-emerald-500 hover:bg-emerald-400 text-white border border-emerald-400/40'
               }`}
             >
-              <CreditCard className={`w-4 h-4 ${hasOutstandingDue ? 'text-slate-950' : 'text-white'}`} />
+              <CreditCard className={`w-4 h-4 ${(isPerSession ? !isPaid : hasOutstandingDue) ? 'text-slate-950' : 'text-white'}`} />
               <span>
-                {hasOutstandingDue 
-                  ? `💳 Pay Pending Fee (₹${totalOutstandingDue.toLocaleString()})` 
-                  : '✓ Fee Paid • View Status'}
+                {isPerSession
+                  ? (isPaid ? '✓ Session Pass Active' : `💳 Pay Session Fee (₹${targetClient.perSessionFee || 1000})`)
+                  : (hasOutstandingDue 
+                    ? `💳 Pay Pending Fee (₹${totalOutstandingDue.toLocaleString()})` 
+                    : '✓ Fee Paid • View Status')}
               </span>
             </button>
           </div>
@@ -373,16 +375,20 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                 <button
                   onClick={scrollToBilling}
                   className={`w-full sm:w-auto px-7 py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2.5 shadow-xl hover:scale-105 active:scale-95 ${
-                    hasOutstandingDue
+                    (isPerSession ? !isPaid : hasOutstandingDue)
                       ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-slate-950 ring-4 ring-amber-400/40 hover:ring-amber-300'
                       : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white ring-2 ring-emerald-400/30'
                   }`}
                 >
-                  <CreditCard className={`w-5 h-5 ${hasOutstandingDue ? 'text-slate-950' : 'text-white'}`} />
+                  <CreditCard className={`w-5 h-5 ${(isPerSession ? !isPaid : hasOutstandingDue) ? 'text-slate-950' : 'text-white'}`} />
                   <span>
-                    {hasOutstandingDue 
-                      ? `💳 Pay Pending Studio Fee & View Billing History (₹${totalOutstandingDue.toLocaleString()})` 
-                      : '✓ Studio Fee Paid • View Billing Cycle Records'}
+                    {isPerSession
+                      ? (isPaid 
+                        ? `✓ Pay-As-You-Go Session Pass Active (₹${targetClient.perSessionFee || 1000}/Class)` 
+                        : `💳 Pay Per-Session Fee (₹${targetClient.perSessionFee || 1000})`)
+                      : (hasOutstandingDue 
+                        ? `💳 Pay Pending Studio Fee & View Billing History (₹${totalOutstandingDue.toLocaleString()})` 
+                        : '✓ Studio Fee Paid • View Billing Cycle Records')}
                   </span>
                   <ChevronRight className="w-4 h-4 opacity-75" />
                 </button>
@@ -754,7 +760,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
         {/* 4. PAYMENT STATUS & INSTRUCTOR INFO SECTION */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          {/* Payment & Continuous Billing Cycles Card (Strict Privacy Enforced!) */}
+          {/* Payment & Fee Status Card (Strict Privacy Enforced!) */}
           <div id="billing-cycle-section" className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 transition-all scroll-mt-24">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
@@ -762,8 +768,12 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">Billing Cycle & Fee Status</h4>
-                  <p className="text-[11px] text-slate-500 font-medium">Monthly fee records verified by Studio Journal</p>
+                  <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
+                    {isPerSession ? 'Pay-As-You-Go Session Pass' : 'Billing Cycle & Fee Status'}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    {isPerSession ? 'Per Session Pass verified by Studio Ledger' : 'Monthly fee records verified by Studio Journal'}
+                  </p>
                 </div>
               </div>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
@@ -774,12 +784,20 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
             {/* Total Balance / Action Bar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-emerald-50/40 border border-slate-200/80">
               <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Outstanding Balance</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                  {isPerSession ? 'Session Plan Rate & Balance' : 'Total Outstanding Balance'}
+                </span>
                 <div className="flex items-center gap-2">
                   <strong className="text-xl font-black text-slate-900">
-                    {hasOutstandingDue ? `₹${totalOutstandingDue.toLocaleString()}` : '₹0 (All Clear)'}
+                    {isPerSession 
+                      ? (isPaid ? '₹0 Due (Pass Active)' : `₹${dueAmount.toLocaleString()} Due`)
+                      : (hasOutstandingDue ? `₹${totalOutstandingDue.toLocaleString()}` : '₹0 (All Clear)')}
                   </strong>
-                  {hasOutstandingDue ? (
+                  {isPerSession ? (
+                    <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 font-bold text-[10px] border border-indigo-200">
+                      ₹{targetClient.perSessionFee || 1000} / Class
+                    </span>
+                  ) : hasOutstandingDue ? (
                     <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px] border border-amber-200">
                       {pendingCycles.length} {pendingCycles.length === 1 ? 'Cycle Pending' : 'Cycles Pending'}
                     </span>
@@ -791,7 +809,15 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                 </div>
               </div>
 
-              {hasOutstandingDue ? (
+              {isPerSession ? (
+                <button
+                  onClick={() => setIsPaymentCheckoutOpen(true)}
+                  className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                >
+                  <Zap className="w-4 h-4 text-amber-300" />
+                  <span>Pay For Session (₹{targetClient.perSessionFee || 1000})</span>
+                </button>
+              ) : hasOutstandingDue ? (
                 <button
                   onClick={() => setIsPaymentCheckoutOpen(true)}
                   className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
@@ -807,64 +833,104 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
               )}
             </div>
 
-            {/* Continuous Monthly Cycles Breakdown */}
-            <div className="space-y-2 pt-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                Monthly Billing History:
-              </span>
-              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                {billingCycles.map((cycle) => (
-                  <div
-                    key={cycle.monthStr}
-                    className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${
-                      cycle.status === 'Paid'
-                        ? 'bg-emerald-50/60 border-emerald-200'
-                        : cycle.status === 'Leave Waived'
-                        ? 'bg-slate-50 border-slate-200 opacity-80'
-                        : 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-200/50'
-                    }`}
-                  >
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-slate-900">
-                          {cycle.monthName}
-                        </span>
-                        {cycle.isCurrentMonth && (
-                          <span className="px-2 py-0.5 rounded-full bg-slate-900 text-white text-[9px] font-extrabold">
-                            Current
+            {/* Per Session Pass Breakdown vs Monthly Cycles Breakdown */}
+            {isPerSession ? (
+              <div className="space-y-3 pt-1">
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Completed Sessions</span>
+                    <strong className="text-base font-black text-slate-900">{targetClient.completedClasses || 0} Attended</strong>
+                  </div>
+                  <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
+                    <span className="text-[10px] font-bold text-emerald-800 uppercase block">Total Fees Paid</span>
+                    <strong className="text-base font-black text-emerald-900">₹{paidAmount.toLocaleString()}</strong>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                    Session Payment History:
+                  </span>
+                  {payments.filter(p => p.clientId === targetClient.id && p.status === 'Paid').length > 0 ? (
+                    <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
+                      {payments.filter(p => p.clientId === targetClient.id && p.status === 'Paid').map((p) => (
+                        <div key={p.id} className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs flex items-center justify-between">
+                          <div>
+                            <span className="font-bold text-slate-900 block">📅 {p.date} • {p.paymentMode || 'UPI'}</span>
+                            <span className="text-[10px] text-slate-500">{p.notes || 'Session Fee'}</span>
+                          </div>
+                          <span className="font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-200">
+                            ₹{p.amount.toLocaleString()} PAID ✓
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-500 italic p-3 rounded-xl bg-slate-50 border border-slate-100">
+                      ✓ Pay-as-you-go pass active. Payment recorded with studio trainer per session.
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2 pt-1">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                  Monthly Billing History:
+                </span>
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {billingCycles.map((cycle) => (
+                    <div
+                      key={cycle.monthStr}
+                      className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${
+                        cycle.status === 'Paid'
+                          ? 'bg-emerald-50/60 border-emerald-200'
+                          : cycle.status === 'Leave Waived'
+                          ? 'bg-slate-50 border-slate-200 opacity-80'
+                          : 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-200/50'
+                      }`}
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black text-slate-900">
+                            {cycle.monthName}
+                          </span>
+                          {cycle.isCurrentMonth && (
+                            <span className="px-2 py-0.5 rounded-full bg-slate-900 text-white text-[9px] font-extrabold">
+                              Current
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          {cycle.status === 'Paid'
+                            ? `₹${cycle.paidAmount.toLocaleString()} Paid on ${cycle.paidDate || 'Monthly Cycle'}`
+                            : cycle.status === 'Leave Waived'
+                            ? 'Full Month Approved Leave • Fee Waived'
+                            : `Due Amount: ₹${cycle.dueAmount.toLocaleString()}`}
+                        </p>
+                      </div>
+
+                      <div>
+                        {cycle.status === 'Paid' ? (
+                          <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-black text-xs border border-emerald-300 flex items-center gap-1 shadow-sm">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                            <span>PAID</span>
+                          </span>
+                        ) : cycle.status === 'Leave Waived' ? (
+                          <span className="px-3 py-1 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs">
+                            Leave Waived 🌴
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-xl bg-amber-100 text-amber-950 font-black text-xs border border-amber-300 flex items-center gap-1 shadow-sm">
+                            <Clock className="w-3.5 h-3.5 text-amber-700" />
+                            <span>PENDING</span>
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-500 font-medium">
-                        {cycle.status === 'Paid'
-                          ? `₹${cycle.paidAmount.toLocaleString()} Paid on ${cycle.paidDate || 'Monthly Cycle'}`
-                          : cycle.status === 'Leave Waived'
-                          ? 'Full Month Approved Leave • Fee Waived'
-                          : `Due Amount: ₹${cycle.dueAmount.toLocaleString()}`}
-                      </p>
                     </div>
-
-                    <div>
-                      {cycle.status === 'Paid' ? (
-                        <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-black text-xs border border-emerald-300 flex items-center gap-1 shadow-sm">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>PAID</span>
-                        </span>
-                      ) : cycle.status === 'Leave Waived' ? (
-                        <span className="px-3 py-1 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs">
-                          Leave Waived 🌴
-                        </span>
-                      ) : (
-                        <span className="px-3 py-1 rounded-xl bg-amber-100 text-amber-950 font-black text-xs border border-amber-300 flex items-center gap-1 shadow-sm">
-                          <Clock className="w-3.5 h-3.5 text-amber-700" />
-                          <span>PENDING</span>
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <p className="text-[11px] text-slate-400 font-medium italic text-center pt-1 flex items-center justify-center gap-1">
               <Lock className="w-3 h-3 text-slate-400" /> All fee transactions are securely recorded in Yoganjali Studio ledger.

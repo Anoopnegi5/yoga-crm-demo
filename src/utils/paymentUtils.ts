@@ -89,11 +89,36 @@ export const getClientCurrentMonthPaymentStatus = (
   isOnFullMonthLeave?: boolean;
 } => {
   const currentMonthStr = targetMonthStr || getTodayDateString().slice(0, 7); // e.g. "2026-08"
+  const isPerSession = client.feeType === 'Per Session' || client.membershipPlan === 'Per Session';
 
+  const clientPayments = payments.filter(p => p.clientId === client.id && p.status === 'Paid');
+  const totalPaidAllTime = clientPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  // --- 1. DEDICATED PAY-AS-YOU-GO / PER-SESSION LOGIC ---
+  if (isPerSession) {
+    const rate = client.perSessionFee || 1000;
+    const completedSessions = client.completedClasses || 0;
+    const totalSessionsCost = completedSessions * rate;
+
+    // A per session client is Paid if they have recorded payment, or marked paid, or totalPaid >= session cost
+    const isPaid = client.paymentStatus === 'Paid' || totalPaidAllTime >= totalSessionsCost || totalPaidAllTime > 0;
+    const remainingBalance = isPaid ? 0 : Math.max(0, totalSessionsCost > 0 ? (totalSessionsCost - totalPaidAllTime) : rate);
+
+    return {
+      status: isPaid ? 'Paid' : 'Pending',
+      paidAmount: totalPaidAllTime,
+      dueAmount: remainingBalance > 0 ? remainingBalance : rate,
+      remainingBalance,
+      unpaidMonthsCount: 0,
+      unpaidMonthsNames: [],
+      isOnFullMonthLeave: false
+    };
+  }
+
+  // --- 2. MONTHLY BATCH SUBSCRIPTION LOGIC ---
   const isOnCurrentMonthLeave = isClientOnFullMonthLeave(client.id, currentMonthStr, leaves);
   
-  // STRICT RULE: Fee journal and pending fee tracking operates STRICTLY from August 2026 (2026-08) onwards!
-  // Any months prior to August 2026 (July 2026 and earlier) are strictly excluded from pending fee calculations.
+  // STRICT RULE: Fee journal operates STRICTLY from August 2026 (2026-08) onwards
   const MIN_FEE_START_MONTH = '2026-08';
   let rawJoiningMonthStr = (client.joiningDate || getTodayDateString()).slice(0, 7);
   let effectiveJoiningMonthStr = rawJoiningMonthStr < MIN_FEE_START_MONTH ? MIN_FEE_START_MONTH : rawJoiningMonthStr;
@@ -108,72 +133,28 @@ export const getClientCurrentMonthPaymentStatus = (
 
   activeMonths.forEach(mStr => {
     const isLeaveInMonth = isClientOnFullMonthLeave(client.id, mStr, leaves);
-
     if (!isLeaveInMonth) {
-      if (client.feeType === 'Per Session') {
-        const perSessionRate = client.perSessionFee || 1000;
-        if (mStr === currentMonthStr) {
-          totalDueSinceJoining += (client.completedClasses || 0) * perSessionRate;
-        } else {
-          totalDueSinceJoining += 8 * perSessionRate;
-        }
-      } else {
-        totalDueSinceJoining += client.monthlyFee || 0;
-      }
+      totalDueSinceJoining += client.monthlyFee || 0;
     }
   });
 
-  const clientPayments = payments.filter(p => p.clientId === client.id);
-  const totalPaidAllTime = clientPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-
-  // Per-session model: each Present mark = auto-collected payment for that session.
-  // So effective paid = max(real payments recorded, sessions-attended × rate).
-  // This keeps profile in sync with Payments tab which also treats per-session as auto-paid.
-  const perSessionAutoCollected = client.feeType === 'Per Session'
-    ? (client.completedClasses || 0) * (client.perSessionFee || 1000)
-    : 0;
-  const effectiveTotalPaid = client.feeType === 'Per Session'
-    ? Math.max(totalPaidAllTime, perSessionAutoCollected)
-    : totalPaidAllTime;
-
-  const cumulativeRemainingBalance = Math.max(0, totalDueSinceJoining - effectiveTotalPaid);
-
+  const cumulativeRemainingBalance = Math.max(0, totalDueSinceJoining - totalPaidAllTime);
   const currentMonthPayments = clientPayments.filter(p => (p.date || '').startsWith(currentMonthStr));
-  // For per-session clients: use effective (auto-collected) paid amount
-  const paidAmount = client.feeType === 'Per Session'
-    ? effectiveTotalPaid
-    : currentMonthPayments.reduce((sum, p) => sum + p.amount, 0);
+  const paidAmount = currentMonthPayments.reduce((sum, p) => sum + p.amount, 0);
 
-  let dueAmount = 0;
-  if (isOnCurrentMonthLeave) {
-    dueAmount = 0;
-  } else if (client.feeType === 'Per Session') {
-    // Due = total sessions fee - already paid (show actual outstanding)
-    dueAmount = (client.completedClasses || 0) * (client.perSessionFee || 1000);
-  } else {
-    dueAmount = client.monthlyFee || 0;
-  }
+  let dueAmount = isOnCurrentMonthLeave ? 0 : (client.monthlyFee || 0);
 
-  let tempPaid = effectiveTotalPaid;
+  let tempPaid = totalPaidAllTime;
   activeMonths.forEach(mStr => {
     const isLeaveInMonth = isClientOnFullMonthLeave(client.id, mStr, leaves);
     if (isLeaveInMonth) return;
 
     let mDue = client.monthlyFee || 0;
-    if (client.feeType === 'Per Session') {
-      // Per-session past months: assume same sessions as completedClasses (not a fixed 8)
-      mDue = mStr === currentMonthStr
-        ? (client.completedClasses || 0) * (client.perSessionFee || 1000)
-        : (client.completedClasses || 0) * (client.perSessionFee || 1000);
-    }
     if (tempPaid >= mDue) {
       tempPaid -= mDue;
     } else {
       tempPaid = 0;
-      if (client.feeType !== 'Per Session') {
-        // Per-session clients never have "unpaid months" — each session auto-collects
-        unpaidMonthsNames.push(formatMonthName(mStr));
-      }
+      unpaidMonthsNames.push(formatMonthName(mStr));
     }
   });
 
@@ -185,13 +166,12 @@ export const getClientCurrentMonthPaymentStatus = (
     status = 'Paid';
     finalRemainingBalance = 0;
   } else if (client.paymentStatus === 'Paid') {
-    // STRICT PERSISTENCE: If client is explicitly marked Paid, enforce Paid status & 0 balance!
     status = 'Paid';
     finalRemainingBalance = 0;
   } else if (client.paymentStatus === 'Pending' || client.paymentStatus === 'Overdue') {
     status = client.paymentStatus;
     if (finalRemainingBalance === 0) {
-      finalRemainingBalance = client.feeType === 'Per Session' ? (client.perSessionFee || 1000) : (client.monthlyFee || 1200);
+      finalRemainingBalance = client.monthlyFee || 1200;
     }
   } else if (cumulativeRemainingBalance === 0) {
     status = 'Paid';
@@ -236,7 +216,28 @@ export const getClientBillingCycles = (
   leaves?: LeaveRecord[],
   targetMonthStr?: string
 ): ClientBillingCycle[] => {
-  const currentMonthStr = targetMonthStr || getTodayDateString().slice(0, 7); // e.g. "2026-08"
+  const isPerSession = client.feeType === 'Per Session' || client.membershipPlan === 'Per Session';
+  const clientPayments = payments.filter(p => p.clientId === client.id && p.status === 'Paid');
+  const currentMonthStr = targetMonthStr || getTodayDateString().slice(0, 7);
+
+  // For Per Session clients: do not generate monthly recurring overdue cycles!
+  if (isPerSession) {
+    const rate = client.perSessionFee || 1000;
+    const totalPaid = clientPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const isPaid = client.paymentStatus === 'Paid' || totalPaid > 0;
+    const latestPayment = clientPayments[0];
+
+    return [{
+      monthStr: currentMonthStr,
+      monthName: `${formatMonthName(currentMonthStr)} (Per Session Pass)`,
+      dueAmount: rate,
+      paidAmount: totalPaid > 0 ? totalPaid : (isPaid ? rate : 0),
+      status: isPaid ? 'Paid' : 'Pending',
+      paidDate: latestPayment?.date || client.joiningDate,
+      isCurrentMonth: true,
+    }];
+  }
+
   const MIN_FEE_START_MONTH = '2026-08';
   const rawJoiningMonthStr = (client.joiningDate || getTodayDateString()).slice(0, 7);
   const effectiveJoiningMonthStr = rawJoiningMonthStr < MIN_FEE_START_MONTH ? MIN_FEE_START_MONTH : rawJoiningMonthStr;
@@ -247,7 +248,6 @@ export const getClientBillingCycles = (
   );
 
   const cycles: ClientBillingCycle[] = [];
-  const clientPayments = payments.filter(p => p.clientId === client.id && p.status === 'Paid');
 
   activeMonths.forEach((mStr) => {
     const isCurrent = mStr === currentMonthStr;
@@ -266,10 +266,7 @@ export const getClientBillingCycles = (
       return;
     }
 
-    const mDue = client.feeType === 'Per Session'
-      ? (client.perSessionFee || 1000) * (client.completedClasses || 1)
-      : (client.monthlyFee || 1200);
-
+    const mDue = client.monthlyFee || 1200;
     const monthPayments = clientPayments.filter(p => (p.month === mStr || (p.date && p.date.startsWith(mStr))));
     const mPaid = monthPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
     const paidDate = monthPayments.length > 0 ? monthPayments[0].date : undefined;
