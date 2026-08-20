@@ -335,7 +335,6 @@ export const ClientWebsite: React.FC = () => {
             <a href="#benefits" className="hover:text-[#4A5D3E] transition-colors">Why Yoganjali</a>
             <a href="#goals" className="hover:text-[#4A5D3E] transition-colors">Goal Programs</a>
             <a href="#testimonials" className="hover:text-[#4A5D3E] transition-colors">Reviews</a>
-            <a href="/members" className="hover:text-[#4A5D3E] transition-colors font-extrabold">Our Yogis</a>
             <a href="#faq" className="hover:text-[#4A5D3E] transition-colors">FAQ</a>
           </nav>
 
@@ -382,7 +381,6 @@ export const ClientWebsite: React.FC = () => {
             <a href="#benefits" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Why Choose Yoganjali</a>
             <a href="#goals" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Targeted Goal Programs</a>
             <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Student Reviews</a>
-            <a href="/members" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700 text-emerald-700 font-extrabold">🧘 Our Yogis</a>
             <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">FAQ</a>
             
             <div className="pt-3 border-t border-slate-100 flex items-center gap-2 justify-between">
@@ -1285,9 +1283,9 @@ export const ClientWebsite: React.FC = () => {
             <a href="#about" className="block text-slate-300 hover:text-white transition-colors">About</a>
             <a href="#classes" className="block text-slate-300 hover:text-white transition-colors">Classes</a>
             <a href="#benefits" className="block text-slate-300 hover:text-white transition-colors">Why Yoganjali</a>
-            <a href="/members" className="block text-amber-300 hover:text-white transition-colors font-bold">🧘 Our Yogis</a>
             <a href="#faq" className="block text-slate-300 hover:text-white transition-colors">FAQ</a>
             <a href="/panel" className="block text-slate-400 hover:text-white transition-colors text-[11px] pt-1">🔐 Trainer Panel</a>
+            <a href="/members" className="block text-slate-400 hover:text-white transition-colors text-[11px]">🧘 Our Yogis</a>
           </div>
 
           <div className="space-y-2">
