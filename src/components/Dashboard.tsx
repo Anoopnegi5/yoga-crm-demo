@@ -53,14 +53,52 @@ interface TopEntity {
 
 const parseTimeToMinutes = (timeStr: string): number => {
   if (!timeStr) return 0;
-  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!match) return 0;
-  let hours = parseInt(match[1], 10);
-  const minutes = parseInt(match[2], 10);
-  const period = match[3].toUpperCase();
-  if (period === 'PM' && hours < 12) hours += 12;
-  if (period === 'AM' && hours === 12) hours = 0;
-  return hours * 60 + minutes;
+  const clean = timeStr.trim();
+  
+  // 12-hour format with AM/PM: e.g. "03:00 PM", "03.00PM", "03.00 PM", "7:30am", "7pm"
+  const match12 = clean.match(/^(\d{1,2})(?:[:.](\d{1,2}))?\s*(AM|PM)$/i);
+  if (match12) {
+    let hours = parseInt(match12[1], 10);
+    const minutes = match12[2] ? parseInt(match12[2], 10) : 0;
+    const period = match12[3].toUpperCase();
+    if (period === 'PM' && hours < 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  }
+
+  // 24-hour format: e.g. "15:00", "07:30", "15.00"
+  const match24 = clean.match(/^(\d{1,2})[:.](\d{1,2})$/);
+  if (match24) {
+    const hours = parseInt(match24[1], 10);
+    const minutes = parseInt(match24[2], 10);
+    return hours * 60 + minutes;
+  }
+
+  // General fallback regex (handles any string with numbers and AM/PM)
+  const matchGeneral = clean.match(/(\d{1,2})[:.](\d{1,2})\s*(AM|PM)?/i);
+  if (matchGeneral) {
+    let hours = parseInt(matchGeneral[1], 10);
+    const minutes = parseInt(matchGeneral[2], 10);
+    const period = matchGeneral[3]?.toUpperCase();
+    if (period === 'PM' && hours < 12) hours += 12;
+    if (period === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  }
+
+  return 0;
+};
+
+export const formatClassTime = (timeStr: string): string => {
+  if (!timeStr) return '';
+  const clean = timeStr.trim();
+  const match = clean.match(/^(\d{1,2})[:.](\d{1,2})\s*(AM|PM)?$/i);
+  if (match) {
+    const hh = match[1].padStart(2, '0');
+    const mm = match[2].padStart(2, '0');
+    const period = match[3] ? match[3].toUpperCase() : (parseInt(hh, 10) >= 12 ? 'PM' : 'AM');
+    return `${hh}:${mm} ${period}`;
+  }
+  return clean;
 };
 
 // Check if class time has passed compared to current local time
@@ -892,7 +930,7 @@ export const Dashboard: React.FC = () => {
                             <span className={`font-bold px-2.5 py-0.5 rounded-md ${
                               !isCompleted ? 'bg-rose-200/80 text-rose-950 font-extrabold' : 'bg-slate-200 text-slate-800'
                             }`}>
-                              ⏰ {client.classTime}
+                              ⏰ {formatClassTime(client.classTime)}
                             </span>
                             <span>• {client.days.join(', ')}</span>
                           </p>

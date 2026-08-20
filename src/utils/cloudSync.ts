@@ -19,6 +19,19 @@ const ENDPOINTS = [
   'https://jsonblob.com/api/jsonBlob/1271790154030637056'
 ];
 
+export const normalizeClassTime = (rawTime: any): string => {
+  if (!rawTime || typeof rawTime !== 'string') return '07:00 AM';
+  const clean = rawTime.trim();
+  const match = clean.match(/^(\d{1,2})[:.](\d{1,2})\s*(AM|PM)?$/i);
+  if (match) {
+    const hh = match[1].padStart(2, '0');
+    const mm = match[2].padStart(2, '0');
+    const period = match[3] ? match[3].toUpperCase() : (parseInt(hh, 10) >= 12 ? 'PM' : 'AM');
+    return `${hh}:${mm} ${period}`;
+  }
+  return clean;
+};
+
 export const normalizeClient = (c: any): any => {
   if (!c || typeof c !== 'object') return null;
 
@@ -46,7 +59,7 @@ export const normalizeClient = (c: any): any => {
     address: c.address || 'Indiranagar, Bengaluru',
     joiningDate: c.joiningDate || new Date().toISOString().split('T')[0],
     photoUrl: c.photoUrl || '',
-    classTime: c.classTime || '07:00 AM',
+    classTime: normalizeClassTime(c.classTime),
     days: Array.isArray(c.days) ? c.days : ['Mon', 'Wed', 'Fri'],
     timeSlot: c.timeSlot || 'Morning',
     sessionType: c.sessionType || 'Group',
