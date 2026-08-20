@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { EditClientModal } from './Modals/EditClientModal';
+import { PaymentCheckoutModal } from './Modals/PaymentCheckoutModal';
 import { getClientCurrentMonthPaymentStatus } from '../utils/paymentUtils';
 import { slugifyName } from '../utils/slugUtils';
 import { 
@@ -24,7 +25,8 @@ import {
   Activity,
   UserX,
   UserCheck,
-  Globe
+  Globe,
+  Zap
 } from 'lucide-react';
 
 export const ClientProfileModal: React.FC = () => {
@@ -51,6 +53,7 @@ export const ClientProfileModal: React.FC = () => {
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [notesText, setNotesText] = useState(client?.trainerNotes || '');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPaymentCheckoutOpen, setIsPaymentCheckoutOpen] = useState(false);
 
   if (!client) return null;
 
@@ -221,6 +224,13 @@ export const ClientProfileModal: React.FC = () => {
               >
                 <CreditCard className="w-4 h-4" />
                 Add Fee
+              </button>
+              <button
+                onClick={() => setIsPaymentCheckoutOpen(true)}
+                className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 font-bold text-xs transition-colors shadow-sm"
+              >
+                <Zap className="w-4 h-4" />
+                Collect Online
               </button>
               <button
                 onClick={() => setIsAddLeaveOpen(true)}
@@ -433,6 +443,19 @@ export const ClientProfileModal: React.FC = () => {
         client={client}
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
+      />
+
+      {/* Razorpay Online Payment Modal */}
+      <PaymentCheckoutModal
+        isOpen={isPaymentCheckoutOpen}
+        onClose={() => setIsPaymentCheckoutOpen(false)}
+        clientName={client.name}
+        clientPhone={client.whatsapp || client.phone || ''}
+        amount={Math.max(dueAmount - paidAmount, dueAmount || (client.monthlyFee || 0))}
+        purpose={`${isPerSession ? 'Per Session Fee' : 'Monthly Fee'} — ${client.name}`}
+        onPaymentSuccess={(paymentId) => {
+          setIsPaymentCheckoutOpen(false);
+        }}
       />
     </>
   );
