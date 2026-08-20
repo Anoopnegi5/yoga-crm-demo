@@ -284,6 +284,17 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                   <MessageCircle className="w-3.5 h-3.5" />
                   <span>Share Progress</span>
                 </button>
+                <button
+                  onClick={() => setIsPaymentCheckoutOpen(true)}
+                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md active:scale-95 ${
+                    !isPaid 
+                      ? 'bg-amber-400 hover:bg-amber-300 text-slate-950 ring-2 ring-amber-300/60' 
+                      : 'bg-white/20 hover:bg-white/30 text-white border border-white/20'
+                  }`}
+                >
+                  <Zap className={`w-3.5 h-3.5 ${!isPaid ? 'fill-slate-950 text-slate-950' : 'text-amber-300'}`} />
+                  <span>{isPaid ? 'Pay Studio Fee' : '⚡ Pay Pending Fee'}</span>
+                </button>
               </div>
 
             </div>

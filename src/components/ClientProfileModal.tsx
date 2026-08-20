@@ -453,6 +453,7 @@ export const ClientProfileModal: React.FC = () => {
         clientPhone={client.whatsapp || client.phone || ''}
         amount={Math.max(dueAmount - paidAmount, dueAmount || (client.monthlyFee || 0))}
         purpose={`${isPerSession ? 'Per Session Fee' : 'Monthly Fee'} — ${client.name}`}
+        isTrainerMode={true}
         onPaymentSuccess={(paymentId) => {
           setIsPaymentCheckoutOpen(false);
         }}
