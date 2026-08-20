@@ -505,76 +505,80 @@ export const Dashboard: React.FC = () => {
       {/* Quick Statistics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        {/* Card 1: Active Clients */}
-        <div className="bg-white rounded-3xl p-6 shadow-soft border border-slate-100 hover-lift relative overflow-hidden group flex flex-col justify-between">
+        {/* Card 1: Active Clients (Purple / Indigo Theme) */}
+        <div className="bg-gradient-to-br from-purple-500/10 via-indigo-50/60 to-white rounded-3xl p-6 shadow-md border-2 border-purple-200/90 hover:border-purple-400 hover-lift relative overflow-hidden group flex flex-col justify-between transition-all">
           <div className="flex items-center justify-between gap-2">
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Active Clients</p>
-              <h3 className="text-3xl font-extrabold text-slate-900">{totalClients}</h3>
-              <p className="text-xs font-semibold text-emerald-600">Active practitioners</p>
+              <p className="text-xs font-black text-purple-900/70 uppercase tracking-wider">Total Active Clients</p>
+              <h3 className="text-3xl font-black text-purple-950 tracking-tight">{totalClients}</h3>
+              <span className="inline-block text-[11px] font-extrabold text-purple-700 bg-purple-100/90 px-2.5 py-0.5 rounded-lg border border-purple-200">
+                Active Practitioners 🧘
+              </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <div className="w-13 h-13 p-3 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-purple-500/25 group-hover:scale-110 transition-transform">
               <Users className="w-6 h-6" />
             </div>
           </div>
         </div>
 
-        {/* Card 2: Today's Classes */}
-        <div className="bg-white rounded-3xl p-6 shadow-soft border border-slate-100 hover-lift relative overflow-hidden group flex flex-col justify-between">
+        {/* Card 2: Today's Classes (Sky / Blue Theme) */}
+        <div className="bg-gradient-to-br from-sky-500/10 via-blue-50/60 to-white rounded-3xl p-6 shadow-md border-2 border-sky-200/90 hover:border-sky-400 hover-lift relative overflow-hidden group flex flex-col justify-between transition-all">
           <div className="flex items-center justify-between gap-2">
             <div className="space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Today's Classes</p>
-              <h3 className="text-3xl font-extrabold text-slate-900">{todaysClasses}</h3>
-              <p className="text-xs font-semibold text-blue-600">Scheduled for {todayDayShort}</p>
+              <p className="text-xs font-black text-sky-900/70 uppercase tracking-wider">Today's Classes</p>
+              <h3 className="text-3xl font-black text-sky-950 tracking-tight">{todaysClasses}</h3>
+              <span className="inline-block text-[11px] font-extrabold text-sky-800 bg-sky-100/90 px-2.5 py-0.5 rounded-lg border border-sky-200">
+                Scheduled for {todayDayShort} ⏰
+              </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+            <div className="w-13 h-13 p-3 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-sky-500/25 group-hover:scale-110 transition-transform">
               <Calendar className="w-6 h-6" />
             </div>
           </div>
         </div>
 
-        {/* CLICKABLE Card 3: Dynamic Month Income */}
+        {/* CLICKABLE Card 3: Dynamic Month Income (Emerald / Teal Theme) */}
         <div 
           onClick={() => setShowIncomeModal(true)}
-          className="bg-white rounded-3xl p-4 sm:p-5 lg:p-6 shadow-soft border border-emerald-100 hover:border-emerald-300 hover-lift relative overflow-hidden group cursor-pointer ring-2 ring-transparent hover:ring-emerald-400/20 transition-all flex flex-col justify-between"
+          className="bg-gradient-to-br from-emerald-500/15 via-teal-50/70 to-white rounded-3xl p-4 sm:p-5 lg:p-6 shadow-md border-2 border-emerald-300 hover:border-emerald-500 hover-lift relative overflow-hidden group cursor-pointer ring-2 ring-emerald-500/10 hover:ring-emerald-500/30 transition-all flex flex-col justify-between"
         >
           <div className="flex items-start justify-between gap-1.5">
             <div className="space-y-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap shrink-0">{currentMonthShortUpper} INCOME</p>
-                <span className="text-[9px] sm:text-[10px] font-extrabold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0">Click list ↗</span>
+                <p className="text-[10px] sm:text-xs font-black text-emerald-900/80 uppercase tracking-wider whitespace-nowrap shrink-0">{currentMonthShortUpper} INCOME</p>
+                <span className="text-[9px] sm:text-[10px] font-black text-white bg-emerald-600 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 shadow-xs">Click list ↗</span>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900">₹{(monthlyIncome || 0).toLocaleString()}</h3>
-              <p className="text-xs font-semibold text-emerald-600 flex items-center gap-1">
+              <h3 className="text-2xl sm:text-3xl font-black text-emerald-950 tracking-tight">₹{(monthlyIncome || 0).toLocaleString()}</h3>
+              <p className="text-xs font-extrabold text-emerald-700 flex items-center gap-1">
                 <span>View {allDisplayableMonthPayments.length} payment records</span>
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform shrink-0" />
               </p>
             </div>
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <IndianRupee className="w-5 h-5" />
+            <div className="w-11 h-11 p-2.5 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-600/25 group-hover:scale-110 transition-transform">
+              <IndianRupee className="w-5 h-5 stroke-[2.5]" />
             </div>
           </div>
         </div>
 
-        {/* CLICKABLE Card 4: Pending Fees */}
+        {/* CLICKABLE Card 4: Pending Fees (Rose / Red Theme) */}
         <div 
           onClick={() => setShowPendingModal(true)}
-          className="bg-white rounded-3xl p-4 sm:p-5 lg:p-6 shadow-soft border border-rose-100 hover:border-rose-300 hover-lift relative overflow-hidden group cursor-pointer ring-2 ring-transparent hover:ring-rose-400/20 transition-all flex flex-col justify-between"
+          className="bg-gradient-to-br from-rose-500/15 via-amber-50/60 to-white rounded-3xl p-4 sm:p-5 lg:p-6 shadow-md border-2 border-rose-300 hover:border-rose-500 hover-lift relative overflow-hidden group cursor-pointer ring-2 ring-rose-500/10 hover:ring-rose-500/30 transition-all flex flex-col justify-between"
         >
           <div className="flex items-start justify-between gap-1.5">
             <div className="space-y-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <p className="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap shrink-0">Pending Fees</p>
-                <span className="text-[9px] sm:text-[10px] font-extrabold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded-full whitespace-nowrap shrink-0">Click list ↗</span>
+                <p className="text-[10px] sm:text-xs font-black text-rose-900/80 uppercase tracking-wider whitespace-nowrap shrink-0">Pending Fees</p>
+                <span className="text-[9px] sm:text-[10px] font-black text-white bg-rose-600 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 shadow-xs">Click list ↗</span>
               </div>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-rose-600">₹{(pendingFees || 0).toLocaleString()}</h3>
-              <p className="text-xs font-semibold text-rose-500 flex items-center gap-1">
+              <h3 className="text-2xl sm:text-3xl font-black text-rose-600 tracking-tight">₹{(pendingFees || 0).toLocaleString()}</h3>
+              <p className="text-xs font-extrabold text-rose-600 flex items-center gap-1">
                 <span>View {pendingFeeClients.length} pending clients</span>
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform shrink-0" />
               </p>
             </div>
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-              <AlertCircle className="w-5 h-5" />
+            <div className="w-11 h-11 p-2.5 rounded-2xl bg-gradient-to-br from-rose-600 to-red-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-rose-600/25 group-hover:scale-110 transition-transform">
+              <AlertCircle className="w-5 h-5 stroke-[2.5]" />
             </div>
           </div>
         </div>
