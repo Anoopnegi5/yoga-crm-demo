@@ -34,15 +34,14 @@ const AppShell: React.FC = () => {
     );
   });
 
-  // Centralized URL routing — handles clean paths (/panel, /join, /members, /yogi/slug)
-  // and legacy query params (?view=panel, ?join=true, ?view=members, ?yogi=slug)
-  const { isYogiProfile, isMembersDirectory, isPanel, isJoinLink, slug } = React.useMemo(() => getSlugFromUrl(), []);
+  // Centralized URL routing — handles clean paths (/panel, /join, /demo, /members, /yogi/slug, /register)
+  const { isYogiProfile, isMembersDirectory, isPanel, isJoinLink, isRegisterLink, slug } = React.useMemo(() => getSlugFromUrl(), []);
 
   useEffect(() => {
-    if (isJoinLink && !isClientWebsiteMode) {
+    if ((isJoinLink || isRegisterLink) && !isClientWebsiteMode) {
       setIsClientWebsiteMode(true);
     }
-  }, [isJoinLink, isClientWebsiteMode, setIsClientWebsiteMode]);
+  }, [isJoinLink, isRegisterLink, isClientWebsiteMode, setIsClientWebsiteMode]);
 
   const handleLogout = () => {
     sessionStorage.removeItem('yoganjali_auth_token');
@@ -70,8 +69,8 @@ const AppShell: React.FC = () => {
     );
   }
 
-  // 3. PUBLIC CLIENT SELF-REGISTRATION (/join)
-  if (isJoinLink) {
+  // 3. EXPLICIT CLIENT REGISTRATION WIZARD (/register)
+  if (isRegisterLink) {
     return (
       <>
         <ClientRegistrationWizard />
@@ -80,8 +79,8 @@ const AppShell: React.FC = () => {
     );
   }
 
-  // 4. PUBLIC WEBSITE (default for visitors, unless /panel is explicitly requested)
-  if (isClientWebsiteMode || !isPanel) {
+  // 4. PUBLIC WEBSITE & FREE DEMO BOOKING (/join, /demo, homepage)
+  if (isClientWebsiteMode || !isPanel || isJoinLink) {
     return (
       <>
         <ClientWebsite />

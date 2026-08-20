@@ -174,21 +174,6 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
   };
 
-  // Real Instructor Stats from Studio Journal
-  const instructorLeavesCount = trainerLeaves.reduce((acc, leave) => {
-    if (leave.startDate && leave.endDate) {
-      const s = new Date(leave.startDate);
-      const e = new Date(leave.endDate);
-      const diff = Math.max(1, Math.round((e.getTime() - s.getTime()) / (1000 * 60 * 60 * 24)) + 1);
-      return acc + diff;
-    }
-    return acc + 1;
-  }, 0);
-
-  const presentAttendanceRecords = attendance.filter(a => a.status === 'Present');
-  const distinctConductedDates = new Set(presentAttendanceRecords.map(a => a.date)).size;
-  const instructorConductedClasses = distinctConductedDates > 0 ? distinctConductedDates : presentAttendanceRecords.length;
-
   const { status: currentMonthStatus, dueAmount, paidAmount } = getClientCurrentMonthPaymentStatus(targetClient, payments, undefined, leaves);
   const isPaid = currentMonthStatus === 'Paid';
   const isPerSession = targetClient.feeType === 'Per Session';
@@ -545,15 +530,13 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 pt-1 text-center">
-              <div className="p-2.5 rounded-xl bg-white/10 border border-white/10">
-                <span className="text-[10px] text-emerald-200 font-bold uppercase block">Classes Conducted</span>
-                <strong className="text-base font-black text-amber-300">{instructorConductedClasses} Sessions</strong>
-              </div>
-              <div className="p-2.5 rounded-xl bg-white/10 border border-white/10">
-                <span className="text-[10px] text-emerald-200 font-bold uppercase block">Instructor Leaves</span>
-                <strong className="text-base font-black text-white">{instructorLeavesCount} Days</strong>
-              </div>
+            <div className="pt-2 border-t border-emerald-800/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="px-3 py-1.5 rounded-xl bg-white/10 text-emerald-200 font-medium">
+                🌿 Vinyasa, Hatha, Flexibility & Posture Correction
+              </span>
+              <span className="px-3 py-1.5 rounded-xl bg-amber-400/20 text-amber-300 font-extrabold border border-amber-400/30">
+                Certified Senior Yoga Instructor
+              </span>
             </div>
           </div>
 

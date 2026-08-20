@@ -44,15 +44,16 @@ export const ClientWebsite: React.FC = () => {
   const { addClient, setIsClientWebsiteMode, showSuccessToast, websiteCMS } = useApp();
   const cms = websiteCMS || DEFAULT_WEBSITE_CMS;
 
-  // URL check for Share Join Link (?join=true)
+  // URL check for Share Demo / Join Link (/join, /demo, ?demo=true, ?join=true)
   const isJoinLink = React.useMemo(() => {
     if (typeof window === 'undefined') return false;
     const search = window.location.search;
-    return search.includes('join=true') || search.includes('register=true') || search.includes('mode=client');
+    const path = window.location.pathname.toLowerCase();
+    return search.includes('join=true') || search.includes('demo=true') || search.includes('register=true') || search.includes('mode=client') || path === '/join' || path === '/demo';
   }, []);
 
   // State
-  const [activeTab, setActiveTab] = useState<'home' | 'register' | 'leaderboard' | 'myProfile'>(isJoinLink ? 'register' : 'home');
+  const [activeTab, setActiveTab] = useState<'home' | 'register' | 'leaderboard' | 'myProfile'>('home');
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(isJoinLink);
   const [selectedGoalForModal, setSelectedGoalForModal] = useState('');
   const [selectedProgramForModal, setSelectedProgramForModal] = useState('');

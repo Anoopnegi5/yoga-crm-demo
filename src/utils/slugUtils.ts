@@ -14,11 +14,12 @@ export interface UrlRouteInfo {
   isMembersDirectory: boolean;
   isPanel: boolean;
   isJoinLink: boolean;
+  isRegisterLink: boolean;
   slug: string | null;
 }
 
 export function getSlugFromUrl(): UrlRouteInfo {
-  const empty: UrlRouteInfo = { isYogiProfile: false, isMembersDirectory: false, isPanel: false, isJoinLink: false, slug: null };
+  const empty: UrlRouteInfo = { isYogiProfile: false, isMembersDirectory: false, isPanel: false, isJoinLink: false, isRegisterLink: false, slug: null };
   if (typeof window === 'undefined') return empty;
 
   const pathname = window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
@@ -32,8 +33,13 @@ export function getSlugFromUrl(): UrlRouteInfo {
     return { ...empty, isPanel: true };
   }
 
-  // /join or /register
-  if (pathname === '/join' || pathname === '/register') {
+  // /register (explicit internal client registration wizard)
+  if (pathname === '/register') {
+    return { ...empty, isRegisterLink: true };
+  }
+
+  // /join or /demo (public Free Demo Class booking)
+  if (pathname === '/join' || pathname === '/demo') {
     return { ...empty, isJoinLink: true };
   }
 
@@ -55,9 +61,14 @@ export function getSlugFromUrl(): UrlRouteInfo {
     return { ...empty, isPanel: true };
   }
 
-  if (search.includes('join=true') || search.includes('register=true') || search.includes('mode=client')) {
+  if (search.includes('join=true') || search.includes('demo=true') || search.includes('mode=client')) {
     try { window.history.replaceState({}, '', '/join'); } catch (e) {}
     return { ...empty, isJoinLink: true };
+  }
+
+  if (search.includes('register=true')) {
+    try { window.history.replaceState({}, '', '/register'); } catch (e) {}
+    return { ...empty, isRegisterLink: true };
   }
 
   if (params.get('view') === 'members' || params.get('members') === 'true') {
