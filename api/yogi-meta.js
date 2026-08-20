@@ -76,35 +76,21 @@ export default async function handler(req, res) {
   const slug = (rawSlug || '').toLowerCase().trim();
   const formattedSlugName = formatNameFromSlug(slug);
 
-  let clientName = formattedSlugName;
-  let photoUrl = 'https://www.yoganjaliyoga.com/yoganjali-logo.png';
-
+  let photoVersion = '1';
   try {
     const clients = await fetchClients();
     const matched = clients.find(c => slugifyName(c.name) === slug);
     if (matched) {
       clientName = matched.name || formattedSlugName;
-      if (matched.photoUrl && !matched.photoUrl.startsWith('data:')) {
-        let rawPhoto = matched.photoUrl;
-        // Convert dicebear SVG to PNG for WhatsApp link preview compatibility
-        if (rawPhoto.includes('dicebear.com') && rawPhoto.includes('/svg?')) {
-          rawPhoto = rawPhoto.replace('/svg?', '/png?');
-        }
-        if (rawPhoto.startsWith('/')) {
-          rawPhoto = `https://www.yoganjaliyoga.com${rawPhoto}`;
-        }
-        photoUrl = rawPhoto;
-      } else {
-        photoUrl = `https://api.dicebear.com/7.x/notionists/png?seed=${encodeURIComponent(clientName)}&size=600`;
+      if (matched.photoUrl) {
+        photoVersion = String(matched.photoUrl.length) + (matched.photoUrl.slice(-8).replace(/[^a-zA-Z0-9]/g, '') || 'v1');
       }
-    } else {
-      photoUrl = `https://api.dicebear.com/7.x/notionists/png?seed=${encodeURIComponent(clientName)}&size=600`;
     }
   } catch (err) {
     console.error('Error matching client in yogi-meta:', err);
-    photoUrl = `https://api.dicebear.com/7.x/notionists/png?seed=${encodeURIComponent(clientName)}&size=600`;
   }
 
+  const photoUrl = `https://www.yoganjaliyoga.com/api/yogi-image?slug=${encodeURIComponent(slug)}&v=${photoVersion}`;
   const pageTitle = `🧘 ${clientName} • Official Yogi Profile | Yoganjali Studio`;
   const ogTitle = `🧘 ${clientName} — Official Yogi Profile`;
   const ogDescription = `View ${clientName}'s personalized yoga practice progress, attendance journal & consistency streak at Yoganjali Studio with Trainer Anjali Negi.`;
