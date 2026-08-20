@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Client } from '../types';
 import { slugifyName } from '../utils/slugUtils';
-import { getClientCurrentMonthPaymentStatus } from '../utils/paymentUtils';
+import { getClientCurrentMonthPaymentStatus, getClientBillingCycles } from '../utils/paymentUtils';
 import { 
   Award, 
   Flame, 
@@ -26,7 +26,9 @@ import {
   Zap,
   CalendarDays,
   CalendarX,
-  XCircle
+  XCircle,
+  Instagram,
+  Youtube
 } from 'lucide-react';
 import { PaymentCheckoutModal } from './Modals/PaymentCheckoutModal';
 
@@ -186,6 +188,12 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   const { status: currentMonthStatus, dueAmount, paidAmount } = getClientCurrentMonthPaymentStatus(targetClient, payments, undefined, leaves);
   const isPaid = currentMonthStatus === 'Paid';
   const isPerSession = targetClient.feeType === 'Per Session';
+
+  // Multi-month continuous billing cycles calculation
+  const billingCycles = getClientBillingCycles(targetClient, payments, leaves);
+  const pendingCycles = billingCycles.filter(c => c.status === 'Pending' || c.status === 'Overdue' || c.status === 'Partial');
+  const totalOutstandingDue = pendingCycles.reduce((sum, c) => sum + Math.max(0, c.dueAmount - c.paidAmount), 0);
+  const hasOutstandingDue = totalOutstandingDue > 0;
 
   // --- MONTHLY ATTENDANCE & LEAVE CALENDAR STATE & DATA ---
   const [calDate, setCalDate] = useState(() => new Date(2026, 7, 1)); // Default to August 2026
@@ -737,48 +745,120 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
         {/* 4. PAYMENT STATUS & INSTRUCTOR INFO SECTION */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
-          {/* Payment Status Card (Strict Privacy Enforced!) */}
-          <div className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-3">
+          {/* Payment & Continuous Billing Cycles Card (Strict Privacy Enforced!) */}
+          <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-700" />
-                <h4 className="font-extrabold text-slate-900 text-sm">Current Month Fee Status</h4>
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">Billing Cycle & Fee Status</h4>
+                  <p className="text-[11px] text-slate-500 font-medium">Monthly fee records verified by Studio Journal</p>
+                </div>
               </div>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
                 <Lock className="w-3 h-3 text-slate-400" /> Private
               </span>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200/60">
+            {/* Total Balance / Action Bar */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-emerald-50/40 border border-slate-200/80">
               <div>
-                <p className="text-xs font-bold text-slate-700">Billing Cycle Status:</p>
-                <p className="text-[11px] text-slate-500 font-medium">Verified by Studio Journal</p>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Outstanding Balance</span>
+                <div className="flex items-center gap-2">
+                  <strong className="text-xl font-black text-slate-900">
+                    {hasOutstandingDue ? `₹${totalOutstandingDue.toLocaleString()}` : '₹0 (All Clear)'}
+                  </strong>
+                  {hasOutstandingDue ? (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px] border border-amber-200">
+                      {pendingCycles.length} {pendingCycles.length === 1 ? 'Cycle Pending' : 'Cycles Pending'}
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold text-[10px] border border-emerald-200">
+                      Up to Date ✓
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {isPaid ? (
-                <span className="px-4 py-2 rounded-2xl bg-emerald-100 text-emerald-900 font-black text-xs border border-emerald-300 flex items-center gap-1.5 shadow-sm">
-                  <span>PAID</span>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                </span>
+              {hasOutstandingDue ? (
+                <button
+                  onClick={() => setIsPaymentCheckoutOpen(true)}
+                  className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                >
+                  <Zap className="w-4 h-4 text-amber-300" />
+                  <span>Pay Online (₹{totalOutstandingDue.toLocaleString()})</span>
+                </button>
               ) : (
-                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
-                  <span className="px-4 py-2 rounded-2xl bg-amber-100 text-amber-900 font-black text-xs border border-amber-300 flex items-center gap-1.5 shadow-sm h-full">
-                    <span>PENDING</span>
-                    <Clock className="w-4 h-4 text-amber-700" />
-                  </span>
-                  <button
-                    onClick={() => setIsPaymentCheckoutOpen(true)}
-                    className="px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
-                  >
-                    <Zap className="w-4 h-4" />
-                    <span>Pay Online</span>
-                  </button>
-                </div>
+                <span className="px-3.5 py-2 rounded-2xl bg-emerald-100 text-emerald-900 font-black text-xs border border-emerald-300 flex items-center gap-1.5 self-start sm:self-auto">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                  <span>Verified by Studio Journal</span>
+                </span>
               )}
             </div>
 
+            {/* Continuous Monthly Cycles Breakdown */}
+            <div className="space-y-2 pt-1">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                Monthly Billing History:
+              </span>
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                {billingCycles.map((cycle) => (
+                  <div
+                    key={cycle.monthStr}
+                    className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${
+                      cycle.status === 'Paid'
+                        ? 'bg-emerald-50/60 border-emerald-200'
+                        : cycle.status === 'Leave Waived'
+                        ? 'bg-slate-50 border-slate-200 opacity-80'
+                        : 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-200/50'
+                    }`}
+                  >
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-slate-900">
+                          {cycle.monthName}
+                        </span>
+                        {cycle.isCurrentMonth && (
+                          <span className="px-2 py-0.5 rounded-full bg-slate-900 text-white text-[9px] font-extrabold">
+                            Current
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-500 font-medium">
+                        {cycle.status === 'Paid'
+                          ? `₹${cycle.paidAmount.toLocaleString()} Paid on ${cycle.paidDate || 'Monthly Cycle'}`
+                          : cycle.status === 'Leave Waived'
+                          ? 'Full Month Approved Leave • Fee Waived'
+                          : `Due Amount: ₹${cycle.dueAmount.toLocaleString()}`}
+                      </p>
+                    </div>
+
+                    <div>
+                      {cycle.status === 'Paid' ? (
+                        <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-black text-xs border border-emerald-300 flex items-center gap-1 shadow-sm">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+                          <span>PAID</span>
+                        </span>
+                      ) : cycle.status === 'Leave Waived' ? (
+                        <span className="px-3 py-1 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs">
+                          Leave Waived 🌴
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-xl bg-amber-100 text-amber-950 font-black text-xs border border-amber-300 flex items-center gap-1 shadow-sm">
+                          <Clock className="w-3.5 h-3.5 text-amber-700" />
+                          <span>PENDING</span>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <p className="text-[11px] text-slate-400 font-medium italic text-center pt-1 flex items-center justify-center gap-1">
-              <Lock className="w-3 h-3 text-slate-400" /> Fee amounts and financial transactions are strictly confidential.
+              <Lock className="w-3 h-3 text-slate-400" /> All fee transactions are securely recorded in Yoganjali Studio ledger.
             </p>
           </div>
 
@@ -852,23 +932,60 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
 
       </main>
 
-      {/* Footer CTA */}
-      <footer className="mt-16 border-t border-slate-200 bg-white py-8 px-4 text-center space-y-3">
-        <div className="max-w-md mx-auto space-y-2">
-          <p className="text-xs font-bold text-slate-800">
-            Want to start your own yoga journey with Trainer Anjali Negi?
+      {/* Studio & Social Connect Footer */}
+      <footer className="mt-16 border-t border-slate-200 bg-white py-12 px-4 sm:px-8 text-center space-y-6 shadow-sm">
+        <div className="max-w-xl mx-auto space-y-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100 text-emerald-900 text-xs font-bold border border-emerald-200">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>Connect with Yoganjali & Trainer Anjali Negi</span>
+          </div>
+
+          <h4 className="font-serif font-extrabold text-xl sm:text-2xl text-slate-900">
+            Official Studio & Social Channels
+          </h4>
+          <p className="text-xs text-slate-600 font-medium leading-relaxed">
+            Follow our daily yoga flows, posture correction tips, student transformations and holistic wellness guides.
           </p>
-          <a
-            href="/join"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-800 via-teal-800 to-emerald-900 text-white text-xs font-extrabold shadow-md hover:scale-105 transition-all"
-          >
-            <Sparkles className="w-4 h-4 text-amber-300" />
-            <span>Book Free Demo Class</span>
-          </a>
+
+          {/* Social Buttons Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            <a
+              href="https://www.yoganjaliyoga.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2.5 p-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-md hover:scale-105 transition-all"
+            >
+              <Globe className="w-4 h-4 text-emerald-400" />
+              <span>Official Website</span>
+            </a>
+
+            <a
+              href="https://instagram.com/yoganjali25"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2.5 p-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white font-extrabold text-xs shadow-md hover:scale-105 transition-all"
+            >
+              <Instagram className="w-4 h-4 text-white" />
+              <span>@Yoganjali25</span>
+            </a>
+
+            <a
+              href="https://www.youtube.com/@Yoganjali25"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2.5 p-3.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md hover:scale-105 transition-all"
+            >
+              <Youtube className="w-4 h-4 text-white" />
+              <span>YouTube Channel</span>
+            </a>
+          </div>
         </div>
-        <p className="text-[11px] text-slate-400 font-medium">
-          © {new Date().getFullYear()} Yoganjali Studio & Fee Manager • Official Member Progress Portal
-        </p>
+
+        <div className="pt-4 border-t border-slate-100 max-w-md mx-auto">
+          <p className="text-[11px] text-slate-400 font-medium">
+            © {new Date().getFullYear()} Yoganjali Yoga Studio • Guided by Anjali Negi • Official Member Progress Portal
+          </p>
+        </div>
       </footer>
 
       {/* Razorpay Online Payment Modal */}
@@ -877,8 +994,8 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
         onClose={() => setIsPaymentCheckoutOpen(false)}
         clientName={targetClient.name}
         clientPhone={targetClient.whatsapp || targetClient.phone || ''}
-        amount={Math.max(dueAmount - paidAmount, dueAmount || (targetClient.monthlyFee || 0))}
-        purpose={`${isPerSession ? 'Per Session Fee' : 'Monthly Fee'} — ${targetClient.name}`}
+        amount={hasOutstandingDue ? totalOutstandingDue : Math.max(dueAmount - paidAmount, dueAmount || (targetClient.monthlyFee || 0))}
+        purpose={`${isPerSession ? 'Per Session Fee' : 'Yoga Studio Fee'} — ${targetClient.name}`}
         onPaymentSuccess={(paymentId, paidAmt) => {
           const today = new Date().toISOString().slice(0, 10);
           addPayment({

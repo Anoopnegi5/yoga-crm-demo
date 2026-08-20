@@ -212,10 +212,91 @@ export const getClientCurrentMonthPaymentStatus = (
   return {
     status,
     paidAmount,
-    dueAmount,
+    dueAmount: finalRemainingBalance > 0 ? finalRemainingBalance : dueAmount,
     remainingBalance: finalRemainingBalance,
     unpaidMonthsCount: unpaidMonthsNames.length,
     unpaidMonthsNames,
     isOnFullMonthLeave: isOnCurrentMonthLeave
   };
+};
+
+export interface ClientBillingCycle {
+  monthStr: string; // e.g. "2026-08"
+  monthName: string; // e.g. "August 2026"
+  dueAmount: number;
+  paidAmount: number;
+  status: 'Paid' | 'Pending' | 'Overdue' | 'Partial' | 'Leave Waived';
+  paidDate?: string;
+  isCurrentMonth: boolean;
+}
+
+export const getClientBillingCycles = (
+  client: Client,
+  payments: PaymentRecord[],
+  leaves?: LeaveRecord[],
+  targetMonthStr?: string
+): ClientBillingCycle[] => {
+  const currentMonthStr = targetMonthStr || getTodayDateString().slice(0, 7); // e.g. "2026-08"
+  const MIN_FEE_START_MONTH = '2026-08';
+  const rawJoiningMonthStr = (client.joiningDate || getTodayDateString()).slice(0, 7);
+  const effectiveJoiningMonthStr = rawJoiningMonthStr < MIN_FEE_START_MONTH ? MIN_FEE_START_MONTH : rawJoiningMonthStr;
+
+  const activeMonths = getMonthsListBetween(
+    effectiveJoiningMonthStr <= currentMonthStr ? effectiveJoiningMonthStr : currentMonthStr,
+    currentMonthStr
+  );
+
+  const cycles: ClientBillingCycle[] = [];
+  const clientPayments = payments.filter(p => p.clientId === client.id && p.status === 'Paid');
+
+  activeMonths.forEach((mStr) => {
+    const isCurrent = mStr === currentMonthStr;
+    const isLeave = isClientOnFullMonthLeave(client.id, mStr, leaves);
+    const monthName = formatMonthName(mStr);
+
+    if (isLeave) {
+      cycles.push({
+        monthStr: mStr,
+        monthName,
+        dueAmount: 0,
+        paidAmount: 0,
+        status: 'Leave Waived',
+        isCurrentMonth: isCurrent,
+      });
+      return;
+    }
+
+    const mDue = client.feeType === 'Per Session'
+      ? (client.perSessionFee || 1000) * (client.completedClasses || 1)
+      : (client.monthlyFee || 1200);
+
+    const monthPayments = clientPayments.filter(p => (p.month === mStr || (p.date && p.date.startsWith(mStr))));
+    const mPaid = monthPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const paidDate = monthPayments.length > 0 ? monthPayments[0].date : undefined;
+
+    let cycleStatus: 'Paid' | 'Pending' | 'Overdue' | 'Partial' | 'Leave Waived' = 'Pending';
+    
+    // If client paymentStatus is explicitly Paid and this is current month
+    if (client.paymentStatus === 'Paid' && isCurrent) {
+      cycleStatus = 'Paid';
+    } else if (mPaid >= mDue) {
+      cycleStatus = 'Paid';
+    } else if (mPaid > 0) {
+      cycleStatus = 'Partial';
+    } else {
+      cycleStatus = 'Pending';
+    }
+
+    cycles.push({
+      monthStr: mStr,
+      monthName,
+      dueAmount: mDue,
+      paidAmount: mPaid,
+      status: cycleStatus,
+      paidDate,
+      isCurrentMonth: isCurrent,
+    });
+  });
+
+  return cycles;
 };
