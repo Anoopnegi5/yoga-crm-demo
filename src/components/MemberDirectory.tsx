@@ -18,9 +18,10 @@ import {
 
 interface MemberDirectoryProps {
   onSelectClient?: (client: Client) => void;
+  onLogout?: () => void;
 }
 
-export const MemberDirectory: React.FC<MemberDirectoryProps> = ({ onSelectClient }) => {
+export const MemberDirectory: React.FC<MemberDirectoryProps> = ({ onSelectClient, onLogout }) => {
   const { clients, attendance } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBatchFilter, setSelectedBatchFilter] = useState<string>('All');
@@ -50,23 +51,35 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({ onSelectClient
               🌿
             </div>
             <div>
-              <h1 className="font-serif font-extrabold text-lg sm:text-xl text-white tracking-tight">
-                Yoganjali Member Directory
-              </h1>
+              <div className="flex items-center gap-2">
+                <h1 className="font-serif font-extrabold text-lg sm:text-xl text-white tracking-tight">
+                  Yoganjali Member Directory
+                </h1>
+                <span className="px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[10px] font-bold">
+                  🔒 Trainer Only
+                </span>
+              </div>
               <p className="text-[11px] text-emerald-200 font-medium hidden sm:block">
-                Celebrating consistency & wellness journeys of active studio yogis
+                Protected studio directory of active yogis and practice journals
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <a
-              href="/join"
-              className="px-4 py-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-extrabold shadow-sm transition-all flex items-center gap-1.5 active:scale-95"
+              href="/panel"
+              className="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-extrabold shadow-sm transition-all flex items-center gap-1.5"
             >
-              <Sparkles className="w-3.5 h-3.5 text-slate-950" />
-              <span>Book Free Demo</span>
+              <span>Trainer Panel</span>
             </a>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="px-3.5 py-2.5 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 text-xs font-extrabold border border-rose-400/30 transition-all flex items-center gap-1.5"
+              >
+                <span>Logout</span>
+              </button>
+            )}
           </div>
         </div>
       </header>

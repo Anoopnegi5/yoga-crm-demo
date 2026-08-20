@@ -266,21 +266,27 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                 <span>Back to Directory</span>
               </button>
             ) : (
-              <div className="flex items-center gap-2.5">
+              <a
+                href="https://www.yoganjaliyoga.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2.5 hover:opacity-95 transition-all group cursor-pointer"
+                title="Visit Yoganjali Yoga Studio Website"
+              >
                 <img
                   src="/yoganjali-logo.png"
                   alt="Yoganjali Logo"
-                  className="w-8 h-8 rounded-full bg-white object-contain p-0.5 shadow-sm ring-1 ring-amber-400"
+                  className="w-9 h-9 rounded-full bg-white object-contain p-0.5 shadow-md ring-2 ring-amber-400 group-hover:scale-105 transition-transform"
                 />
                 <div>
-                  <h2 className="font-serif font-extrabold text-sm sm:text-base text-white tracking-tight leading-tight">
+                  <h2 className="font-serif font-extrabold text-sm sm:text-base text-white tracking-tight leading-tight group-hover:text-amber-300 transition-colors">
                     Yoganjali Studio
                   </h2>
-                  <p className="text-[10px] text-emerald-200 font-medium leading-none">
+                  <p className="text-[10px] text-emerald-200 font-medium leading-none mt-0.5">
                     Official Member Practice Portal
                   </p>
                 </div>
-              </div>
+              </a>
             )}
             <div className="hidden sm:block h-4 w-px bg-emerald-700/60" />
             <span className="hidden sm:inline text-xs font-bold text-amber-300 tracking-wider uppercase">

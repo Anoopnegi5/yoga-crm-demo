@@ -66,7 +66,7 @@ const AppShell: React.FC = () => {
     }
     return (
       <>
-        <MemberDirectory />
+        <MemberDirectory onLogout={handleLogout} />
         <Toast />
       </>
     );
