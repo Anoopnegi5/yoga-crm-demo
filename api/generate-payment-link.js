@@ -1,4 +1,5 @@
-import Razorpay from 'razorpay';
+// api/generate-payment-link.js
+// Vercel Serverless Function — creates Razorpay Payment Link via direct REST API
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,43 +17,69 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { amount, clientName, clientPhone, clientEmail, purpose, description } = req.body;
+    const { amount, clientName, clientPhone, clientEmail, purpose, description } = req.body || {};
 
-    if (!amount || amount < 1) {
+    if (!amount || Number(amount) < 1) {
       return res.status(400).json({ error: 'Invalid amount' });
     }
 
-    const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
     const expiryTimestamp = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60);
 
-    const paymentLink = await razorpay.paymentLink.create({
-      amount: Math.round(amount * 100),
+    const cleanPhone = clientPhone ? clientPhone.replace(/[^0-9]/g, '').slice(-10) : '';
+    const customerObj = {
+      name: clientName || 'Yoga Client'
+    };
+    if (cleanPhone && cleanPhone.length === 10 && !cleanPhone.startsWith('0000000000')) {
+      customerObj.contact = `+91${cleanPhone}`;
+    }
+    if (clientEmail && clientEmail.includes('@')) {
+      customerObj.email = clientEmail;
+    }
+
+    const payload = {
+      amount: Math.round(Number(amount) * 100),
       currency: 'INR',
       accept_partial: false,
-      description: description || `Yoganjali Yoga Studio — ${purpose || 'Class Fee'}`,
-      customer: {
-        name: clientName || 'Yoga Client',
-        contact: clientPhone ? `+91${clientPhone.replace(/[^0-9]/g, '').slice(-10)}` : undefined,
-        email: clientEmail || undefined,
-      },
+      description: description || `Yoganjali Studio — ${purpose || 'Class Fee'}`,
+      customer: customerObj,
       notify: {
-        sms: !!clientPhone,
-        email: !!clientEmail,
+        sms: !!customerObj.contact,
+        email: !!customerObj.email
       },
       reminder_enable: true,
       notes: {
         purpose: purpose || 'yoga_fee',
-        studio: 'Yoganjali — Anjali Negi',
+        studio: 'Yoganjali — Anjali Negi'
       },
-      expire_by: expiryTimestamp,
+      expire_by: expiryTimestamp
+    };
+
+    const rzpRes = await fetch('https://api.razorpay.com/v1/payment_links', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
     });
+
+    const data = await rzpRes.json();
+
+    if (!rzpRes.ok) {
+      console.error('Razorpay Payment Link creation error:', data);
+      return res.status(rzpRes.status).json({
+        error: data.error?.description || 'Failed to create payment link',
+        details: data
+      });
+    }
 
     return res.status(200).json({
       success: true,
-      paymentLink: paymentLink.short_url,
-      linkId: paymentLink.id,
-      amount: paymentLink.amount / 100,
-      expiresAt: new Date(expiryTimestamp * 1000).toLocaleDateString('en-IN'),
+      paymentLink: data.short_url,
+      linkId: data.id,
+      amount: data.amount / 100,
+      expiresAt: new Date(expiryTimestamp * 1000).toLocaleDateString('en-IN')
     });
   } catch (err) {
     console.error('Payment link creation failed:', err);

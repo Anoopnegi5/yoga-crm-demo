@@ -1,3 +1,4 @@
+// api/verify-payment.js
 import crypto from 'crypto';
 
 export default async function handler(req, res) {
@@ -11,14 +12,14 @@ export default async function handler(req, res) {
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!keySecret) {
-    return res.status(500).json({ error: 'Payment gateway not configured' });
+    return res.status(500).json({ error: 'Payment gateway secret not configured' });
   }
 
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body || {};
 
     if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ error: 'Missing payment details' });
+      return res.status(400).json({ error: 'Missing required payment verification details' });
     }
 
     const expectedSignature = crypto
@@ -27,14 +28,14 @@ export default async function handler(req, res) {
       .digest('hex');
 
     if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ success: false, error: 'Payment verification failed — invalid signature' });
+      return res.status(400).json({ success: false, error: 'Invalid payment signature' });
     }
 
     return res.status(200).json({
       success: true,
       paymentId: razorpay_payment_id,
       orderId: razorpay_order_id,
-      message: 'Payment verified successfully',
+      message: 'Payment verified successfully'
     });
   } catch (err) {
     console.error('Payment verification error:', err);

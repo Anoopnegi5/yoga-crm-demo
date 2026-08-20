@@ -1,4 +1,5 @@
-import Razorpay from 'razorpay';
+// api/create-order.js
+// Vercel Serverless Function — creates Razorpay order via direct REST API (zero-dependency, native fetch)
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -12,40 +13,58 @@ export default async function handler(req, res) {
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
   if (!keyId || !keySecret) {
-    console.error('Razorpay keys not configured');
+    console.error('Razorpay keys not configured in environment variables');
     return res.status(500).json({ error: 'Payment gateway not configured' });
   }
 
   try {
-    const { amount, currency = 'INR', clientName, clientPhone, purpose, notes } = req.body;
+    const { amount, currency = 'INR', clientName, clientPhone, purpose, notes } = req.body || {};
 
-    if (!amount || amount < 1) {
+    if (!amount || Number(amount) < 1) {
       return res.status(400).json({ error: 'Invalid amount' });
     }
 
-    const razorpay = new Razorpay({ key_id: keyId, key_secret: keySecret });
-
-    const order = await razorpay.orders.create({
-      amount: Math.round(amount * 100), 
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+    const orderPayload = {
+      amount: Math.round(Number(amount) * 100), // paise
       currency,
-      receipt: `yoganjali_${Date.now()}`,
+      receipt: `yog_${Date.now()}`,
       notes: {
         clientName: clientName || '',
         clientPhone: clientPhone || '',
         purpose: purpose || 'yoga_fee',
         extraNotes: notes || '',
-        studio: 'Yoganjali — Anjali Negi',
+        studio: 'Yoganjali — Anjali Negi'
+      }
+    };
+
+    const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+        'Content-Type': 'application/json'
       },
+      body: JSON.stringify(orderPayload)
     });
 
+    const data = await rzpRes.json();
+
+    if (!rzpRes.ok) {
+      console.error('Razorpay order creation error:', data);
+      return res.status(rzpRes.status).json({ 
+        error: data.error?.description || 'Failed to create payment order',
+        details: data 
+      });
+    }
+
     return res.status(200).json({
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
-      keyId, 
+      orderId: data.id,
+      amount: data.amount,
+      currency: data.currency,
+      keyId
     });
   } catch (err) {
-    console.error('Razorpay order creation failed:', err);
-    return res.status(500).json({ error: 'Failed to create payment order', details: err.message });
+    console.error('Server error creating Razorpay order:', err);
+    return res.status(500).json({ error: 'Server error processing payment order', details: err.message });
   }
 }
