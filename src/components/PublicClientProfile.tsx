@@ -41,7 +41,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   clientId,
   onBackToDirectory 
 }) => {
-  const { clients, attendance, leaves, trainerLeaves, payments, showSuccessToast } = useApp();
+  const { clients, attendance, leaves, trainerLeaves, payments, addPayment, showSuccessToast } = useApp();
   const [copied, setCopied] = useState(false);
   const [isPaymentCheckoutOpen, setIsPaymentCheckoutOpen] = useState(false);
 
@@ -833,9 +833,20 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
         clientPhone={targetClient.whatsapp || targetClient.phone || ''}
         amount={Math.max(dueAmount - paidAmount, dueAmount || (targetClient.monthlyFee || 0))}
         purpose={`${isPerSession ? 'Per Session Fee' : 'Monthly Fee'} — ${targetClient.name}`}
-        onPaymentSuccess={(paymentId) => {
+        onPaymentSuccess={(paymentId, paidAmt) => {
+          const today = new Date().toISOString().slice(0, 10);
+          addPayment({
+            clientId: targetClient.id,
+            clientName: targetClient.name,
+            amount: paidAmt,
+            date: today,
+            month: today.slice(0, 7),
+            paymentMode: 'UPI',
+            status: 'Paid',
+            notes: `Online Payment via Razorpay (Ref: ${paymentId})`,
+          });
           setIsPaymentCheckoutOpen(false);
-          // Optional: Refresh could be triggered here
+          showSuccessToast(`🎉 Payment of ₹${paidAmt.toLocaleString()} completed successfully! Verified as PAID.`);
         }}
       />
     </div>

@@ -44,6 +44,7 @@ export const ClientProfileModal: React.FC = () => {
     attendance,
     leaves,
     payments,
+    addPayment,
     deletePayment,
     deleteLeave,
     deleteAttendanceRecord
@@ -454,7 +455,18 @@ export const ClientProfileModal: React.FC = () => {
         amount={Math.max(dueAmount - paidAmount, dueAmount || (client.monthlyFee || 0))}
         purpose={`${isPerSession ? 'Per Session Fee' : 'Monthly Fee'} — ${client.name}`}
         isTrainerMode={true}
-        onPaymentSuccess={(paymentId) => {
+        onPaymentSuccess={(paymentId, paidAmt) => {
+          const today = new Date().toISOString().slice(0, 10);
+          addPayment({
+            clientId: client.id,
+            clientName: client.name,
+            amount: paidAmt,
+            date: today,
+            month: today.slice(0, 7),
+            paymentMode: 'UPI',
+            status: 'Paid',
+            notes: `Online Payment via Razorpay (Ref: ${paymentId})`,
+          });
           setIsPaymentCheckoutOpen(false);
         }}
       />

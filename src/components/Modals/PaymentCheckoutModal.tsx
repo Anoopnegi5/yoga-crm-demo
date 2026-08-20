@@ -24,7 +24,7 @@ interface PaymentCheckoutModalProps {
   amount: number;
   purpose: string;
   isTrainerMode?: boolean; // true = Trainer Panel (shows WhatsApp link option), false = Public profile
-  onPaymentSuccess?: (paymentId: string) => void;
+  onPaymentSuccess?: (paymentId: string, paidAmount: number) => void;
 }
 
 type ModalStep = 'choose' | 'review_direct' | 'collecting' | 'generating_link' | 'link_ready' | 'success' | 'error';
@@ -87,7 +87,7 @@ export const PaymentCheckoutModal: React.FC<PaymentCheckoutModalProps> = ({
       onSuccess: (pid) => {
         setPaymentId(pid);
         setStep('success');
-        onPaymentSuccess?.(pid);
+        onPaymentSuccess?.(pid, editAmount);
       },
       onFailure: (err) => {
         if (err === 'Payment cancelled') {
