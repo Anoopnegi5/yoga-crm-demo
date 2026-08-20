@@ -1,0 +1,37 @@
+{
+  "name": "Yoganjali - Yoga Studio & Trainer Panel",
+  "short_name": "Yoganjali",
+  "description": "Yoganjali Yoga Studio Journal, Attendance & Fee Manager by Trainer Anjali Negi",
+  "start_url": "/panel",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F3E8",
+  "theme_color": "#1E3A2B",
+  "icons": [
+    {
+      "src": "/yoganjali-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/yoganjali-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Trainer Panel",
+      "url": "/panel",
+      "description": "Open Yoga Studio Dashboard & Attendance"
+    },
+    {
+      "name": "Live Website",
+      "url": "/",
+      "description": "Open Yoganjali Website"
+    }
+  ]
+}
