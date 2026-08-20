@@ -96,19 +96,17 @@ export const getClientCurrentMonthPaymentStatus = (
 
   // --- 1. DEDICATED PAY-AS-YOU-GO / PER-SESSION LOGIC ---
   if (isPerSession) {
-    const rate = client.perSessionFee || 1000;
+    const rate = client.perSessionFee || 800;
     const completedSessions = client.completedClasses || 0;
-    const totalSessionsCost = completedSessions * rate;
-
-    // A per session client is Paid if they have recorded payment, or marked paid, or totalPaid >= session cost
-    const isPaid = client.paymentStatus === 'Paid' || totalPaidAllTime >= totalSessionsCost || totalPaidAllTime > 0;
-    const remainingBalance = isPaid ? 0 : Math.max(0, totalSessionsCost > 0 ? (totalSessionsCost - totalPaidAllTime) : rate);
+    const sessionAttendedCost = completedSessions * rate;
+    const directPaymentsPaid = clientPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const totalEffectivePaid = Math.max(sessionAttendedCost, directPaymentsPaid);
 
     return {
-      status: isPaid ? 'Paid' : 'Pending',
-      paidAmount: totalPaidAllTime,
-      dueAmount: remainingBalance > 0 ? remainingBalance : rate,
-      remainingBalance,
+      status: 'Paid',
+      paidAmount: totalEffectivePaid,
+      dueAmount: 0,
+      remainingBalance: 0,
       unpaidMonthsCount: 0,
       unpaidMonthsNames: [],
       isOnFullMonthLeave: false
@@ -222,18 +220,20 @@ export const getClientBillingCycles = (
 
   // For Per Session clients: do not generate monthly recurring overdue cycles!
   if (isPerSession) {
-    const rate = client.perSessionFee || 1000;
-    const totalPaid = clientPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
-    const isPaid = client.paymentStatus === 'Paid' || totalPaid > 0;
+    const rate = client.perSessionFee || 800;
+    const completedSessions = client.completedClasses || 0;
+    const sessionAttendedCost = completedSessions * rate;
+    const directPaid = clientPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+    const totalPaid = Math.max(sessionAttendedCost, directPaid);
     const latestPayment = clientPayments[0];
 
     return [{
       monthStr: currentMonthStr,
       monthName: `${formatMonthName(currentMonthStr)} (Per Session Pass)`,
-      dueAmount: rate,
-      paidAmount: totalPaid > 0 ? totalPaid : (isPaid ? rate : 0),
-      status: isPaid ? 'Paid' : 'Pending',
-      paidDate: latestPayment?.date || client.joiningDate,
+      dueAmount: 0,
+      paidAmount: totalPaid,
+      status: 'Paid',
+      paidDate: latestPayment?.date || client.joiningDate || getTodayDateString(),
       isCurrentMonth: true,
     }];
   }

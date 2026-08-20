@@ -186,15 +186,15 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
   };
 
+  const isPerSession = targetClient.feeType === 'Per Session' || targetClient.membershipPlan === 'Per Session';
   const { status: currentMonthStatus, dueAmount, paidAmount } = getClientCurrentMonthPaymentStatus(targetClient, payments, undefined, leaves);
-  const isPaid = currentMonthStatus === 'Paid';
-  const isPerSession = targetClient.feeType === 'Per Session';
+  const isPaid = isPerSession ? true : currentMonthStatus === 'Paid';
 
   // Multi-month continuous billing cycles calculation
   const billingCycles = getClientBillingCycles(targetClient, payments, leaves);
-  const pendingCycles = billingCycles.filter(c => c.status === 'Pending' || c.status === 'Overdue' || c.status === 'Partial');
-  const totalOutstandingDue = pendingCycles.reduce((sum, c) => sum + Math.max(0, c.dueAmount - c.paidAmount), 0);
-  const hasOutstandingDue = totalOutstandingDue > 0;
+  const pendingCycles = isPerSession ? [] : billingCycles.filter(c => c.status === 'Pending' || c.status === 'Overdue' || c.status === 'Partial');
+  const totalOutstandingDue = isPerSession ? 0 : pendingCycles.reduce((sum, c) => sum + Math.max(0, c.dueAmount - c.paidAmount), 0);
+  const hasOutstandingDue = !isPerSession && totalOutstandingDue > 0;
 
   const scrollToBilling = () => {
     const el = document.getElementById('billing-cycle-section');
@@ -790,12 +790,12 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                 <div className="flex items-center gap-2">
                   <strong className="text-xl font-black text-slate-900">
                     {isPerSession 
-                      ? (isPaid ? '₹0 Due (Pass Active)' : `₹${dueAmount.toLocaleString()} Due`)
+                      ? '₹0 Due (All Classes Paid)'
                       : (hasOutstandingDue ? `₹${totalOutstandingDue.toLocaleString()}` : '₹0 (All Clear)')}
                   </strong>
                   {isPerSession ? (
-                    <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 font-bold text-[10px] border border-indigo-200">
-                      ₹{targetClient.perSessionFee || 1000} / Class
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold text-[10px] border border-emerald-200">
+                      ₹{targetClient.perSessionFee || 800} / Class • Up to Date ✓
                     </span>
                   ) : hasOutstandingDue ? (
                     <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px] border border-amber-200">
@@ -815,7 +815,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                   className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
                 >
                   <Zap className="w-4 h-4 text-amber-300" />
-                  <span>Pay For Session (₹{targetClient.perSessionFee || 1000})</span>
+                  <span>Pay For Next Session (₹{targetClient.perSessionFee || 800})</span>
                 </button>
               ) : hasOutstandingDue ? (
                 <button
@@ -837,13 +837,15 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
             {isPerSession ? (
               <div className="space-y-3 pt-1">
                 <div className="grid grid-cols-2 gap-2.5">
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
+                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
                     <span className="text-[10px] font-bold text-slate-500 uppercase block">Completed Sessions</span>
-                    <strong className="text-base font-black text-slate-900">{targetClient.completedClasses || 0} Attended</strong>
+                    <strong className="text-lg font-black text-slate-900">{targetClient.completedClasses || 0} Attended</strong>
+                    <span className="text-[10px] text-slate-500 font-medium block mt-0.5">Pay-as-you-go plan</span>
                   </div>
-                  <div className="p-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
+                  <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
                     <span className="text-[10px] font-bold text-emerald-800 uppercase block">Total Fees Paid</span>
-                    <strong className="text-base font-black text-emerald-900">₹{paidAmount.toLocaleString()}</strong>
+                    <strong className="text-lg font-black text-emerald-900">₹{paidAmount.toLocaleString()}</strong>
+                    <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">All {targetClient.completedClasses || 0} Classes Paid ✓</span>
                   </div>
                 </div>
 
@@ -866,9 +868,15 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-500 italic p-3 rounded-xl bg-slate-50 border border-slate-100">
-                      ✓ Pay-as-you-go pass active. Payment recorded with studio trainer per session.
-                    </p>
+                    <div className="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-200 text-xs flex items-center justify-between">
+                      <div>
+                        <span className="font-bold text-emerald-950 block">✓ Pay-as-you-go session pass active</span>
+                        <span className="text-[11px] text-emerald-800">Fee collected per attended session (₹{targetClient.perSessionFee || 800} × {targetClient.completedClasses || 0} classes)</span>
+                      </div>
+                      <span className="font-black text-emerald-900 bg-emerald-100 px-2.5 py-1 rounded-xl border border-emerald-300">
+                        ₹{paidAmount.toLocaleString()} PAID ✓
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>
