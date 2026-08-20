@@ -610,34 +610,6 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
             </div>
           </div>
 
-          {/* Month Summary Counters */}
-          <div className={`grid gap-3 ${isPerSession ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-5'}`}>
-            <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
-              <span className="text-[10px] font-extrabold text-emerald-800 uppercase block">Present</span>
-              <strong className="text-lg sm:text-xl font-black text-emerald-900">{calMonthPresent} Days</strong>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-center">
-              <span className="text-[10px] font-extrabold text-rose-800 uppercase block">Absent</span>
-              <strong className="text-lg sm:text-xl font-black text-rose-900">{calMonthAbsent} Days</strong>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-center">
-              <span className="text-[10px] font-extrabold text-amber-800 uppercase block">Client Leaves</span>
-              <strong className="text-lg sm:text-xl font-black text-amber-900">{calMonthLeaves} Days</strong>
-            </div>
-            {!isPerSession && (
-              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 border border-amber-300 text-center ring-1 ring-amber-300/50">
-                <span className="text-[10px] font-black text-amber-900 uppercase block">💳 Fee Paid</span>
-                <strong className="text-lg sm:text-xl font-black text-amber-950">
-                  {calMonthPayments.length > 0 ? `₹${calMonthPaidTotal.toLocaleString()}` : '₹0'}
-                </strong>
-              </div>
-            )}
-            <div className={`p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-center ${isPerSession ? '' : 'col-span-2 sm:col-span-1'}`}>
-              <span className="text-[10px] font-extrabold text-purple-800 uppercase block">Studio Leaves</span>
-              <strong className="text-lg sm:text-xl font-black text-purple-900">{instructorLeavesCount} Logged</strong>
-            </div>
-          </div>
-
           {/* Calendar Grid */}
           <div className="space-y-2">
             {/* Days of Week Header */}
