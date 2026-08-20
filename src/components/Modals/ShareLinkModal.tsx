@@ -14,7 +14,7 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ isOpen, onClose 
 
   if (!isOpen) return null;
 
-  const shareableUrl = `https://www.yoganjaliyoga.com/join`;
+  const shareableUrl = `https://www.yoganjaliyoga.com/register`;
   const fullMessage = `Hi! 👋 Please fill in your Yoga Registration details for Yoganjali Studio:
 
 ${shareableUrl}
