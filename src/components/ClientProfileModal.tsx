@@ -189,6 +189,38 @@ export const ClientProfileModal: React.FC = () => {
               </div>
             )}
 
+            {/* Dedicated WhatsApp Yogi Profile Share Banner */}
+            <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md border border-emerald-800/40">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-xl shrink-0 border border-emerald-400/30 shadow-inner">
+                  🧘
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-extrabold text-sm sm:text-base text-white">
+                      Share Yogi Profile on WhatsApp
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[9px] uppercase">
+                      Client Portal Link
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-emerald-200/90 font-medium mt-0.5">
+                    Send {client.name} unki personal profile link to check attendance, fee status & consistency.
+                  </p>
+                </div>
+              </div>
+
+              <a
+                href={`https://api.whatsapp.com/send?phone=${(client.whatsapp || client.phone || '').replace(/[^0-9]/g, '')}&text=${encodeURIComponent(`Namaste ${client.name}! 🙏\n\nYeh aapki personal Yoganjali Yoga Profile & Progress Portal link hai:\nhttps://www.yoganjaliyoga.com/yogi/${slugifyName(client.name)}\n\nIs link me aap apni:\n✨ Monthly Attendance & Regularity Record\n💳 Fee Payment Status & Billing History\n🧘 Batch Slot & Health Goals\ndekh sakte hain.\n\nKeep up your practice & consistency on the mat! 🌿🧘‍♀️\n— Trainer Anjali Negi, Yoganjali Yoga Studio`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 shrink-0 self-stretch sm:self-auto"
+              >
+                <MessageCircle className="w-4 h-4 fill-white text-emerald-500" />
+                <span>Send Profile Link</span>
+              </a>
+            </div>
+
             {/* Quick Action Toolbar */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               <a
@@ -199,7 +231,7 @@ export const ClientProfileModal: React.FC = () => {
                 Call
               </a>
               <a
-                href={`https://api.whatsapp.com/send?phone=${client.whatsapp.replace(/[^0-9]/g, '')}&text=${encodeURIComponent(`Hi ${client.name}! 🙏\n\nHere is your official Yoganjali yoga practice & progress journal:\n\nhttps://www.yoganjaliyoga.com/yogi/${slugifyName(client.name)}\n\nTrack your attendance record, practice consistency streak, and fee status. 🧘🌿\n\n— Anjali Negi, Yoganjali`)}`}
+                href={`https://api.whatsapp.com/send?phone=${(client.whatsapp || client.phone || '').replace(/[^0-9]/g, '')}&text=${encodeURIComponent(`Namaste ${client.name}! 🙏\n\nYeh aapki personal Yoganjali Yoga Profile & Progress Portal link hai:\nhttps://www.yoganjaliyoga.com/yogi/${slugifyName(client.name)}\n\nIs link me aap apni:\n✨ Monthly Attendance & Regularity Record\n💳 Fee Payment Status & Billing History\n🧘 Batch Slot & Health Goals\ndekh sakte hain.\n\nKeep up your practice & consistency on the mat! 🌿🧘‍♀️\n— Trainer Anjali Negi, Yoganjali Yoga Studio`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 p-3 rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700 font-bold text-xs transition-colors shadow-sm"

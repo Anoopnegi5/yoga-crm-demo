@@ -430,10 +430,10 @@ export const Clients: React.FC = () => {
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-2 mt-4">
                   <button
                     onClick={() => setSelectedClientId(client.id)}
-                    className="flex-1 flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs transition-colors"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    Journal
+                    View Profile
                   </button>
 
                   {isDiscontinued ? (
