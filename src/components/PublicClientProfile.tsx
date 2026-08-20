@@ -516,7 +516,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
           </div>
 
           {/* Month Summary Counters */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className={`grid gap-3 ${isPerSession ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-5'}`}>
             <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
               <span className="text-[10px] font-extrabold text-emerald-800 uppercase block">Present</span>
               <strong className="text-lg sm:text-xl font-black text-emerald-900">{calMonthPresent} Days</strong>
@@ -529,13 +529,15 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
               <span className="text-[10px] font-extrabold text-amber-800 uppercase block">Client Leaves</span>
               <strong className="text-lg sm:text-xl font-black text-amber-900">{calMonthLeaves} Days</strong>
             </div>
-            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 border border-amber-300 text-center ring-1 ring-amber-300/50">
-              <span className="text-[10px] font-black text-amber-900 uppercase block">💳 Fee Paid</span>
-              <strong className="text-lg sm:text-xl font-black text-amber-950">
-                {calMonthPayments.length > 0 ? `₹${calMonthPaidTotal.toLocaleString()}` : '₹0'}
-              </strong>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-center col-span-2 sm:col-span-1">
+            {!isPerSession && (
+              <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 border border-amber-300 text-center ring-1 ring-amber-300/50">
+                <span className="text-[10px] font-black text-amber-900 uppercase block">💳 Fee Paid</span>
+                <strong className="text-lg sm:text-xl font-black text-amber-950">
+                  {calMonthPayments.length > 0 ? `₹${calMonthPaidTotal.toLocaleString()}` : '₹0'}
+                </strong>
+              </div>
+            )}
+            <div className={`p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-center ${isPerSession ? '' : 'col-span-2 sm:col-span-1'}`}>
               <span className="text-[10px] font-extrabold text-purple-800 uppercase block">Studio Leaves</span>
               <strong className="text-lg sm:text-xl font-black text-purple-900">{instructorLeavesCount} Logged</strong>
             </div>
@@ -578,10 +580,10 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                   return dateStr >= s && dateStr <= e;
                 });
 
-                // Client fee payment check for this date
+                // Client fee payment check for this date (Only for monthly batch subscriptions)
                 const clientPaymentsOnDate = payments.filter(p => p.clientId === targetClient.id && p.date === dateStr && p.status === 'Paid');
                 const totalPaidOnDate = clientPaymentsOnDate.reduce((sum, p) => sum + (p.amount || 0), 0);
-                const hasPayment = clientPaymentsOnDate.length > 0;
+                const hasPayment = !isPerSession && clientPaymentsOnDate.length > 0;
 
                 const isToday = new Date().toISOString().slice(0, 10) === dateStr;
 
@@ -652,10 +654,12 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
 
           {/* Calendar Legend */}
           <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-slate-600">
-            <span className="flex items-center gap-1.5">
-              <span className="w-3.5 h-3.5 rounded-full bg-amber-400 ring-2 ring-amber-300 flex items-center justify-center text-[8px] shadow-sm">💰</span>
-              <span className="text-amber-950 font-black">Fee Paid Date</span>
-            </span>
+            {!isPerSession && (
+              <span className="flex items-center gap-1.5">
+                <span className="w-3.5 h-3.5 rounded-full bg-amber-400 ring-2 ring-amber-300 flex items-center justify-center text-[8px] shadow-sm">💰</span>
+                <span className="text-amber-950 font-black">Fee Paid Date</span>
+              </span>
+            )}
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-emerald-500" />
               <span>Attended (Present)</span>
