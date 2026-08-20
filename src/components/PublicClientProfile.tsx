@@ -209,6 +209,8 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   const calMonthPresent = clientAtt.filter(a => a.date.startsWith(calMonthPrefix) && a.status === 'Present').length;
   const calMonthAbsent = clientAtt.filter(a => a.date.startsWith(calMonthPrefix) && a.status === 'Absent').length;
   const calMonthLeaves = leaves.filter(l => l.clientId === targetClient.id && ((l.startDate && l.startDate.startsWith(calMonthPrefix)) || (l.date && l.date.startsWith(calMonthPrefix)))).length;
+  const calMonthPayments = payments.filter(p => p.clientId === targetClient.id && p.date.startsWith(calMonthPrefix) && p.status === 'Paid');
+  const calMonthPaidTotal = calMonthPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
   // Real Instructor Leave Days
   const instructorLeavesCount = trainerLeaves.reduce((acc, leave) => {
@@ -470,22 +472,28 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
           </div>
 
           {/* Month Summary Counters */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
-              <span className="text-[10px] font-extrabold text-emerald-800 uppercase block">Present (Attended)</span>
-              <strong className="text-xl font-black text-emerald-900">{calMonthPresent} Sessions</strong>
+              <span className="text-[10px] font-extrabold text-emerald-800 uppercase block">Present</span>
+              <strong className="text-lg sm:text-xl font-black text-emerald-900">{calMonthPresent} Days</strong>
             </div>
             <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-center">
-              <span className="text-[10px] font-extrabold text-rose-800 uppercase block">Absent (Missed)</span>
-              <strong className="text-xl font-black text-rose-900">{calMonthAbsent} Days</strong>
+              <span className="text-[10px] font-extrabold text-rose-800 uppercase block">Absent</span>
+              <strong className="text-lg sm:text-xl font-black text-rose-900">{calMonthAbsent} Days</strong>
             </div>
             <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-center">
-              <span className="text-[10px] font-extrabold text-amber-800 uppercase block">Approved Leaves</span>
-              <strong className="text-xl font-black text-amber-900">{calMonthLeaves} Days</strong>
+              <span className="text-[10px] font-extrabold text-amber-800 uppercase block">Client Leaves</span>
+              <strong className="text-lg sm:text-xl font-black text-amber-900">{calMonthLeaves} Days</strong>
             </div>
-            <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-center">
+            <div className="p-3.5 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 border border-amber-300 text-center ring-1 ring-amber-300/50">
+              <span className="text-[10px] font-black text-amber-900 uppercase block">💳 Fee Paid</span>
+              <strong className="text-lg sm:text-xl font-black text-amber-950">
+                {calMonthPayments.length > 0 ? `₹${calMonthPaidTotal.toLocaleString()}` : '₹0'}
+              </strong>
+            </div>
+            <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-200 text-center col-span-2 sm:col-span-1">
               <span className="text-[10px] font-extrabold text-purple-800 uppercase block">Studio Leaves</span>
-              <strong className="text-xl font-black text-purple-900">{instructorLeavesCount} Logged</strong>
+              <strong className="text-lg sm:text-xl font-black text-purple-900">{instructorLeavesCount} Logged</strong>
             </div>
           </div>
 
@@ -526,13 +534,20 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                   return dateStr >= s && dateStr <= e;
                 });
 
+                // Client fee payment check for this date
+                const clientPaymentsOnDate = payments.filter(p => p.clientId === targetClient.id && p.date === dateStr && p.status === 'Paid');
+                const totalPaidOnDate = clientPaymentsOnDate.reduce((sum, p) => sum + (p.amount || 0), 0);
+                const hasPayment = clientPaymentsOnDate.length > 0;
+
                 const isToday = new Date().toISOString().slice(0, 10) === dateStr;
 
                 return (
                   <div
                     key={dateStr}
                     className={`min-h-[56px] sm:min-h-[68px] p-2 rounded-2xl border transition-all flex flex-col justify-between ${
-                      isPresent
+                      hasPayment
+                        ? 'bg-gradient-to-br from-amber-50 via-emerald-50/60 to-amber-100/70 border-amber-400 ring-2 ring-amber-400 shadow-md'
+                        : isPresent
                         ? 'bg-emerald-50/90 border-emerald-300 ring-1 ring-emerald-200'
                         : isAbsent
                         ? 'bg-rose-50/90 border-rose-300 ring-1 ring-rose-200'
@@ -547,37 +562,43 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                   >
                     <div className="flex items-center justify-between">
                       <span className={`text-xs font-black ${
-                        isToday ? 'w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center text-[10px]' : 'text-slate-700'
+                        hasPayment
+                          ? 'w-5 h-5 rounded-full bg-amber-400 text-amber-950 flex items-center justify-center text-[10px] shadow-sm ring-1 ring-amber-500'
+                          : isToday 
+                          ? 'w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center text-[10px]' 
+                          : 'text-slate-700'
                       }`}>
                         {dayNum}
                       </span>
-                      {isPresent && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
-                      {isAbsent && <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />}
-                      {clientLeave && <span className="text-xs">🌴</span>}
-                      {trainerLeave && <span className="text-xs">🧘‍♀️</span>}
+                      {hasPayment && <span className="text-xs shrink-0" title={`Payment Paid ₹${totalPaidOnDate.toLocaleString()}`}>💰</span>}
+                      {!hasPayment && isPresent && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+                      {!hasPayment && isAbsent && <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />}
+                      {!hasPayment && clientLeave && <span className="text-xs">🌴</span>}
+                      {!hasPayment && trainerLeave && <span className="text-xs">🧘‍♀️</span>}
                     </div>
 
-                    <div className="pt-1">
-                      {isPresent && (
+                    <div className="pt-1 space-y-0.5">
+                      {hasPayment ? (
+                        <span className="text-[9px] font-black text-amber-950 bg-amber-300/90 px-1 py-0.5 rounded-md block text-center truncate shadow-sm">
+                          💳 Paid ₹{totalPaidOnDate.toLocaleString()}
+                        </span>
+                      ) : isPresent ? (
                         <span className="text-[9px] font-black text-emerald-800 bg-emerald-200/60 px-1 py-0.5 rounded-md block text-center truncate">
                           Present
                         </span>
-                      )}
-                      {isAbsent && (
+                      ) : isAbsent ? (
                         <span className="text-[9px] font-black text-rose-800 bg-rose-200/60 px-1 py-0.5 rounded-md block text-center truncate">
                           Absent
                         </span>
-                      )}
-                      {clientLeave && !isPresent && !isAbsent && (
+                      ) : clientLeave ? (
                         <span className="text-[9px] font-bold text-amber-800 bg-amber-200/60 px-1 py-0.5 rounded-md block text-center truncate">
                           Leave
                         </span>
-                      )}
-                      {trainerLeave && !isPresent && !isAbsent && !clientLeave && (
+                      ) : trainerLeave ? (
                         <span className="text-[9px] font-bold text-purple-800 bg-purple-200/60 px-1 py-0.5 rounded-md block text-center truncate" title={trainerLeave.reason || 'Instructor Rest Day'}>
                           Studio Off
                         </span>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 );
@@ -587,6 +608,10 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
 
           {/* Calendar Legend */}
           <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-slate-600">
+            <span className="flex items-center gap-1.5">
+              <span className="w-3.5 h-3.5 rounded-full bg-amber-400 ring-2 ring-amber-300 flex items-center justify-center text-[8px] shadow-sm">💰</span>
+              <span className="text-amber-950 font-black">Fee Paid Date</span>
+            </span>
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded-full bg-emerald-500" />
               <span>Attended (Present)</span>
