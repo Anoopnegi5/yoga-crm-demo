@@ -7,6 +7,7 @@ export interface CloudDataPayload {
   trainerLeaves: any[];
   leaves?: any[];
   attendance: any[];
+  blogs?: any[];
   customGroupBatches?: string[];
   deletedIds?: string[];
   lastUpdated: string;
@@ -151,6 +152,31 @@ export const normalizeLeave = (l: any): any => {
     reason: l.reason || 'Leave / Rest Day',
     duration: l.duration || '1 Day',
     isFullMonthLeave: !!l.isFullMonthLeave
+  };
+};
+
+export const normalizeBlog = (b: any): any => {
+  if (!b || typeof b !== 'object') return null;
+  const title = b.title || 'Yoga Insights & Practice Guide';
+  const slug = b.slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+  return {
+    id: b.id || `blog-${Date.now()}`,
+    slug: slug,
+    title: title,
+    excerpt: b.excerpt || '',
+    content: b.content || '',
+    coverImage: b.coverImage || '/hero-group-yoga.jpg',
+    category: b.category || 'Yoga Asanas',
+    author: b.author || 'Anjali Negi',
+    authorRole: b.authorRole || 'Founder & Certified Senior Yoga Instructor',
+    authorPhoto: b.authorPhoto || '/anjali-hero.jpg',
+    date: b.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+    readTime: b.readTime || '4 min read',
+    tags: Array.isArray(b.tags) ? b.tags : [],
+    isPublished: b.isPublished !== undefined ? !!b.isPublished : true,
+    featured: !!b.featured,
+    metaTitle: b.metaTitle || title,
+    metaDescription: b.metaDescription || b.excerpt || ''
   };
 };
 

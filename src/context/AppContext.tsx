@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { Client, PaymentRecord, LeaveRecord, AttendanceRecord, TrainerProfile, TrainerLeave, AttendanceStatus, WebsiteCMS, TrainerDreamGoal, PaymentStatus } from '../types';
-import { INITIAL_CLIENTS, INITIAL_PAYMENTS, INITIAL_LEAVES, INITIAL_ATTENDANCE, DEFAULT_TRAINER_PROFILE, INITIAL_TRAINER_LEAVES, INITIAL_TRAINER_DREAMS } from '../data/mockData';
+import { Client, PaymentRecord, LeaveRecord, AttendanceRecord, TrainerProfile, TrainerLeave, AttendanceStatus, WebsiteCMS, TrainerDreamGoal, PaymentStatus, BlogPost } from '../types';
+import { INITIAL_CLIENTS, INITIAL_PAYMENTS, INITIAL_LEAVES, INITIAL_ATTENDANCE, DEFAULT_TRAINER_PROFILE, INITIAL_TRAINER_LEAVES, INITIAL_TRAINER_DREAMS, INITIAL_BLOG_POSTS } from '../data/mockData';
 import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
 import { getTodayDateString } from '../utils/dateUtils';
-import { fetchCloudSyncData, pushCloudSyncData, mergeArraysById, normalizeClient, normalizePayment, normalizeAttendance, normalizeTrainerDream, normalizeLeave } from '../utils/cloudSync';
+import { fetchCloudSyncData, pushCloudSyncData, mergeArraysById, normalizeClient, normalizePayment, normalizeAttendance, normalizeTrainerDream, normalizeLeave, normalizeBlog } from '../utils/cloudSync';
 
 interface AppContextType {
   trainerProfile: TrainerProfile;
@@ -11,6 +11,12 @@ interface AppContextType {
 
   websiteCMS: WebsiteCMS;
   updateWebsiteCMS: (cms: WebsiteCMS) => void;
+
+  blogs: BlogPost[];
+  addBlogPost: (blog: Omit<BlogPost, 'id'>) => void;
+  updateBlogPost: (blog: BlogPost) => void;
+  deleteBlogPost: (id: string) => void;
+  toggleBlogPublish: (id: string) => void;
   
   trainerLeaves: TrainerLeave[];
   addTrainerLeave: (leave: Omit<TrainerLeave, 'id'>) => void;
@@ -132,6 +138,124 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       console.warn('LocalStorage quota limit reached, saving in memory session:', e);
     }
     showSuccessToast('🎉 Live Website Content & Images Updated!');
+  };
+
+  const [blogs, setBlogs] = useState<BlogPost[]>(() => {
+    try {
+      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_blogs`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(normalizeBlog).filter(Boolean);
+      }
+    } catch (e) {}
+    return INITIAL_BLOG_POSTS;
+  });
+
+  const addBlogPost = (blogData: Omit<BlogPost, 'id'>) => {
+    const title = blogData.title || 'Yoga Insights';
+    const autoSlug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+    const newBlog: BlogPost = {
+      ...blogData,
+      id: `blog-${Date.now()}`,
+      slug: blogData.slug?.trim() || autoSlug || `post-${Date.now()}`,
+      author: blogData.author || trainerProfile.name || 'Anjali Negi',
+      authorRole: blogData.authorRole || 'Founder & Senior Yoga Instructor',
+      authorPhoto: blogData.authorPhoto || trainerProfile.photoUrl || '/anjali-hero.jpg',
+      date: blogData.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      isPublished: blogData.isPublished !== undefined ? blogData.isPublished : true,
+    };
+    const updated = [newBlog, ...blogs];
+    setBlogs(updated);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients,
+      payments,
+      trainerDreams,
+      trainerLeaves,
+      leaves,
+      attendance,
+      blogs: updated,
+      customGroupBatches,
+      deletedIds,
+      action: 'overwrite'
+    } as any);
+
+    showSuccessToast('📝 New Blog Article Published Successfully!');
+  };
+
+  const updateBlogPost = (updatedBlog: BlogPost) => {
+    const updated = blogs.map(b => b.id === updatedBlog.id ? updatedBlog : b);
+    setBlogs(updated);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients,
+      payments,
+      trainerDreams,
+      trainerLeaves,
+      leaves,
+      attendance,
+      blogs: updated,
+      customGroupBatches,
+      deletedIds,
+      action: 'overwrite'
+    } as any);
+
+    showSuccessToast('✨ Blog Article Updated & Saved!');
+  };
+
+  const deleteBlogPost = (id: string) => {
+    const updated = blogs.filter(b => b.id !== id);
+    setBlogs(updated);
+    const newDeleted = Array.from(new Set([...deletedIds, id]));
+    setDeletedIds(newDeleted);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients,
+      payments,
+      trainerDreams,
+      trainerLeaves,
+      leaves,
+      attendance,
+      blogs: updated,
+      customGroupBatches,
+      deletedIds: newDeleted,
+      action: 'overwrite'
+    } as any);
+
+    showSuccessToast('🗑️ Blog Article Deleted.');
+  };
+
+  const toggleBlogPublish = (id: string) => {
+    const updated = blogs.map(b => b.id === id ? { ...b, isPublished: !b.isPublished } : b);
+    setBlogs(updated);
+    try {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
+    } catch (e) {}
+
+    pushCloudSyncData({
+      clients,
+      payments,
+      trainerDreams,
+      trainerLeaves,
+      leaves,
+      attendance,
+      blogs: updated,
+      customGroupBatches,
+      deletedIds,
+      action: 'overwrite'
+    } as any);
+
+    const target = updated.find(b => b.id === id);
+    showSuccessToast(target?.isPublished ? '🌐 Article is now Live on Website!' : '🔒 Article moved to Drafts.');
   };
 
   const [trainerLeaves, setTrainerLeaves] = useState<TrainerLeave[]>(() => {
@@ -451,6 +575,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const mergedTrainerLeaves = mergeArraysById(trainerLeaves, remote?.trainerLeaves || [], allDeleted);
       const mergedLeaves = mergeArraysById(leaves, remote?.leaves || [], allDeleted);
       const mergedAttendance = mergeArraysById(attendance, remote?.attendance || [], allDeleted);
+      const mergedBlogs = mergeArraysById(blogs, remote?.blogs || [], allDeleted);
       const mergedBatches = Array.from(new Set([...customGroupBatches, ...(remote?.customGroupBatches || [])]));
 
       setClients(mergedClients);
@@ -459,6 +584,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setTrainerLeaves(mergedTrainerLeaves);
       setLeaves(mergedLeaves);
       setAttendance(mergedAttendance);
+      setBlogs(mergedBlogs);
       setCustomGroupBatches(mergedBatches);
 
       await pushCloudSyncData({
@@ -468,6 +594,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         trainerLeaves: mergedTrainerLeaves,
         leaves: mergedLeaves,
         attendance: mergedAttendance,
+        blogs: mergedBlogs,
         customGroupBatches: mergedBatches,
         deletedIds: allDeleted
       });
@@ -493,6 +620,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         trainerLeaves,
         leaves,
         attendance,
+        blogs,
         customGroupBatches,
         deletedIds,
         action: 'overwrite'
@@ -552,6 +680,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             const rawRemote = Array.isArray(remote.attendance) ? remote.attendance.map(normalizeAttendance).filter(Boolean) : [];
             const merged = mergeArraysById(prev, rawRemote, allDeleted);
             return merged.map(normalizeAttendance).filter(Boolean);
+          });
+          setBlogs(prev => {
+            const rawRemote = Array.isArray(remote.blogs) ? remote.blogs.map(normalizeBlog).filter(Boolean) : [];
+            if (rawRemote.length === 0) return prev;
+            const merged = mergeArraysById(prev, rawRemote, allDeleted);
+            return merged.map(normalizeBlog).filter(Boolean);
           });
 
           if (Array.isArray(remote.customGroupBatches)) {
@@ -1281,6 +1415,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lastCloudSyncTime,
         syncCloudNow,
         forcePushCloud,
+        blogs,
+        addBlogPost,
+        updateBlogPost,
+        deleteBlogPost,
+        toggleBlogPublish,
         startNewMonthCycle,
         resetToSampleData,
         exportBackupData,

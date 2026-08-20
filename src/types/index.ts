@@ -192,3 +192,32 @@ export interface WebsiteCMS {
   instagramUrl: string;
   youtubeUrl: string;
 }
+
+export type BlogCategory = 
+  | 'Yoga Asanas' 
+  | 'Posture & Back Pain' 
+  | 'Weight Management' 
+  | 'Pranayama & Meditation' 
+  | 'Holistic Wellness' 
+  | 'Mindful Living';
+
+export interface BlogPost {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  coverImage: string;
+  category: BlogCategory;
+  author: string;
+  authorRole: string;
+  authorPhoto?: string;
+  date: string;
+  readTime: string;
+  tags: string[];
+  isPublished: boolean;
+  featured?: boolean;
+  metaTitle?: string;
+  metaDescription?: string;
+}
+

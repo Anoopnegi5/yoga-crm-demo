@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { SITE_CONFIG, DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
 import { FreeDemoModal } from './Modals/FreeDemoModal';
+import { BlogArticleModal } from './BlogArticleModal';
 import { 
   Sparkles, 
   CheckCircle2, 
@@ -36,12 +37,14 @@ import {
   Layers,
   CheckCircle,
   UserPlus,
-  FileText
+  FileText,
+  BookOpen,
+  Calendar
 } from 'lucide-react';
-import { Gender, SessionType, FeeType } from '../types';
+import { Gender, SessionType, FeeType, BlogPost } from '../types';
 
 export const ClientWebsite: React.FC = () => {
-  const { addClient, setIsClientWebsiteMode, showSuccessToast, websiteCMS } = useApp();
+  const { addClient, setIsClientWebsiteMode, showSuccessToast, websiteCMS, blogs } = useApp();
   const cms = websiteCMS || DEFAULT_WEBSITE_CMS;
 
   // URL check for Share Demo / Join Link (/join, /demo, ?demo=true, ?join=true)
@@ -60,6 +63,11 @@ export const ClientWebsite: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(0);
   const [activeGoalCard, setActiveGoalCard] = useState<string | null>(null);
+
+  // Blog State
+  const [selectedBlogForModal, setSelectedBlogForModal] = useState<BlogPost | null>(null);
+  const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
+  const [blogFilterCategory, setBlogFilterCategory] = useState<string>('All');
 
   // Full Onboarding Form State
   const [name, setName] = useState('');
@@ -84,6 +92,40 @@ export const ClientWebsite: React.FC = () => {
       setIsDemoModalOpen(true);
     }
   }, [isJoinLink]);
+
+  // Deep linking to individual blog post via clean URL (/blog/:slug or ?blog=slug or #blog-slug)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !blogs || blogs.length === 0) return;
+    const path = window.location.pathname.toLowerCase();
+    const search = window.location.search;
+    const hash = window.location.hash.toLowerCase();
+
+    if (path.startsWith('/blog/')) {
+      const slug = path.replace('/blog/', '').replace(/\/$/, '');
+      const match = blogs.find(b => b.slug.toLowerCase() === slug || b.id.toLowerCase() === slug);
+      if (match) {
+        setSelectedBlogForModal(match);
+        setIsBlogModalOpen(true);
+      }
+    } else {
+      const params = new URLSearchParams(search);
+      const querySlug = params.get('blog') || params.get('article');
+      if (querySlug) {
+        const match = blogs.find(b => b.slug.toLowerCase() === querySlug.toLowerCase() || b.id.toLowerCase() === querySlug.toLowerCase());
+        if (match) {
+          setSelectedBlogForModal(match);
+          setIsBlogModalOpen(true);
+        }
+      } else if (hash.startsWith('#blog-')) {
+        const hashSlug = hash.replace('#blog-', '');
+        const match = blogs.find(b => b.slug.toLowerCase() === hashSlug || b.id.toLowerCase() === hashSlug);
+        if (match) {
+          setSelectedBlogForModal(match);
+          setIsBlogModalOpen(true);
+        }
+      }
+    }
+  }, [blogs]);
 
   const openDemoModal = (goal: string = '', program: string = '') => {
     setSelectedGoalForModal(goal);
@@ -334,6 +376,10 @@ export const ClientWebsite: React.FC = () => {
             <a href="#classes" className="hover:text-[#4A5D3E] transition-colors">Classes</a>
             <a href="#benefits" className="hover:text-[#4A5D3E] transition-colors">Why Yoganjali</a>
             <a href="#goals" className="hover:text-[#4A5D3E] transition-colors">Goal Programs</a>
+            <a href="#blog" className="hover:text-[#4A5D3E] transition-colors flex items-center gap-1">
+              <span>Blog</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+            </a>
             <a href="#testimonials" className="hover:text-[#4A5D3E] transition-colors">Reviews</a>
             <a href="#faq" className="hover:text-[#4A5D3E] transition-colors">FAQ</a>
           </nav>
@@ -380,6 +426,10 @@ export const ClientWebsite: React.FC = () => {
             <a href="#classes" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Yoga Programs</a>
             <a href="#benefits" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Why Choose Yoganjali</a>
             <a href="#goals" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Targeted Goal Programs</a>
+            <a href="#blog" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-emerald-800 font-extrabold flex items-center justify-between">
+              <span>🌿 Yoga Blog & Guides</span>
+              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-[10px] text-emerald-900">New</span>
+            </a>
             <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Student Reviews</a>
             <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">FAQ</a>
             
@@ -1033,6 +1083,125 @@ export const ClientWebsite: React.FC = () => {
 
 
       {/* ================================================== */}
+      {/* 11. YOGA INSIGHTS & HOLISTIC WELLNESS BLOG SECTION */}
+      {/* ================================================== */}
+      <section id="blog" className="py-24 space-y-12">
+        
+        <div className="text-center space-y-4 max-w-2xl mx-auto">
+          <span className="text-xs font-black uppercase tracking-widest text-emerald-800 bg-emerald-100 px-4.5 py-1.5 rounded-full border border-emerald-200 inline-flex items-center gap-1.5">
+            <BookOpen className="w-3.5 h-3.5 text-emerald-800" />
+            <span>YOGA INSIGHTS & HOLISTIC GUIDES</span>
+          </span>
+
+          <h2 className="font-serif text-4xl sm:text-6xl text-[#2D3B27] font-extrabold tracking-tight">
+            Knowledge for Your Mat & Mind
+          </h2>
+          
+          <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-xl mx-auto leading-relaxed">
+            Explore authentic posture alignment, back pain recovery, breathwork science, and mindful health guides written by Trainer Anjali Negi.
+          </p>
+
+          {/* Category Filter Pills */}
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-3">
+            {['All', 'Posture & Back Pain', 'Yoga Asanas', 'Weight Management', 'Pranayama & Meditation'].map((cat) => {
+              const count = cat === 'All' 
+                ? (blogs || []).filter(b => b.isPublished).length 
+                : (blogs || []).filter(b => b.isPublished && b.category === cat).length;
+
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setBlogFilterCategory(cat)}
+                  className={`px-4 py-2 rounded-full text-xs font-extrabold transition-all ${
+                    blogFilterCategory === cat
+                      ? 'bg-[#2D3B27] text-white shadow-md ring-2 ring-emerald-600/30'
+                      : 'bg-white/80 text-slate-700 hover:bg-white border border-[#E3D9C6] hover:border-emerald-500'
+                  }`}
+                >
+                  <span>{cat}</span>
+                  <span className="ml-1.5 opacity-70 text-[10px]">({count})</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Blog Post Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          {(blogs || [])
+            .filter(b => b.isPublished)
+            .filter(b => blogFilterCategory === 'All' || b.category === blogFilterCategory)
+            .map((post) => (
+              <div
+                key={post.id}
+                onClick={() => {
+                  setSelectedBlogForModal(post);
+                  setIsBlogModalOpen(true);
+                }}
+                className="group bg-white/95 backdrop-blur-md rounded-3xl border border-[#E3D9C6] shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer flex flex-col justify-between hover:-translate-y-1 relative"
+              >
+                <div>
+                  {/* Card Cover Image */}
+                  <div className="relative h-52 w-full overflow-hidden bg-slate-100">
+                    <img
+                      src={post.coverImage}
+                      alt={post.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                    
+                    {/* Category Badge */}
+                    <span className="absolute top-3 left-3 px-3 py-1 rounded-xl bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-black border border-white/20">
+                      {post.category}
+                    </span>
+
+                    {/* Date and Read Time Overlay */}
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[11px] text-slate-200 font-bold">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3 text-amber-300" />
+                        {post.date}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-amber-300" />
+                        {post.readTime}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Card Title & Excerpt */}
+                  <div className="p-6 space-y-3">
+                    <h3 className="font-serif font-extrabold text-lg sm:text-xl text-[#2D3B27] group-hover:text-emerald-800 transition-colors leading-snug line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed font-medium">
+                      {post.excerpt}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Card Footer / Author & CTA */}
+                <div className="p-6 pt-0 flex items-center justify-between border-t border-slate-100 mt-2">
+                  <div className="flex items-center gap-2 pt-3">
+                    <img
+                      src={post.authorPhoto || '/anjali-hero.jpg'}
+                      alt={post.author}
+                      className="w-7 h-7 rounded-full object-cover ring-1 ring-emerald-500 bg-white"
+                    />
+                    <span className="text-xs font-bold text-slate-800">{post.author}</span>
+                  </div>
+
+                  <span className="pt-3 text-xs font-black text-emerald-800 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                    <span>Read Article</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-emerald-700" />
+                  </span>
+                </div>
+              </div>
+            ))}
+        </div>
+
+      </section>
+
+      {/* ================================================== */}
       {/* 12. TESTIMONIALS & GOOGLE REVIEWS */}
       {/* ================================================== */}
       <section id="testimonials" className="py-24 space-y-14">
@@ -1283,6 +1452,7 @@ export const ClientWebsite: React.FC = () => {
             <a href="#about" className="block text-slate-300 hover:text-white transition-colors">About</a>
             <a href="#classes" className="block text-slate-300 hover:text-white transition-colors">Classes</a>
             <a href="#benefits" className="block text-slate-300 hover:text-white transition-colors">Why Yoganjali</a>
+            <a href="#blog" className="block text-amber-300 hover:text-white font-bold transition-colors">🌿 Yoga Insights Blog</a>
             <a href="#faq" className="block text-slate-300 hover:text-white transition-colors">FAQ</a>
             <a href="/panel" className="block text-slate-400 hover:text-white transition-colors text-[11px] pt-1">🔐 Trainer Panel</a>
             <a href="/members" className="block text-slate-400 hover:text-white transition-colors text-[11px]">🧘 Our Yogis</a>
@@ -1329,6 +1499,22 @@ export const ClientWebsite: React.FC = () => {
           <span>WHATSAPP</span>
         </button>
       </div>
+
+      {/* BLOG ARTICLE READER MODAL */}
+      <BlogArticleModal
+        post={selectedBlogForModal}
+        isOpen={isBlogModalOpen}
+        onClose={() => {
+          setIsBlogModalOpen(false);
+          // If URL was /blog/slug, reset clean history without reloading
+          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/blog/')) {
+            window.history.pushState(null, '', '/');
+          }
+        }}
+        onOpenDemoModal={(goal, prog) => openDemoModal(goal, prog)}
+        allPosts={blogs || []}
+        onSelectPost={(p) => setSelectedBlogForModal(p)}
+      />
 
       {/* LEAD FORM MODAL */}
       <FreeDemoModal

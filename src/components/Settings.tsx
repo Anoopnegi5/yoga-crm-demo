@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { User, Lock, Building, Save, CheckCircle2, LogOut, Upload, Sparkles, Image as ImageIcon, Type, Download, Globe, Cloud, Database } from 'lucide-react';
+import { User, Lock, Building, Save, CheckCircle2, LogOut, Upload, Sparkles, Image as ImageIcon, Type, Download, Globe, Cloud, Database, BookOpen } from 'lucide-react';
 import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
 import { getSupabaseConfig, saveSupabaseConfig, clearSupabaseConfig } from '../utils/supabaseSync';
 import { getStoredGDriveToken, saveGDriveToken, clearGDriveToken, uploadOrOverwriteBackupFile, findOrCreateYoganjaliFolder, openGoogleOAuthTokenPage } from '../utils/gdriveSync';
+import { BlogManagerCMS } from './BlogManagerCMS';
 
 interface SettingsProps {
   onLogout?: () => void;
@@ -31,7 +32,7 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
 
   // Website CMS Multi-Section State
   const cms = websiteCMS || DEFAULT_WEBSITE_CMS;
-  const [activeCmsTab, setActiveCmsTab] = useState<'photos' | 'hero' | 'about' | 'programs' | 'sections' | 'contacts'>('photos');
+  const [activeCmsTab, setActiveCmsTab] = useState<'photos' | 'hero' | 'about' | 'programs' | 'sections' | 'contacts' | 'blogs'>('blogs');
 
   // Brand & Header
   const [announcementBar, setAnnouncementBar] = useState(cms.announcementBar || "🌸 1-Day Free Trial Available • Book Your Live Demo Session Today");
@@ -500,6 +501,19 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
             <div className="flex flex-wrap items-center gap-2 border-b border-purple-800/80 pb-3">
               <button
                 type="button"
+                onClick={() => setActiveCmsTab('blogs')}
+                className={`px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 ${
+                  activeCmsTab === 'blogs'
+                    ? 'bg-amber-400 text-amber-950 shadow-md font-extrabold ring-2 ring-amber-300'
+                    : 'bg-white/15 text-amber-300 hover:bg-white/25'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>📝 Blog & Articles Manager</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => setActiveCmsTab('photos')}
                 className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 ${
                   activeCmsTab === 'photos'
@@ -570,6 +584,13 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                 📞 Hotlines & Socials
               </button>
             </div>
+
+            {/* TAB 0: BLOG & ARTICLES MANAGER */}
+            {activeCmsTab === 'blogs' && (
+              <div className="pt-2">
+                <BlogManagerCMS />
+              </div>
+            )}
 
             {/* TAB 1: PHOTOS & IMAGES */}
             {activeCmsTab === 'photos' && (

@@ -2,8 +2,11 @@
   "rewrites": [
     { "source": "/panel", "destination": "/index.html" },
     { "source": "/join", "destination": "/index.html" },
+    { "source": "/demo", "destination": "/index.html" },
     { "source": "/register", "destination": "/index.html" },
     { "source": "/members", "destination": "/index.html" },
+    { "source": "/blog/:slug", "destination": "/api/blog-meta" },
+    { "source": "/blog", "destination": "/index.html" },
     { "source": "/yogi/:slug", "destination": "/api/yogi-meta" },
     { "source": "/member/:slug", "destination": "/api/yogi-meta" }
   ],
@@ -22,19 +25,11 @@
       ]
     },
     {
-      "source": "/(.*)",
+      "source": "/(sitemap.xml|robots.txt)",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
+          "value": "public, max-age=3600, s-maxage=86400"
         }
       ]
     }

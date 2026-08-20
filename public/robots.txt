@@ -33,12 +33,16 @@ Disallow: /register
 Disallow: /register/
 Disallow: /api/
 
-# Allow crawling of public studio pages
+# Allow crawling of public studio & blog pages
 Allow: /$
 Allow: /join
 Allow: /demo
+Allow: /blog
+Allow: /blog/
 Allow: /assets/
 Allow: /*.png
 Allow: /*.jpg
 Allow: /*.svg
 
+# XML Sitemap
+Sitemap: https://www.yoganjaliyoga.com/sitemap.xml
