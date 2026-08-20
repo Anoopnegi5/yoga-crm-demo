@@ -25,6 +25,7 @@ import {
   Lock,
   Zap,
   CreditCard,
+  Camera,
   CalendarDays,
   CalendarX,
   XCircle,
@@ -44,9 +45,11 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   clientId,
   onBackToDirectory 
 }) => {
-  const { clients, attendance, leaves, trainerLeaves, payments, addPayment, showSuccessToast } = useApp();
+  const { clients, updateClient, attendance, leaves, trainerLeaves, payments, addPayment, showSuccessToast } = useApp();
   const [copied, setCopied] = useState(false);
   const [isPaymentCheckoutOpen, setIsPaymentCheckoutOpen] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
   // Find target client by slug or ID
   const activeClients = clients.filter(c => c.status !== 'Discontinued');
@@ -186,6 +189,67 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
   };
 
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Please select an image smaller than 5MB.');
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Url = event.target?.result as string;
+      if (base64Url && targetClient) {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const maxDim = 600;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressedUrl = canvas.toDataURL('image/jpeg', 0.85);
+            updateClient({
+              ...targetClient,
+              photoUrl: compressedUrl
+            });
+            showSuccessToast('📸 Profile picture updated successfully!');
+          }
+          setIsUploadingPhoto(false);
+        };
+        img.onerror = () => {
+          updateClient({
+            ...targetClient,
+            photoUrl: base64Url
+          });
+          showSuccessToast('📸 Profile picture updated successfully!');
+          setIsUploadingPhoto(false);
+        };
+        img.src = base64Url;
+      } else {
+        setIsUploadingPhoto(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const isPerSession = targetClient.feeType === 'Per Session' || targetClient.membershipPlan === 'Per Session';
   const { status: currentMonthStatus, dueAmount, paidAmount } = getClientCurrentMonthPaymentStatus(targetClient, payments, undefined, leaves);
   const isPaid = isPerSession ? true : currentMonthStatus === 'Paid';
@@ -306,7 +370,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
               <CreditCard className={`w-4 h-4 ${(isPerSession ? !isPaid : hasOutstandingDue) ? 'text-slate-950' : 'text-white'}`} />
               <span>
                 {isPerSession
-                  ? (isPaid ? '✓ Session Pass Active' : `💳 Pay Session Fee (₹${targetClient.perSessionFee || 1000})`)
+                  ? (isPaid ? '✓ Session Pass Active' : `💳 Pay Session Fee (₹${targetClient.perSessionFee || 800})`)
                   : (hasOutstandingDue 
                     ? `💳 Pay Pending Fee (₹${totalOutstandingDue.toLocaleString()})` 
                     : '✓ Fee Paid • View Status')}
@@ -329,16 +393,47 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
 
           <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8 text-center md:text-left">
             
-            {/* Yogi Avatar with Ring */}
-            <div className="relative shrink-0">
-              <img
-                src={targetClient.photoUrl}
-                alt={targetClient.name}
-                className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover ring-4 ring-amber-400 shadow-2xl bg-white"
-              />
-              <div className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-lg font-black shadow-md ring-2 ring-emerald-950">
-                ✨
+            {/* Yogi Avatar with Ring & Interactive DP Change Option */}
+            <div className="relative shrink-0 group">
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="relative cursor-pointer rounded-full"
+                title="Click to change profile picture / DP"
+              >
+                <img
+                  src={targetClient.photoUrl}
+                  alt={targetClient.name}
+                  className="w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover ring-4 ring-amber-400 shadow-2xl bg-white transition-all group-hover:brightness-90"
+                />
+                
+                {/* Hover / Touch Camera Overlay on DP */}
+                <div className="absolute inset-0 rounded-full bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white text-[10px] sm:text-xs font-extrabold backdrop-blur-[2px]">
+                  <Camera className="w-6 h-6 text-amber-300 mb-0.5 animate-bounce" />
+                  <span>{isUploadingPhoto ? 'Updating...' : 'Change DP'}</span>
+                </div>
+
+                {/* Floating Action Button at bottom-right corner of DP */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    fileInputRef.current?.click();
+                  }}
+                  className="absolute -bottom-1 -right-1 w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 hover:from-amber-300 hover:to-yellow-300 text-slate-950 flex items-center justify-center shadow-xl ring-2 ring-emerald-950 transition-transform active:scale-90 hover:scale-110"
+                  title="Upload / Update Profile Photo"
+                >
+                  <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-slate-950" />
+                </button>
               </div>
+
+              {/* Hidden File Input for DP */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoUpload}
+                className="hidden"
+              />
             </div>
 
             {/* Yogi Info */}
