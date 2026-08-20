@@ -84,7 +84,7 @@ export default async function handler(req, res) {
     const matched = clients.find(c => slugifyName(c.name) === slug);
     if (matched) {
       clientName = matched.name || formattedSlugName;
-      if (matched.photoUrl) {
+      if (matched.photoUrl && !matched.photoUrl.startsWith('data:')) {
         let rawPhoto = matched.photoUrl;
         // Convert dicebear SVG to PNG for WhatsApp link preview compatibility
         if (rawPhoto.includes('dicebear.com') && rawPhoto.includes('/svg?')) {
@@ -94,16 +94,43 @@ export default async function handler(req, res) {
           rawPhoto = `https://www.yoganjaliyoga.com${rawPhoto}`;
         }
         photoUrl = rawPhoto;
+      } else {
+        photoUrl = `https://api.dicebear.com/7.x/notionists/png?seed=${encodeURIComponent(clientName)}&size=600`;
       }
+    } else {
+      photoUrl = `https://api.dicebear.com/7.x/notionists/png?seed=${encodeURIComponent(clientName)}&size=600`;
     }
   } catch (err) {
     console.error('Error matching client in yogi-meta:', err);
+    photoUrl = `https://api.dicebear.com/7.x/notionists/png?seed=${encodeURIComponent(clientName)}&size=600`;
   }
 
   const pageTitle = `🧘 ${clientName} • Official Yogi Profile | Yoganjali Studio`;
   const ogTitle = `🧘 ${clientName} — Official Yogi Profile`;
   const ogDescription = `View ${clientName}'s personalized yoga practice progress, attendance journal & consistency streak at Yoganjali Studio with Trainer Anjali Negi.`;
   const profileUrl = `https://www.yoganjaliyoga.com/yogi/${slug}`;
+
+  const metaTags = `
+    <title>${escapeHtml(pageTitle)}</title>
+    <meta name="title" content="${escapeHtml(ogTitle)}" />
+    <meta name="description" content="${escapeHtml(ogDescription)}" />
+    <meta property="og:site_name" content="Yoganjali Yoga Studio" />
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content="${escapeHtml(ogTitle)}" />
+    <meta property="og:description" content="${escapeHtml(ogDescription)}" />
+    <meta property="og:url" content="${profileUrl}" />
+    <meta property="og:image" content="${photoUrl}" />
+    <meta property="og:image:secure_url" content="${photoUrl}" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="600" />
+    <meta property="og:image:height" content="600" />
+    <meta property="og:image:alt" content="${escapeHtml(clientName)} Yogi Profile" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(ogTitle)}" />
+    <meta name="twitter:description" content="${escapeHtml(ogDescription)}" />
+    <meta name="twitter:image" content="${photoUrl}" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="googlebot" content="noindex, nofollow" />`;
 
   // Read base index.html from dist
   let html = '';
@@ -117,12 +144,14 @@ export default async function handler(req, res) {
   }
 
   if (html) {
-    // Replace default meta tags with dynamic client metadata and strict noindex robots tag for search engines
-    html = html.replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(pageTitle)}</title>\n    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />\n    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />`);
-    html = html.replace(/<meta property="og:title" content=".*?" \/>/i, `<meta property="og:title" content="${escapeHtml(ogTitle)}" />`);
-    html = html.replace(/<meta property="og:description" content=".*?" \/>/i, `<meta property="og:description" content="${escapeHtml(ogDescription)}" />`);
-    html = html.replace(/<meta property="og:image" content=".*?" \/>/i, `<meta property="og:image" content="${escapeHtml(photoUrl)}" />\n    <meta property="og:image:secure_url" content="${escapeHtml(photoUrl)}" />\n    <meta property="og:image:width" content="600" />\n    <meta property="og:image:height" content="600" />\n    <meta property="og:url" content="${escapeHtml(profileUrl)}" />\n    <meta name="twitter:card" content="summary_large_image" />\n    <meta name="twitter:title" content="${escapeHtml(ogTitle)}" />\n    <meta name="twitter:description" content="${escapeHtml(ogDescription)}" />\n    <meta name="twitter:image" content="${escapeHtml(photoUrl)}" />`);
-    html = html.replace(/<meta name="description" content=".*?" \/>/i, `<meta name="description" content="${escapeHtml(ogDescription)}" />`);
+    // Clean out existing default title/meta tags so there are no conflicts
+    html = html.replace(/<title>.*?<\/title>/gis, '');
+    html = html.replace(/<meta property="og:.*?" \/>/gis, '');
+    html = html.replace(/<meta name="twitter:.*?" \/>/gis, '');
+    html = html.replace(/<meta name="description" content=".*?" \/>/gis, '');
+    html = html.replace(/<meta name="robots" content=".*?" \/>/gis, '');
+    html = html.replace(/<meta name="googlebot" content=".*?" \/>/gis, '');
+    html = html.replace(/<head>/i, `<head>${metaTags}`);
   } else {
     // Fallback standalone HTML
     html = `<!doctype html>
@@ -131,21 +160,7 @@ export default async function handler(req, res) {
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/yoganjali-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${escapeHtml(pageTitle)}</title>
-    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
-    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />
-    <meta name="description" content="${escapeHtml(ogDescription)}" />
-    <meta property="og:type" content="profile" />
-    <meta property="og:url" content="${escapeHtml(profileUrl)}" />
-    <meta property="og:title" content="${escapeHtml(ogTitle)}" />
-    <meta property="og:description" content="${escapeHtml(ogDescription)}" />
-    <meta property="og:image" content="${escapeHtml(photoUrl)}" />
-    <meta property="og:image:width" content="600" />
-    <meta property="og:image:height" content="600" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${escapeHtml(ogTitle)}" />
-    <meta name="twitter:description" content="${escapeHtml(ogDescription)}" />
-    <meta name="twitter:image" content="${escapeHtml(photoUrl)}" />
+    ${metaTags}
   </head>
   <body>
     <div id="root"></div>
@@ -155,7 +170,7 @@ export default async function handler(req, res) {
   }
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive, nosnippet');
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300');
   return res.status(200).send(html);
 }

@@ -1,6 +1,25 @@
 # Robots.txt for Yoganjali Yoga Studio
-# Prevent crawling and indexing of private studio panels, member directories, and individual client profile pages
 
+# Allow Social Media & Messaging Link Preview Scrapers (WhatsApp, Facebook, Twitter, Telegram, LinkedIn)
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+# Search Engine Crawlers (Googlebot, Bingbot, etc.) — Prevent indexing of private studio panels & client profiles
 User-agent: *
 Disallow: /panel
 Disallow: /panel/
@@ -14,12 +33,10 @@ Disallow: /register
 Disallow: /register/
 Disallow: /api/
 
-# Allow crawling of public website and booking pages
+# Allow crawling of public studio pages
 Allow: /$
 Allow: /join
-Allow: /join/
 Allow: /demo
-Allow: /demo/
 Allow: /assets/
 Allow: /*.png
 Allow: /*.jpg
