@@ -360,7 +360,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsPaymentCheckoutOpen(true)}
+              onClick={scrollToBilling}
               className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all flex items-center gap-2 hover:scale-105 active:scale-95 ${
                 (isPerSession ? !isPaid : hasOutstandingDue)
                   ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 ring-2 ring-amber-300/80 animate-pulse'
@@ -468,7 +468,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
               {/* Action Bar inside card — Big Prominent Payment & Billing Status Button */}
               <div className="pt-3 flex flex-wrap items-center justify-center md:justify-start">
                 <button
-                  onClick={() => setIsPaymentCheckoutOpen(true)}
+                  onClick={scrollToBilling}
                   className={`w-full sm:w-auto px-7 py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2.5 shadow-xl hover:scale-105 active:scale-95 ${
                     (isPerSession ? !isPaid : hasOutstandingDue)
                       ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-slate-950 ring-4 ring-amber-400/40 hover:ring-amber-300'
@@ -482,8 +482,8 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                         ? `✓ Pay-As-You-Go Session Pass Active (₹${targetClient.perSessionFee || 800}/Class)` 
                         : `💳 Pay Per-Session Fee (₹${targetClient.perSessionFee || 800})`)
                       : (hasOutstandingDue 
-                        ? `💳 Pay Pending Studio Fee (₹${totalOutstandingDue.toLocaleString()})` 
-                        : '✓ Studio Fee Paid • Verified')}
+                        ? `💳 Pay Pending Studio Fee & View Billing History (₹${totalOutstandingDue.toLocaleString()})` 
+                        : '✓ Studio Fee Paid • View Billing Cycle Records')}
                   </span>
                   <ChevronRight className="w-4 h-4 opacity-75" />
                 </button>
