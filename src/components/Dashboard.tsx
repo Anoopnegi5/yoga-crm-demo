@@ -585,269 +585,6 @@ export const Dashboard: React.FC = () => {
 
       </div>
 
-      {/* 🌟 TRAINER FINANCIAL VISION & DREAMS WIDGET */}
-      {trainerDreams && trainerDreams.length > 0 && (
-        <div 
-          onClick={() => setActiveTab('dreams')}
-          className="bg-gradient-to-r from-slate-950 via-purple-950 to-indigo-950 text-white rounded-3xl p-6 shadow-xl border border-purple-500/30 cursor-pointer hover:border-purple-400/60 transition-all group"
-        >
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-amber-400 text-amber-950 font-black text-2xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform shrink-0">
-                🏆
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-serif font-extrabold text-lg sm:text-xl text-white">Anjali's Future Dreams & Revenue Goals</h4>
-                  <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-300/40 px-2.5 py-0.5 rounded-full font-black uppercase">
-                    VISION BOARD
-                  </span>
-                </div>
-                <p className="text-xs text-purple-200 font-medium mt-0.5">
-                  Top Goal: <strong className="text-white">{trainerDreams[0]?.title || 'Financial Vision Goal'}</strong> (Target: ₹{(trainerDreams[0]?.targetAmount || 0).toLocaleString('en-IN')})
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-              <div className="text-right">
-                <span className="text-xs text-purple-200 font-bold block">Funded</span>
-                <span className="text-amber-300 font-black text-base sm:text-lg">
-                  ₹{(trainerDreams[0]?.savedAmount || 0).toLocaleString('en-IN')}
-                </span>
-              </div>
-              <button className="px-4 py-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs shadow-md transition-all flex items-center gap-1 group-hover:translate-x-1">
-                <span>View All Dreams</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* NEW RICH FEATURE: 3 EQUAL-SIZE ANALYTICS & LEADERBOARD CARDS */}
-      <div className="bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl space-y-6">
-        
-        <div className="flex items-center justify-between border-b border-white/10 pb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-purple-600/40 backdrop-blur-md flex items-center justify-center text-yellow-300 border border-purple-400/30">
-              <Trophy className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-extrabold tracking-tight">Studio Performance Analytics & Leaderboard</h3>
-              <p className="text-xs text-purple-200/80 font-medium">Top 5 Regular Yogis, Irregular Client Alerts & Fee Collection Health</p>
-            </div>
-          </div>
-
-          <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-white/10 text-purple-200 text-xs font-bold border border-white/15">
-            ⚡ Live Studio Insights
-          </span>
-        </div>
-
-        {/* EQUAL 3-COLUMN GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
-          {/* Card 1: TOP 5 REGULAR YOGIS LEADERBOARD */}
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/15 hover:bg-white/15 transition-all space-y-3 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                <span className="text-[10px] font-extrabold tracking-wider text-yellow-300 uppercase bg-yellow-400/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <Trophy className="w-3.5 h-3.5" /> 🏆 Top 5 Regular Yogis
-                </span>
-                <span className="text-[10px] font-bold text-yellow-200">
-                  Disciplined
-                </span>
-              </div>
-
-              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                {rankedTop5Yogis.map((item, idx) => {
-                  const { client, completedClasses, absentCount, leaveCount, consistencyRate } = item;
-                  const rankBadges = ['🥇 #1', '🥈 #2', '🥉 #3', '4️⃣ #4', '5️⃣ #5'];
-                  const rankColors = [
-                    'bg-yellow-400 text-slate-950 ring-yellow-400',
-                    'bg-slate-200 text-slate-950 ring-slate-300',
-                    'bg-amber-600 text-white ring-amber-500',
-                    'bg-purple-800 text-white ring-purple-400',
-                    'bg-purple-900 text-white ring-purple-500'
-                  ];
-
-                  return (
-                    <div 
-                      key={client.id}
-                      onClick={() => setSelectedClientId(client.id)}
-                      className="p-2.5 rounded-xl bg-white/10 border border-white/10 flex items-center justify-between gap-2 hover:bg-white/20 cursor-pointer transition-all group/item"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className="relative shrink-0">
-                          <img
-                            src={client.photoUrl}
-                            alt={client.name}
-                            className={`w-9 h-9 rounded-xl object-cover ring-2 bg-white ${
-                              idx === 0 ? 'ring-yellow-400' : 'ring-purple-300'
-                            }`}
-                          />
-                          <span className={`absolute -top-1.5 -left-1.5 text-[8px] font-black px-1.5 py-0.2 rounded-full shadow-md ${rankColors[idx]}`}>
-                            {rankBadges[idx]}
-                          </span>
-                        </div>
-
-                        <div>
-                          <h4 className="font-extrabold text-white text-xs group-hover/item:text-yellow-300 transition-colors">
-                            {client.name}
-                          </h4>
-                          <p className="text-[10px] text-purple-200 font-medium">
-                            ✓ {completedClasses} Attended • {absentCount} Abs
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="text-right shrink-0">
-                        <span className="text-[11px] font-black text-emerald-400 block">
-                          🔥 {consistencyRate}%
-                        </span>
-                        <span className="text-[9px] font-bold text-purple-200 bg-purple-900/60 px-1.5 py-0.2 rounded inline-block">
-                          {item.score} pts
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="pt-2 text-center text-[10px] text-purple-300/80 border-t border-white/10 font-medium">
-              Calculated by Presents, Absences & Leaves
-            </div>
-          </div>
-
-          {/* Card 2: TOP 5 IRREGULAR CLIENTS ALERT */}
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/15 hover:bg-white/15 transition-all space-y-3 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                <span className="text-[10px] font-extrabold tracking-wider text-rose-300 uppercase bg-rose-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <AlertTriangle className="w-3.5 h-3.5" /> 😴 Needs Motivation ({lowAttendanceClients.length})
-                </span>
-                <span className="text-[10px] font-bold text-rose-200">Irregular</span>
-              </div>
-
-              {lowAttendanceClients.length === 0 ? (
-                <p className="text-xs text-purple-200 py-6 text-center">All active clients are regularly attending sessions! 🎉</p>
-              ) : (
-                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-                  {lowAttendanceClients.slice(0, 5).map((c, idx) => (
-                    <div key={c.id} className="p-2.5 rounded-xl bg-white/10 border border-white/10 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2.5">
-                        <img src={c.photoUrl} alt={c.name} className="w-8 h-8 rounded-xl object-cover bg-white shrink-0" />
-                        <div>
-                          <h5 
-                            onClick={() => setSelectedClientId(c.id)}
-                            className="font-bold text-white text-xs hover:text-yellow-300 cursor-pointer"
-                          >
-                            #{idx + 1} {c.name}
-                          </h5>
-                          <p className="text-[10px] text-purple-200">{c.completedClasses} classes attended</p>
-                        </div>
-                      </div>
-
-                      <a
-                        href={`https://api.whatsapp.com/send?phone=${c.whatsapp.replace(/[^0-9]/g, '')}&text=${encodeURIComponent(`Hi ${c.name}! 👋 We missed you in Yoga class today. Hope everything is well! 🌿`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] shadow-sm shrink-0 flex items-center gap-1"
-                      >
-                        💬 Remind
-                      </a>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="pt-2 text-center text-[10px] text-purple-300/80 border-t border-white/10 font-medium">
-              Showing top 5 clients needing motivation
-            </div>
-          </div>
-
-          {/* Card 3: FEE COLLECTION HEALTH & FINANCIAL QUICK INSIGHTS */}
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/15 hover:bg-white/15 transition-all space-y-4 flex flex-col justify-between">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                <span className="text-[10px] font-extrabold tracking-wider text-emerald-300 uppercase bg-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                  <PieChart className="w-3.5 h-3.5" /> 📈 Fee Collection Health
-                </span>
-                <span className="text-xs font-black text-emerald-400">{collectionRatePercent}% Collected</span>
-              </div>
-
-              <div className="space-y-3 pt-1">
-                {/* Progress bar */}
-                <div>
-                  <div className="flex justify-between text-xs font-bold text-purple-200 mb-1.5">
-                    <span>Collected: ₹{(monthlyIncome || 0).toLocaleString()}</span>
-                    <span>Pending: ₹{(pendingFees || 0).toLocaleString()}</span>
-                  </div>
-                  <div className="w-full h-4 bg-white/20 rounded-full overflow-hidden flex p-0.5">
-                    <div style={{ width: `${collectionRatePercent}%` }} className="bg-emerald-400 h-full rounded-full transition-all duration-500 shadow-sm" />
-                  </div>
-                </div>
-
-                {/* Membership Plan split */}
-                <div className="p-3 rounded-xl bg-white/10 border border-white/10 space-y-2">
-                  <span className="text-[10px] font-extrabold text-purple-300 uppercase tracking-wider block">Membership Plan Ratio</span>
-                  <div className="flex items-center justify-between text-xs font-semibold text-purple-200">
-                    <span className="flex items-center gap-1">
-                      📅 Monthly: <strong className="text-white">{monthlySubscribersCount} Clients</strong>
-                    </span>
-                    <span className="flex items-center gap-1">
-                      🧘 Per Session: <strong className="text-white">{perSessionCount} Clients</strong>
-                    </span>
-                  </div>
-                </div>
-
-                {/* Financial Quick Insights Box */}
-                <div className="p-3 rounded-xl bg-purple-900/40 border border-purple-400/20 space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-purple-200">
-                    <span className="flex items-center gap-1">
-                      <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Avg Revenue / Client:
-                    </span>
-                    <strong className="text-emerald-300 font-extrabold">₹{(avgRevenuePerClient || 0).toLocaleString()}</strong>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] font-bold text-purple-200">
-                    <span>Collection Status:</span>
-                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
-                      collectionRatePercent >= 75
-                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
-                        : collectionRatePercent >= 50
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
-                        : 'bg-rose-500/20 text-rose-300 border border-rose-400/30'
-                    }`}>
-                      {collectionRatePercent >= 75 ? '🟢 Healthy Collection' : collectionRatePercent >= 50 ? '🟡 Moderate Collection' : '🔴 Action Required'}
-                    </span>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-            {/* Quick Action Button */}
-            <div className="pt-3 border-t border-white/10">
-              <button
-                onClick={() => {
-                  setPaymentModalDefaultClientId(null);
-                  setIsAddPaymentOpen(true);
-                }}
-                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold text-xs shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
-              >
-                <CreditCard className="w-3.5 h-3.5" />
-                + Record Fee Payment
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
       {/* Main Grid: Schedule Timeline & Sidebar Alerts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
@@ -1116,6 +853,269 @@ export const Dashboard: React.FC = () => {
                 })}
               </div>
             )}
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* 🌟 TRAINER FINANCIAL VISION & DREAMS WIDGET */}
+      {trainerDreams && trainerDreams.length > 0 && (
+        <div 
+          onClick={() => setActiveTab('dreams')}
+          className="bg-gradient-to-r from-slate-950 via-purple-950 to-indigo-950 text-white rounded-3xl p-6 shadow-xl border border-purple-500/30 cursor-pointer hover:border-purple-400/60 transition-all group"
+        >
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-amber-400 text-amber-950 font-black text-2xl flex items-center justify-center shadow-md group-hover:scale-110 transition-transform shrink-0">
+                🏆
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-serif font-extrabold text-lg sm:text-xl text-white">Anjali's Future Dreams & Revenue Goals</h4>
+                  <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-300/40 px-2.5 py-0.5 rounded-full font-black uppercase">
+                    VISION BOARD
+                  </span>
+                </div>
+                <p className="text-xs text-purple-200 font-medium mt-0.5">
+                  Top Goal: <strong className="text-white">{trainerDreams[0]?.title || 'Financial Vision Goal'}</strong> (Target: ₹{(trainerDreams[0]?.targetAmount || 0).toLocaleString('en-IN')})
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+              <div className="text-right">
+                <span className="text-xs text-purple-200 font-bold block">Funded</span>
+                <span className="text-amber-300 font-black text-base sm:text-lg">
+                  ₹{(trainerDreams[0]?.savedAmount || 0).toLocaleString('en-IN')}
+                </span>
+              </div>
+              <button className="px-4 py-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-amber-950 font-black text-xs shadow-md transition-all flex items-center gap-1 group-hover:translate-x-1">
+                <span>View All Dreams</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NEW RICH FEATURE: 3 EQUAL-SIZE ANALYTICS & LEADERBOARD CARDS */}
+      <div className="bg-gradient-to-r from-slate-900 via-purple-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl space-y-6">
+        
+        <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-purple-600/40 backdrop-blur-md flex items-center justify-center text-yellow-300 border border-purple-400/30">
+              <Trophy className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-extrabold tracking-tight">Studio Performance Analytics & Leaderboard</h3>
+              <p className="text-xs text-purple-200/80 font-medium">Top 5 Regular Yogis, Irregular Client Alerts & Fee Collection Health</p>
+            </div>
+          </div>
+
+          <span className="hidden sm:inline-flex px-3 py-1 rounded-full bg-white/10 text-purple-200 text-xs font-bold border border-white/15">
+            ⚡ Live Studio Insights
+          </span>
+        </div>
+
+        {/* EQUAL 3-COLUMN GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Card 1: TOP 5 REGULAR YOGIS LEADERBOARD */}
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/15 hover:bg-white/15 transition-all space-y-3 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <span className="text-[10px] font-extrabold tracking-wider text-yellow-300 uppercase bg-yellow-400/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <Trophy className="w-3.5 h-3.5" /> 🏆 Top 5 Regular Yogis
+                </span>
+                <span className="text-[10px] font-bold text-yellow-200">
+                  Disciplined
+                </span>
+              </div>
+
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {rankedTop5Yogis.map((item, idx) => {
+                  const { client, completedClasses, absentCount, leaveCount, consistencyRate } = item;
+                  const rankBadges = ['🥇 #1', '🥈 #2', '🥉 #3', '4️⃣ #4', '5️⃣ #5'];
+                  const rankColors = [
+                    'bg-yellow-400 text-slate-950 ring-yellow-400',
+                    'bg-slate-200 text-slate-950 ring-slate-300',
+                    'bg-amber-600 text-white ring-amber-500',
+                    'bg-purple-800 text-white ring-purple-400',
+                    'bg-purple-900 text-white ring-purple-500'
+                  ];
+
+                  return (
+                    <div 
+                      key={client.id}
+                      onClick={() => setSelectedClientId(client.id)}
+                      className="p-2.5 rounded-xl bg-white/10 border border-white/10 flex items-center justify-between gap-2 hover:bg-white/20 cursor-pointer transition-all group/item"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="relative shrink-0">
+                          <img
+                            src={client.photoUrl}
+                            alt={client.name}
+                            className={`w-9 h-9 rounded-xl object-cover ring-2 bg-white ${
+                              idx === 0 ? 'ring-yellow-400' : 'ring-purple-300'
+                            }`}
+                          />
+                          <span className={`absolute -top-1.5 -left-1.5 text-[8px] font-black px-1.5 py-0.2 rounded-full shadow-md ${rankColors[idx]}`}>
+                            {rankBadges[idx]}
+                          </span>
+                        </div>
+
+                        <div>
+                          <h4 className="font-extrabold text-white text-xs group-hover/item:text-yellow-300 transition-colors">
+                            {client.name}
+                          </h4>
+                          <p className="text-[10px] text-purple-200 font-medium">
+                            ✓ {completedClasses} Attended • {absentCount} Abs
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right shrink-0">
+                        <span className="text-[11px] font-black text-emerald-400 block">
+                          🔥 {consistencyRate}%
+                        </span>
+                        <span className="text-[9px] font-bold text-purple-200 bg-purple-900/60 px-1.5 py-0.2 rounded inline-block">
+                          {item.score} pts
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="pt-2 text-center text-[10px] text-purple-300/80 border-t border-white/10 font-medium">
+              Calculated by Presents, Absences & Leaves
+            </div>
+          </div>
+
+          {/* Card 2: TOP 5 IRREGULAR CLIENTS ALERT */}
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/15 hover:bg-white/15 transition-all space-y-3 flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <span className="text-[10px] font-extrabold tracking-wider text-rose-300 uppercase bg-rose-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <AlertTriangle className="w-3.5 h-3.5" /> 😴 Needs Motivation ({lowAttendanceClients.length})
+                </span>
+                <span className="text-[10px] font-bold text-rose-200">Irregular</span>
+              </div>
+
+              {lowAttendanceClients.length === 0 ? (
+                <p className="text-xs text-purple-200 py-6 text-center">All active clients are regularly attending sessions! 🎉</p>
+              ) : (
+                <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                  {lowAttendanceClients.slice(0, 5).map((c, idx) => (
+                    <div key={c.id} className="p-2.5 rounded-xl bg-white/10 border border-white/10 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <img src={c.photoUrl} alt={c.name} className="w-8 h-8 rounded-xl object-cover bg-white shrink-0" />
+                        <div>
+                          <h5 
+                            onClick={() => setSelectedClientId(c.id)}
+                            className="font-bold text-white text-xs hover:text-yellow-300 cursor-pointer"
+                          >
+                            #{idx + 1} {c.name}
+                          </h5>
+                          <p className="text-[10px] text-purple-200">{c.completedClasses} classes attended</p>
+                        </div>
+                      </div>
+
+                      <a
+                        href={`https://api.whatsapp.com/send?phone=${c.whatsapp.replace(/[^0-9]/g, '')}&text=${encodeURIComponent(`Hi ${c.name}! 👋 We missed you in Yoga class today. Hope everything is well! 🌿`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-[10px] shadow-sm shrink-0 flex items-center gap-1"
+                      >
+                        💬 Remind
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="pt-2 text-center text-[10px] text-purple-300/80 border-t border-white/10 font-medium">
+              Showing top 5 clients needing motivation
+            </div>
+          </div>
+
+          {/* Card 3: FEE COLLECTION HEALTH & FINANCIAL QUICK INSIGHTS */}
+          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 border border-white/15 hover:bg-white/15 transition-all space-y-4 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <span className="text-[10px] font-extrabold tracking-wider text-emerald-300 uppercase bg-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <PieChart className="w-3.5 h-3.5" /> 📈 Fee Collection Health
+                </span>
+                <span className="text-xs font-black text-emerald-400">{collectionRatePercent}% Collected</span>
+              </div>
+
+              <div className="space-y-3 pt-1">
+                {/* Progress bar */}
+                <div>
+                  <div className="flex justify-between text-xs font-bold text-purple-200 mb-1.5">
+                    <span>Collected: ₹{(monthlyIncome || 0).toLocaleString()}</span>
+                    <span>Pending: ₹{(pendingFees || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="w-full h-4 bg-white/20 rounded-full overflow-hidden flex p-0.5">
+                    <div style={{ width: `${collectionRatePercent}%` }} className="bg-emerald-400 h-full rounded-full transition-all duration-500 shadow-sm" />
+                  </div>
+                </div>
+
+                {/* Membership Plan split */}
+                <div className="p-3 rounded-xl bg-white/10 border border-white/10 space-y-2">
+                  <span className="text-[10px] font-extrabold text-purple-300 uppercase tracking-wider block">Membership Plan Ratio</span>
+                  <div className="flex items-center justify-between text-xs font-semibold text-purple-200">
+                    <span className="flex items-center gap-1">
+                      📅 Monthly: <strong className="text-white">{monthlySubscribersCount} Clients</strong>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      🧘 Per Session: <strong className="text-white">{perSessionCount} Clients</strong>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Financial Quick Insights Box */}
+                <div className="p-3 rounded-xl bg-purple-900/40 border border-purple-400/20 space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-purple-200">
+                    <span className="flex items-center gap-1">
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Avg Revenue / Client:
+                    </span>
+                    <strong className="text-emerald-300 font-extrabold">₹{(avgRevenuePerClient || 0).toLocaleString()}</strong>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] font-bold text-purple-200">
+                    <span>Collection Status:</span>
+                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                      collectionRatePercent >= 75
+                        ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30'
+                        : collectionRatePercent >= 50
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-400/30'
+                        : 'bg-rose-500/20 text-rose-300 border border-rose-400/30'
+                    }`}>
+                      {collectionRatePercent >= 75 ? '🟢 Healthy Collection' : collectionRatePercent >= 50 ? '🟡 Moderate Collection' : '🔴 Action Required'}
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Quick Action Button */}
+            <div className="pt-3 border-t border-white/10">
+              <button
+                onClick={() => {
+                  setPaymentModalDefaultClientId(null);
+                  setIsAddPaymentOpen(true);
+                }}
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold text-xs shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5"
+              >
+                <CreditCard className="w-3.5 h-3.5" />
+                + Record Fee Payment
+              </button>
+            </div>
           </div>
 
         </div>
