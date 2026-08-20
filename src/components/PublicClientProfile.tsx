@@ -360,7 +360,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={scrollToBilling}
+              onClick={() => setIsPaymentCheckoutOpen(true)}
               className={`px-4 py-2 sm:px-5 sm:py-2.5 rounded-2xl text-xs sm:text-sm font-black shadow-md hover:shadow-lg transition-all flex items-center gap-2 hover:scale-105 active:scale-95 ${
                 (isPerSession ? !isPaid : hasOutstandingDue)
                   ? 'bg-gradient-to-r from-amber-400 via-amber-300 to-yellow-400 text-slate-950 ring-2 ring-amber-300/80 animate-pulse'
@@ -468,7 +468,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
               {/* Action Bar inside card — Big Prominent Payment & Billing Status Button */}
               <div className="pt-3 flex flex-wrap items-center justify-center md:justify-start">
                 <button
-                  onClick={scrollToBilling}
+                  onClick={() => setIsPaymentCheckoutOpen(true)}
                   className={`w-full sm:w-auto px-7 py-3.5 rounded-2xl font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2.5 shadow-xl hover:scale-105 active:scale-95 ${
                     (isPerSession ? !isPaid : hasOutstandingDue)
                       ? 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-300 text-slate-950 ring-4 ring-amber-400/40 hover:ring-amber-300'
@@ -479,11 +479,11 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                   <span>
                     {isPerSession
                       ? (isPaid 
-                        ? `✓ Pay-As-You-Go Session Pass Active (₹${targetClient.perSessionFee || 1000}/Class)` 
-                        : `💳 Pay Per-Session Fee (₹${targetClient.perSessionFee || 1000})`)
+                        ? `✓ Pay-As-You-Go Session Pass Active (₹${targetClient.perSessionFee || 800}/Class)` 
+                        : `💳 Pay Per-Session Fee (₹${targetClient.perSessionFee || 800})`)
                       : (hasOutstandingDue 
-                        ? `💳 Pay Pending Studio Fee & View Billing History (₹${totalOutstandingDue.toLocaleString()})` 
-                        : '✓ Studio Fee Paid • View Billing Cycle Records')}
+                        ? `💳 Pay Pending Studio Fee (₹${totalOutstandingDue.toLocaleString()})` 
+                        : '✓ Studio Fee Paid • Verified')}
                   </span>
                   <ChevronRight className="w-4 h-4 opacity-75" />
                 </button>
@@ -507,55 +507,55 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5 sm:gap-4">
             
             {/* Box 1: Attendance Rate */}
-            <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm text-center space-y-1.5 hover:shadow-md transition-shadow">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Attendance Rate</span>
-              <p className="text-2xl sm:text-3xl font-extrabold text-emerald-800">{attendanceRate}%</p>
-              <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-emerald-600 h-full rounded-full" style={{ width: `${attendanceRate}%` }} />
+            <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 p-5 rounded-3xl text-white text-center space-y-2 shadow-lg shadow-emerald-900/20 border border-emerald-500/40 hover:scale-[1.03] transition-all">
+              <span className="text-[10px] font-extrabold text-emerald-200 uppercase tracking-wider block">Attendance Rate</span>
+              <p className="text-2xl sm:text-3xl font-black text-white">{attendanceRate}%</p>
+              <div className="w-full bg-black/20 h-2 rounded-full overflow-hidden p-0.5">
+                <div className="bg-gradient-to-r from-amber-300 to-yellow-400 h-full rounded-full" style={{ width: `${attendanceRate}%` }} />
               </div>
             </div>
 
             {/* Box 2: Classes Attended */}
-            <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm text-center space-y-1 hover:shadow-md transition-shadow">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Attended</span>
-              <p className="text-2xl sm:text-3xl font-extrabold text-slate-900">{classesAttended}</p>
-              <span className="text-[10px] text-slate-500 font-medium">Classes Completed</span>
+            <div className="bg-gradient-to-br from-indigo-600 via-indigo-700 to-blue-800 p-5 rounded-3xl text-white text-center space-y-1 shadow-lg shadow-indigo-900/20 border border-indigo-400/40 hover:scale-[1.03] transition-all">
+              <span className="text-[10px] font-extrabold text-indigo-200 uppercase tracking-wider block">Attended</span>
+              <p className="text-2xl sm:text-3xl font-black text-white">{classesAttended}</p>
+              <span className="text-[10px] text-indigo-200 font-bold block">Classes Done ✓</span>
             </div>
 
             {/* Box 3: Leaves Taken */}
-            <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm text-center space-y-1 hover:shadow-md transition-shadow">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Leaves</span>
-              <p className="text-2xl sm:text-3xl font-extrabold text-amber-600">{leavesCount}</p>
-              <span className="text-[10px] text-slate-500 font-medium">Approved Leaves</span>
+            <div className="bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600 p-5 rounded-3xl text-white text-center space-y-1 shadow-lg shadow-amber-900/20 border border-amber-400/40 hover:scale-[1.03] transition-all">
+              <span className="text-[10px] font-extrabold text-amber-100 uppercase tracking-wider block">Leaves</span>
+              <p className="text-2xl sm:text-3xl font-black text-white">{leavesCount}</p>
+              <span className="text-[10px] text-amber-100 font-bold block">Approved Leaves</span>
             </div>
 
             {/* Box 4: Absences */}
-            <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm text-center space-y-1 hover:shadow-md transition-shadow">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Absences</span>
-              <p className="text-2xl sm:text-3xl font-extrabold text-rose-600">{absentCount}</p>
-              <span className="text-[10px] text-slate-500 font-medium">Unexcused Missed</span>
+            <div className="bg-gradient-to-br from-rose-500 via-rose-600 to-pink-700 p-5 rounded-3xl text-white text-center space-y-1 shadow-lg shadow-rose-900/20 border border-rose-400/40 hover:scale-[1.03] transition-all">
+              <span className="text-[10px] font-extrabold text-rose-200 uppercase tracking-wider block">Absences</span>
+              <p className="text-2xl sm:text-3xl font-black text-white">{absentCount}</p>
+              <span className="text-[10px] text-rose-200 font-bold block">Missed Classes</span>
             </div>
 
             {/* Box 5: Attendance Streak */}
-            <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm text-center space-y-1 hover:shadow-md transition-shadow">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Practice Streak</span>
-              <p className="text-2xl sm:text-3xl font-extrabold text-amber-500 flex items-center justify-center gap-1">
+            <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-fuchsia-800 p-5 rounded-3xl text-white text-center space-y-1 shadow-lg shadow-purple-900/20 border border-purple-400/40 hover:scale-[1.03] transition-all">
+              <span className="text-[10px] font-extrabold text-purple-200 uppercase tracking-wider block">Practice Streak</span>
+              <p className="text-2xl sm:text-3xl font-black text-white flex items-center justify-center gap-1">
                 <span>{displayStreak}</span>
-                <span className="text-lg">🔥</span>
+                <span className="text-xl animate-pulse">🔥</span>
               </p>
-              <span className="text-[10px] text-slate-500 font-medium">Days Continuous</span>
+              <span className="text-[10px] text-purple-200 font-bold block">Days Continuous</span>
             </div>
 
             {/* Box 6: Consistency Score */}
-            <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-sm text-center space-y-1 hover:shadow-md transition-shadow">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Consistency</span>
-              <p className="text-xs font-black text-emerald-900 bg-emerald-50 py-2 rounded-xl border border-emerald-100 mt-1">
-                {consistencyScore.split(' ')[0]}
+            <div className="bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 p-5 rounded-3xl text-slate-950 text-center space-y-1 shadow-lg shadow-amber-500/20 border border-yellow-300 hover:scale-[1.03] transition-all">
+              <span className="text-[10px] font-black text-amber-950 uppercase tracking-wider block">Consistency</span>
+              <p className="text-sm font-black text-slate-950 bg-white/70 py-1 px-2 rounded-xl shadow-inner mt-1">
+                {consistencyScore.split(' ')[0]} ⭐
               </p>
-              <span className="text-[10px] text-slate-500 font-medium">Studio Rating</span>
+              <span className="text-[10px] text-amber-950 font-black block">Studio Rating</span>
             </div>
 
           </div>
@@ -771,343 +771,6 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
               <span className="w-3 h-3 rounded-full bg-purple-500" />
               <span>Studio / Instructor Leave</span>
             </span>
-          </div>
-
-        </div>
-
-
-        {/* 4. LEADERBOARD HISTORY & ACHIEVEMENTS BADGES */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* Leaderboard History */}
-          <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
-                  🏆
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-slate-900 text-base">Studio Leaderboard History</h4>
-                  <p className="text-[11px] text-slate-500 font-medium">Monthly regularity rankings & feature analytics</p>
-                </div>
-              </div>
-              <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-black text-xs border border-amber-200">
-                August 2026 Ranking
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              {leaderboardHistory.map((h, i) => (
-                <div key={i} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/60 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="w-8 h-8 rounded-xl bg-white text-slate-800 font-extrabold text-xs flex items-center justify-center border border-slate-200 shadow-sm">
-                      #{i + 1}
-                    </span>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">{h.month}</p>
-                      <span className="text-[10px] text-emerald-700 font-semibold">{h.badge}</span>
-                    </div>
-                  </div>
-                  <span className="px-3 py-1 rounded-xl bg-amber-400/20 text-amber-900 font-extrabold text-xs border border-amber-300/40">
-                    {h.rank}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Earned Badges & Achievements */}
-          <div className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
-                  🎖️
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-slate-900 text-base">Earned Yoga Badges</h4>
-                  <p className="text-[11px] text-slate-500 font-medium">Recognitions achieved for regularity & dedication</p>
-                </div>
-              </div>
-              <span className="px-2.5 py-1 rounded-full bg-purple-100 text-purple-900 font-black text-xs border border-purple-200">
-                {achievements.filter(a => a.earned).length} Badges
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {achievements.map((badge) => (
-                <div 
-                  key={badge.id} 
-                  className={`p-3.5 rounded-2xl border transition-all flex items-start gap-3 ${
-                    badge.earned 
-                      ? 'bg-gradient-to-br from-amber-50/80 to-purple-50/50 border-amber-200 shadow-sm' 
-                      : 'bg-slate-50/50 border-slate-200/60 opacity-50 grayscale'
-                  }`}
-                >
-                  <span className="text-2xl shrink-0">{badge.icon}</span>
-                  <div>
-                    <h5 className="text-xs font-extrabold text-slate-900">{badge.title}</h5>
-                    <p className="text-[10px] text-slate-500 font-medium mt-0.5 leading-tight">{badge.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        </div>
-
-
-        {/* 4. PAYMENT STATUS & INSTRUCTOR INFO SECTION */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* Payment & Fee Status Card (Strict Privacy Enforced!) */}
-          <div id="billing-cycle-section" className="bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-sm space-y-4 transition-all scroll-mt-24">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-slate-900 text-sm sm:text-base">
-                    {isPerSession ? 'Pay-As-You-Go Session Pass' : 'Billing Cycle & Fee Status'}
-                  </h4>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    {isPerSession ? 'Per Session Pass verified by Studio Ledger' : 'Monthly fee records verified by Studio Journal'}
-                  </p>
-                </div>
-              </div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                <Lock className="w-3 h-3 text-slate-400" /> Private
-              </span>
-            </div>
-
-            {/* Total Balance / Action Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-slate-50 to-emerald-50/40 border border-slate-200/80">
-              <div>
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                  {isPerSession ? 'Session Plan Rate & Balance' : 'Total Outstanding Balance'}
-                </span>
-                <div className="flex items-center gap-2">
-                  <strong className="text-xl font-black text-slate-900">
-                    {isPerSession 
-                      ? '₹0 Due (All Classes Paid)'
-                      : (hasOutstandingDue ? `₹${totalOutstandingDue.toLocaleString()}` : '₹0 (All Clear)')}
-                  </strong>
-                  {isPerSession ? (
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold text-[10px] border border-emerald-200">
-                      ₹{targetClient.perSessionFee || 800} / Class • Up to Date ✓
-                    </span>
-                  ) : hasOutstandingDue ? (
-                    <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold text-[10px] border border-amber-200">
-                      {pendingCycles.length} {pendingCycles.length === 1 ? 'Cycle Pending' : 'Cycles Pending'}
-                    </span>
-                  ) : (
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-bold text-[10px] border border-emerald-200">
-                      Up to Date ✓
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {isPerSession ? (
-                <button
-                  onClick={() => setIsPaymentCheckoutOpen(true)}
-                  className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                >
-                  <Zap className="w-4 h-4 text-amber-300" />
-                  <span>Pay For Next Session (₹{targetClient.perSessionFee || 800})</span>
-                </button>
-              ) : hasOutstandingDue ? (
-                <button
-                  onClick={() => setIsPaymentCheckoutOpen(true)}
-                  className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
-                >
-                  <Zap className="w-4 h-4 text-amber-300" />
-                  <span>Pay Online (₹{totalOutstandingDue.toLocaleString()})</span>
-                </button>
-              ) : (
-                <span className="px-3.5 py-2 rounded-2xl bg-emerald-100 text-emerald-900 font-black text-xs border border-emerald-300 flex items-center gap-1.5 self-start sm:self-auto">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                  <span>Verified by Studio Journal</span>
-                </span>
-              )}
-            </div>
-
-            {/* Per Session Pass Breakdown vs Monthly Cycles Breakdown */}
-            {isPerSession ? (
-              <div className="space-y-3 pt-1">
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase block">Completed Sessions</span>
-                    <strong className="text-lg font-black text-slate-900">{targetClient.completedClasses || 0} Attended</strong>
-                    <span className="text-[10px] text-slate-500 font-medium block mt-0.5">Pay-as-you-go plan</span>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
-                    <span className="text-[10px] font-bold text-emerald-800 uppercase block">Total Fees Paid</span>
-                    <strong className="text-lg font-black text-emerald-900">₹{paidAmount.toLocaleString()}</strong>
-                    <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">All {targetClient.completedClasses || 0} Classes Paid ✓</span>
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                    Session Payment History:
-                  </span>
-                  {payments.filter(p => p.clientId === targetClient.id && p.status === 'Paid').length > 0 ? (
-                    <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
-                      {payments.filter(p => p.clientId === targetClient.id && p.status === 'Paid').map((p) => (
-                        <div key={p.id} className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200 text-xs flex items-center justify-between">
-                          <div>
-                            <span className="font-bold text-slate-900 block">📅 {p.date} • {p.paymentMode || 'UPI'}</span>
-                            <span className="text-[10px] text-slate-500">{p.notes || 'Session Fee'}</span>
-                          </div>
-                          <span className="font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded-lg border border-emerald-200">
-                            ₹{p.amount.toLocaleString()} PAID ✓
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-200 text-xs flex items-center justify-between">
-                      <div>
-                        <span className="font-bold text-emerald-950 block">✓ Pay-as-you-go session pass active</span>
-                        <span className="text-[11px] text-emerald-800">Fee collected per attended session (₹{targetClient.perSessionFee || 800} × {targetClient.completedClasses || 0} classes)</span>
-                      </div>
-                      <span className="font-black text-emerald-900 bg-emerald-100 px-2.5 py-1 rounded-xl border border-emerald-300">
-                        ₹{paidAmount.toLocaleString()} PAID ✓
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2 pt-1">
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                  Monthly Billing History:
-                </span>
-                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                  {billingCycles.map((cycle) => (
-                    <div
-                      key={cycle.monthStr}
-                      className={`p-3.5 rounded-2xl border flex items-center justify-between transition-all ${
-                        cycle.status === 'Paid'
-                          ? 'bg-emerald-50/60 border-emerald-200'
-                          : cycle.status === 'Leave Waived'
-                          ? 'bg-slate-50 border-slate-200 opacity-80'
-                          : 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-200/50'
-                      }`}
-                    >
-                      <div className="space-y-0.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-black text-slate-900">
-                            {cycle.monthName}
-                          </span>
-                          {cycle.isCurrentMonth && (
-                            <span className="px-2 py-0.5 rounded-full bg-slate-900 text-white text-[9px] font-extrabold">
-                              Current
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-500 font-medium">
-                          {cycle.status === 'Paid'
-                            ? `₹${cycle.paidAmount.toLocaleString()} Paid on ${cycle.paidDate || 'Monthly Cycle'}`
-                            : cycle.status === 'Leave Waived'
-                            ? 'Full Month Approved Leave • Fee Waived'
-                            : `Due Amount: ₹${cycle.dueAmount.toLocaleString()}`}
-                        </p>
-                      </div>
-
-                      <div>
-                        {cycle.status === 'Paid' ? (
-                          <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-900 font-black text-xs border border-emerald-300 flex items-center gap-1 shadow-sm">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-                            <span>PAID</span>
-                          </span>
-                        ) : cycle.status === 'Leave Waived' ? (
-                          <span className="px-3 py-1 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs">
-                            Leave Waived 🌴
-                          </span>
-                        ) : (
-                          <span className="px-3 py-1 rounded-xl bg-amber-100 text-amber-950 font-black text-xs border border-amber-300 flex items-center gap-1 shadow-sm">
-                            <Clock className="w-3.5 h-3.5 text-amber-700" />
-                            <span>PENDING</span>
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <p className="text-[11px] text-slate-400 font-medium italic text-center pt-1 flex items-center justify-center gap-1">
-              <Lock className="w-3 h-3 text-slate-400" /> All fee transactions are securely recorded in Yoganjali Studio ledger.
-            </p>
-          </div>
-
-          {/* Instructor Information Card */}
-          <div className="bg-gradient-to-br from-emerald-900 to-slate-900 p-6 rounded-3xl text-white shadow-md border border-emerald-800/40 space-y-3">
-            <div className="flex items-center justify-between border-b border-emerald-800/60 pb-3">
-              <div className="flex items-center gap-2">
-                <HeartHandshake className="w-5 h-5 text-amber-400" />
-                <h4 className="font-extrabold text-white text-sm">Guided Studio Instructor</h4>
-              </div>
-              <span className="text-[10px] font-black text-amber-300 uppercase tracking-wider bg-white/10 px-2.5 py-0.5 rounded-full">
-                Lead Trainer
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <img
-                src="/anjali_hero.jpg"
-                alt="Trainer Anjali Negi"
-                className="w-12 h-12 rounded-full object-cover ring-2 ring-amber-400 shrink-0 bg-white"
-              />
-              <div>
-                <h5 className="font-extrabold text-white text-sm">Trainer Anjali Negi</h5>
-                <p className="text-[11px] text-emerald-200 font-medium">Founder & Certified Senior Yoga Instructor</p>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-emerald-800/60 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <span className="px-3 py-1.5 rounded-xl bg-white/10 text-emerald-200 font-medium">
-                🌿 Vinyasa, Hatha, Flexibility & Posture Correction
-              </span>
-              <span className="px-3 py-1.5 rounded-xl bg-amber-400/20 text-amber-300 font-extrabold border border-amber-400/30">
-                Certified Senior Yoga Instructor
-              </span>
-            </div>
-
-            {/* Instructor Leave Schedule */}
-            <div className="pt-3 border-t border-emerald-800/60 space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-emerald-200 font-bold flex items-center gap-1.5">
-                  <CalendarX className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Instructor Leave Schedule:</span>
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-black text-xs border border-amber-400/30">
-                  {instructorLeavesCount} {instructorLeavesCount === 1 ? 'Day' : 'Days'} Total
-                </span>
-              </div>
-              
-              {trainerLeaves.length > 0 ? (
-                <div className="space-y-1.5 pt-1">
-                  {trainerLeaves.slice(0, 3).map((tl) => (
-                    <div key={tl.id} className="p-2 rounded-xl bg-white/10 border border-white/10 text-xs flex items-center justify-between">
-                      <span className="text-slate-200 font-medium">
-                        📅 {tl.startDate || tl.date} {tl.endDate && tl.endDate !== tl.startDate ? `to ${tl.endDate}` : ''}
-                      </span>
-                      <span className="text-amber-300 font-bold">
-                        {tl.reason || 'Personal / Rest Day'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-[11px] text-emerald-300/80 italic pt-0.5">
-                  ✓ No studio leaves scheduled. All guided classes running as per regular slots.
-                </p>
-              )}
-            </div>
           </div>
 
         </div>
