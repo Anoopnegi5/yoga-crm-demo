@@ -163,7 +163,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
   };
 
-  // Instructor Stats
+  const instructorConductedClasses = 22;
   const instructorLeavesCount = trainerLeaves.length || 2;
 
   const { status: currentMonthStatus, dueAmount, paidAmount } = getClientCurrentMonthPaymentStatus(targetClient, payments, undefined, leaves);
