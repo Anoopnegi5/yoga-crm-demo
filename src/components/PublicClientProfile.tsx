@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Client } from '../types';
 import { slugifyName } from '../utils/slugUtils';
+import { getClientCurrentMonthPaymentStatus } from '../utils/paymentUtils';
 import { 
   Award, 
   Flame, 
@@ -21,8 +22,10 @@ import {
   Activity, 
   HeartHandshake, 
   Globe, 
-  Lock 
+  Lock,
+  Zap
 } from 'lucide-react';
+import { PaymentCheckoutModal } from './Modals/PaymentCheckoutModal';
 
 interface PublicClientProfileProps {
   clientSlug?: string;
@@ -35,8 +38,9 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   clientId,
   onBackToDirectory 
 }) => {
-  const { clients, attendance, leaves, trainerLeaves, showSuccessToast } = useApp();
+  const { clients, attendance, leaves, trainerLeaves, payments, showSuccessToast } = useApp();
   const [copied, setCopied] = useState(false);
+  const [isPaymentCheckoutOpen, setIsPaymentCheckoutOpen] = useState(false);
 
   // Find target client by slug or ID
   const activeClients = clients.filter(c => c.status !== 'Discontinued');
@@ -160,10 +164,11 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   };
 
   // Instructor Stats
-  const instructorConductedClasses = 22;
   const instructorLeavesCount = trainerLeaves.length || 2;
 
-  const isPaid = targetClient.paymentStatus === 'Paid' || targetClient.paymentStatus === 'Partial';
+  const { status: currentMonthStatus, dueAmount, paidAmount } = getClientCurrentMonthPaymentStatus(targetClient, payments, undefined, leaves);
+  const isPaid = currentMonthStatus === 'Paid';
+  const isPerSession = targetClient.feeType === 'Per Session';
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-slate-900 font-sans pb-20 selection:bg-emerald-100 selection:text-emerald-900">
@@ -461,10 +466,19 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                   <CheckCircle2 className="w-4 h-4 text-emerald-700" />
                 </span>
               ) : (
-                <span className="px-4 py-2 rounded-2xl bg-amber-100 text-amber-900 font-black text-xs border border-amber-300 flex items-center gap-1.5 shadow-sm">
-                  <span>PENDING</span>
-                  <Clock className="w-4 h-4 text-amber-700" />
-                </span>
+                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                  <span className="px-4 py-2 rounded-2xl bg-amber-100 text-amber-900 font-black text-xs border border-amber-300 flex items-center gap-1.5 shadow-sm h-full">
+                    <span>PENDING</span>
+                    <Clock className="w-4 h-4 text-amber-700" />
+                  </span>
+                  <button
+                    onClick={() => setIsPaymentCheckoutOpen(true)}
+                    className="px-4 py-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
+                  >
+                    <Zap className="w-4 h-4" />
+                    <span>Pay Online</span>
+                  </button>
+                </div>
               )}
             </div>
 
@@ -532,6 +546,19 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
         </p>
       </footer>
 
+      {/* Razorpay Online Payment Modal */}
+      <PaymentCheckoutModal
+        isOpen={isPaymentCheckoutOpen}
+        onClose={() => setIsPaymentCheckoutOpen(false)}
+        clientName={targetClient.name}
+        clientPhone={targetClient.whatsapp || targetClient.phone || ''}
+        amount={Math.max(dueAmount - paidAmount, dueAmount || (targetClient.monthlyFee || 0))}
+        purpose={`${isPerSession ? 'Per Session Fee' : 'Monthly Fee'} — ${targetClient.name}`}
+        onPaymentSuccess={(paymentId) => {
+          setIsPaymentCheckoutOpen(false);
+          // Optional: Refresh could be triggered here
+        }}
+      />
     </div>
   );
 };
