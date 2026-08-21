@@ -109,10 +109,10 @@ export default async function handler(req, res) {
     <meta property="og:image" content="${photoUrl}" />
     <meta property="og:image:secure_url" content="${photoUrl}" />
     <meta property="og:image:type" content="image/png" />
-    <meta property="og:image:width" content="600" />
-    <meta property="og:image:height" content="600" />
+    <meta property="og:image:width" content="256" />
+    <meta property="og:image:height" content="256" />
     <meta property="og:image:alt" content="${escapeHtml(clientName)} Yogi Profile" />
-    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="${escapeHtml(ogTitle)}" />
     <meta name="twitter:description" content="${escapeHtml(ogDescription)}" />
     <meta name="twitter:image" content="${photoUrl}" />

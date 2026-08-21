@@ -26,7 +26,9 @@ import {
   UserX,
   UserCheck,
   Globe,
-  Zap
+  Zap,
+  Copy,
+  Check
 } from 'lucide-react';
 
 export const ClientProfileModal: React.FC = () => {
@@ -47,7 +49,8 @@ export const ClientProfileModal: React.FC = () => {
     addPayment,
     deletePayment,
     deleteLeave,
-    deleteAttendanceRecord
+    deleteAttendanceRecord,
+    showSuccessToast
   } = useApp();
 
   const client = clients.find(c => c.id === selectedClientId);
@@ -55,6 +58,34 @@ export const ClientProfileModal: React.FC = () => {
   const [notesText, setNotesText] = useState(client?.trainerNotes || '');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPaymentCheckoutOpen, setIsPaymentCheckoutOpen] = useState(false);
+  const [copiedProfileMsg, setCopiedProfileMsg] = useState(false);
+
+  const copyToClipboard = (text: string): boolean => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) {
+      console.warn('Clipboard API failed, using fallback:', e);
+    }
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      document.execCommand('copy');
+      textArea.remove();
+      return true;
+    } catch (err) {
+      console.error('Fallback copy failed:', err);
+      return false;
+    }
+  };
 
   if (!client) return null;
 
@@ -190,7 +221,7 @@ export const ClientProfileModal: React.FC = () => {
             )}
 
             {/* Dedicated WhatsApp Yogi Profile Share Banner */}
-            <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md border border-emerald-800/40">
+            <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-900 text-white flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-md border border-emerald-800/40">
               <div className="flex items-center gap-3.5">
                 <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-xl shrink-0 border border-emerald-400/30 shadow-inner">
                   🧘
@@ -210,15 +241,39 @@ export const ClientProfileModal: React.FC = () => {
                 </div>
               </div>
 
-              <a
-                href={`https://api.whatsapp.com/send?phone=${(client.whatsapp || client.phone || '').replace(/[^0-9]/g, '')}&text=${encodeURIComponent(`Namaste ${client.name}! 🙏\n\nHere is your personal Yoganjali Yoga Profile & Progress Portal link:\nhttps://www.yoganjaliyoga.com/yogi/${slugifyName(client.name)}\n\nIn this link, you can track:\n✨ Monthly Attendance & Regularity Record\n💳 Fee Payment Status & Billing History\n🧘 Batch Schedule & Personal Health Goals\n\nKeep up your dedication and practice on the mat! 🌿🧘‍♀️\n— Trainer Anjali Negi, Yoganjali Yoga Studio`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 shrink-0 self-stretch sm:self-auto"
-              >
-                <MessageCircle className="w-4 h-4 fill-white text-emerald-500" />
-                <span>Send Profile Link</span>
-              </a>
+              <div className="flex items-center gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
+                {/* 📋 Copy Full WhatsApp Message Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const fullMsg = `Namaste ${client.name}! 🙏\n\nHere is your personal Yoganjali Yoga Profile & Progress Portal link:\nhttps://www.yoganjaliyoga.com/yogi/${slugifyName(client.name)}\n\nIn this link, you can track:\n✨ Monthly Attendance & Regularity Record\n💳 Fee Payment Status & Billing History\n🧘 Batch Schedule & Personal Health Goals\n\nKeep up your dedication and practice on the mat! 🌿🧘‍♀️\n— Trainer Anjali Negi, Yoganjali Yoga Studio`;
+                    copyToClipboard(fullMsg);
+                    setCopiedProfileMsg(true);
+                    showSuccessToast(`📋 Full WhatsApp Message & Profile Link for ${client.name} copied!`);
+                    setTimeout(() => setCopiedProfileMsg(false), 3000);
+                  }}
+                  className={`px-4 py-2.5 rounded-2xl font-black text-xs transition-all flex items-center justify-center gap-1.5 shrink-0 border ${
+                    copiedProfileMsg
+                      ? 'bg-emerald-600 border-emerald-400 text-white shadow-md'
+                      : 'bg-white/10 hover:bg-white/20 text-emerald-200 border-emerald-400/30 hover:text-white hover:border-emerald-300'
+                  }`}
+                  title="Copy the entire message with link to paste anywhere"
+                >
+                  {copiedProfileMsg ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4" />}
+                  <span>{copiedProfileMsg ? 'Message Copied!' : 'Copy Full Message'}</span>
+                </button>
+
+                {/* 💬 Direct Send to WhatsApp */}
+                <a
+                  href={`https://api.whatsapp.com/send?phone=${(client.whatsapp || client.phone || '').replace(/[^0-9]/g, '')}&text=${encodeURIComponent(`Namaste ${client.name}! 🙏\n\nHere is your personal Yoganjali Yoga Profile & Progress Portal link:\nhttps://www.yoganjaliyoga.com/yogi/${slugifyName(client.name)}\n\nIn this link, you can track:\n✨ Monthly Attendance & Regularity Record\n💳 Fee Payment Status & Billing History\n🧘 Batch Schedule & Personal Health Goals\n\nKeep up your dedication and practice on the mat! 🌿🧘‍♀️\n— Trainer Anjali Negi, Yoganjali Yoga Studio`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs shadow-lg hover:scale-105 transition-all flex items-center justify-center gap-2 shrink-0"
+                >
+                  <MessageCircle className="w-4 h-4 fill-white text-emerald-500" />
+                  <span>Send on WhatsApp</span>
+                </a>
+              </div>
             </div>
 
             {/* Quick Action Toolbar */}
