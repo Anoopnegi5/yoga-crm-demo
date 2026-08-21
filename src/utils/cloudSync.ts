@@ -13,10 +13,9 @@ export interface CloudDataPayload {
   lastUpdated: string;
 }
 
-// Same-domain Vercel Serverless Sync API Endpoint + Backup Cloud Bins
+// Same-domain Vercel Serverless Sync API Endpoint
 const ENDPOINTS = [
-  '/api/sync',
-  'https://jsonblob.com/api/jsonBlob/1271790154030637056'
+  '/api/sync'
 ];
 
 export const normalizeClassTime = (rawTime: any): string => {
@@ -252,15 +251,21 @@ export const fetchCloudSyncData = async (): Promise<CloudDataPayload | null> => 
   for (const url of ENDPOINTS) {
     try {
       const cacheBustUrl = url.includes('?') ? `${url}&t=${Date.now()}` : `${url}?t=${Date.now()}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       const res = await fetch(cacheBustUrl, {
         method: 'GET',
         cache: 'no-store',
+        signal: controller.signal,
         headers: { 
           'Accept': 'application/json',
           'Content-Type': 'application/json',
           'Cache-Control': 'no-cache'
         }
       });
+      clearTimeout(timeoutId);
+
       if (res.ok) {
         const data = await res.json();
         const payload = data.data || data;
@@ -294,17 +299,23 @@ export const pushCloudSyncData = async (payload: Omit<CloudDataPayload, 'lastUpd
     console.warn('Supabase push error:', e);
   }
 
-  // 2. Push to Vercel Serverless Endpoint Backup
+  // 2. Push to Vercel Serverless Endpoint Backup with 5-second timeout
   for (const url of ENDPOINTS) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+
       const res = await fetch(url, {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
         body: JSON.stringify(dataWithTimestamp)
       });
+      clearTimeout(timeoutId);
+
       if (res.ok) {
         success = true;
       }
