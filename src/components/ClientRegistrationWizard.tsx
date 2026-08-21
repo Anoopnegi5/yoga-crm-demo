@@ -181,11 +181,10 @@ export const ClientRegistrationWizard: React.FC = () => {
                 {submitted ? 'Registration Successful' : 'Add New Yoga Client'}
               </h3>
               <p className="text-xs text-purple-100">
-                {submitted ? 'Yoganjali Studio Onboarding' : `Step ${step} of 5 — ${
+                {submitted ? 'Yoganjali Studio Onboarding' : `Step ${step} of 4 — ${
                   step === 1 ? 'Basic Details & Avatar' :
                   step === 2 ? 'Class & Group Batch' :
-                  step === 3 ? 'Health & Reasons' :
-                  step === 4 ? 'Fee & Billing Model' : 'Save & Review'
+                  step === 3 ? 'Health & Reasons' : 'Fee & Submit'
                 }`}
               </p>
             </div>
@@ -194,7 +193,7 @@ export const ClientRegistrationWizard: React.FC = () => {
 
         {/* Step Progress Indicators */}
         <div className="flex items-center justify-between px-6 py-3 bg-slate-50 border-b border-slate-100">
-          {[1, 2, 3, 4, 5].map((i) => (
+          {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex items-center gap-1.5 cursor-pointer" onClick={() => i < step && setStep(i)}>
               <div className={`w-6 h-6 rounded-full text-[11px] font-bold flex items-center justify-center transition-all ${
                 step === i 
@@ -206,7 +205,7 @@ export const ClientRegistrationWizard: React.FC = () => {
                 {step > i ? <Check className="w-3.5 h-3.5" /> : i}
               </div>
               <span className="hidden sm:inline text-[11px] font-semibold text-slate-500">
-                {i === 1 ? 'Basic' : i === 2 ? 'Batch' : i === 3 ? 'Health' : i === 4 ? 'Fee' : 'Save'}
+                {i === 1 ? 'Basic Details' : i === 2 ? 'Batch & Time' : i === 3 ? 'Health Goals' : 'Fee & Submit'}
               </span>
             </div>
           ))}
@@ -757,68 +756,40 @@ export const ClientRegistrationWizard: React.FC = () => {
               </div>
             )}
 
-            {/* Step 5: Trainer Notes & Save */}
-            {step === 5 && (
-              <div className="space-y-4 animate-fadeIn">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Main Health Goal (Optional)</label>
-                  <input
-                    type="text"
-                    value={goal}
-                    onChange={(e) => setGoal(e.target.value)}
-                    placeholder="e.g. Weight reduction, back pain relief"
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Trainer Journal Notes (Optional)</label>
-                  <textarea
-                    rows={3}
-                    value={trainerNotes}
-                    onChange={(e) => setTrainerNotes(e.target.value)}
-                    placeholder="Notes about spinal health, breathing posture, etc."
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-medium focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none"
-                  />
-                </div>
-              </div>
-            )}
-
             {/* Navigation Controls */}
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
               {step > 1 ? (
                 <button
                   type="button"
                   onClick={() => setStep(step - 1)}
-                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors"
+                  disabled={isSubmitting}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors disabled:opacity-50"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Previous Step
                 </button>
               ) : <div />}
 
-              {step < 5 ? (
+              {step < 4 ? (
                 <button
                   type="button"
                   onClick={() => {
                     if (step === 1 && (!name || !phone)) {
-                      alert('Please fill out your Name and Phone number.');
+                      alert('Please enter your full Name and Mobile number.');
                       return;
                     }
                     setStep(step + 1);
                   }}
-                  className="flex items-center gap-1.5 px-5 py-2.5 rounded-2xl bg-purple-600 text-white font-bold text-xs shadow-md hover:bg-purple-700 transition-all"
+                  className="flex items-center gap-1.5 px-5 py-2.5 rounded-2xl bg-purple-600 text-white font-bold text-xs shadow-md hover:bg-purple-700 hover:scale-105 active:scale-95 transition-all"
                 >
-                  Next Step
+                  <span>Next Step</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               ) : (
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-emerald-600 text-white font-extrabold text-xs shadow-lg transition-all ${
-                    isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 active:scale-95'
-                  }`}
+                  className="flex items-center gap-2 px-7 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-extrabold text-xs shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-75"
                 >
                   {isSubmitting ? (
                     <>
@@ -827,8 +798,8 @@ export const ClientRegistrationWizard: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4 text-yellow-300" />
-                      <span>Save Yoga Client Profile</span>
+                      <Sparkles className="w-4 h-4 text-emerald-200" />
+                      <span>Complete & Submit Registration</span>
                     </>
                   )}
                 </button>
