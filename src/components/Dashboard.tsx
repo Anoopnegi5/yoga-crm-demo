@@ -533,13 +533,13 @@ export const Dashboard: React.FC = () => {
         {/* CLICKABLE Card 3: Dynamic Month Income (Emerald / Teal Theme) */}
         <div 
           onClick={() => setShowIncomeModal(true)}
-          className="bg-gradient-to-br from-emerald-500/15 via-teal-50/70 to-white rounded-3xl p-4 sm:p-5 lg:p-6 shadow-md border-2 border-emerald-300 hover:border-emerald-500 hover-lift relative overflow-hidden group cursor-pointer ring-2 ring-emerald-500/10 hover:ring-emerald-500/30 transition-all flex flex-col justify-between"
+          className="bg-gradient-to-br from-emerald-500/15 via-teal-50/70 to-white rounded-3xl p-5 sm:p-6 shadow-md border-2 border-emerald-300 hover:border-emerald-500 hover-lift relative overflow-hidden group cursor-pointer ring-2 ring-emerald-500/10 hover:ring-emerald-500/30 transition-all flex flex-col justify-between"
         >
-          <div className="flex items-start justify-between gap-1.5">
-            <div className="space-y-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <p className="text-[10px] sm:text-xs font-black text-emerald-900/80 uppercase tracking-wider whitespace-nowrap shrink-0">{currentMonthShortUpper} INCOME</p>
-                <span className="text-[9px] sm:text-[10px] font-black text-white bg-emerald-600 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 shadow-xs">Click list ↗</span>
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-black text-emerald-900/80 uppercase tracking-wider whitespace-nowrap">{currentMonthShortUpper} INCOME</p>
+                <span className="text-[9px] sm:text-[10px] font-black text-white bg-emerald-600 px-2 py-0.5 rounded-full whitespace-nowrap shadow-xs">Click list ↗</span>
               </div>
               <h3 className="text-2xl sm:text-3xl font-black text-emerald-950 tracking-tight">₹{(monthlyIncome || 0).toLocaleString()}</h3>
               <p className="text-xs font-extrabold text-emerald-700 flex items-center gap-1">
@@ -547,7 +547,7 @@ export const Dashboard: React.FC = () => {
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform shrink-0" />
               </p>
             </div>
-            <div className="w-11 h-11 p-2.5 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-600/25 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 p-3 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center shrink-0 shadow-lg shadow-emerald-600/25 group-hover:scale-110 transition-transform self-center">
               <IndianRupee className="w-5 h-5 stroke-[2.5]" />
             </div>
           </div>
@@ -556,13 +556,13 @@ export const Dashboard: React.FC = () => {
         {/* CLICKABLE Card 4: Pending Fees (Rose / Red Theme) */}
         <div 
           onClick={() => setShowPendingModal(true)}
-          className="bg-gradient-to-br from-rose-500/15 via-amber-50/60 to-white rounded-3xl p-4 sm:p-5 lg:p-6 shadow-md border-2 border-rose-300 hover:border-rose-500 hover-lift relative overflow-hidden group cursor-pointer ring-2 ring-rose-500/10 hover:ring-rose-500/30 transition-all flex flex-col justify-between"
+          className="bg-gradient-to-br from-rose-500/15 via-amber-50/60 to-white rounded-3xl p-5 sm:p-6 shadow-md border-2 border-rose-300 hover:border-rose-500 hover-lift relative overflow-hidden group cursor-pointer ring-2 ring-rose-500/10 hover:ring-rose-500/30 transition-all flex flex-col justify-between"
         >
-          <div className="flex items-start justify-between gap-1.5">
-            <div className="space-y-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <p className="text-[10px] sm:text-xs font-black text-rose-900/80 uppercase tracking-wider whitespace-nowrap shrink-0">Pending Fees</p>
-                <span className="text-[9px] sm:text-[10px] font-black text-white bg-rose-600 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 shadow-xs">Click list ↗</span>
+          <div className="flex items-center justify-between gap-3">
+            <div className="space-y-1.5 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-black text-rose-900/80 uppercase tracking-wider whitespace-nowrap">Pending Fees</p>
+                <span className="text-[9px] sm:text-[10px] font-black text-white bg-rose-600 px-2 py-0.5 rounded-full whitespace-nowrap shadow-xs">Click list ↗</span>
               </div>
               <h3 className="text-2xl sm:text-3xl font-black text-rose-600 tracking-tight">₹{(pendingFees || 0).toLocaleString()}</h3>
               <p className="text-xs font-extrabold text-rose-600 flex items-center gap-1">
@@ -570,7 +570,7 @@ export const Dashboard: React.FC = () => {
                 <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform shrink-0" />
               </p>
             </div>
-            <div className="w-11 h-11 p-2.5 rounded-2xl bg-gradient-to-br from-rose-600 to-red-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-rose-600/25 group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 p-3 rounded-2xl bg-gradient-to-br from-rose-600 to-red-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-rose-600/25 group-hover:scale-110 transition-transform self-center">
               <AlertCircle className="w-5 h-5 stroke-[2.5]" />
             </div>
           </div>
