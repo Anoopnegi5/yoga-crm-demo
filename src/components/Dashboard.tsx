@@ -393,82 +393,75 @@ export const Dashboard: React.FC = () => {
     <div className="space-y-8 animate-fadeIn">
       
       {/* Top Hero Section */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-700 via-indigo-600 to-blue-600 text-white p-8 sm:p-10 shadow-xl">
-        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 -mb-10 w-60 h-60 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0F172A] via-[#1E293B] to-[#0A0F1D] text-white p-7 sm:p-9 shadow-xl border border-slate-800">
+        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-1/3 -mb-10 w-80 h-80 bg-purple-500/10 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-purple-100 border border-white/20">
-              <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/80 backdrop-blur-md text-xs font-semibold text-emerald-300 border border-slate-700/80 shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
               <span>{todayDateString}</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-              {getGreeting()}, <span className="text-purple-200">{trainerProfile.name}</span>
-            </h2>
-            <p className="text-purple-100/90 text-sm max-w-xl">
-              Welcome to <strong className="text-white font-bold">{trainerProfile.studioName}</strong>. You have <strong className="text-white font-bold">{todaysClasses} active sessions</strong> scheduled for today and <strong className="text-emerald-200 font-bold">{activeLeaves.length} clients on leave</strong>.
-            </p>
+            
+            <div>
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white font-sans">
+                {getGreeting()}, <span className="text-emerald-400 bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">{trainerProfile.name}</span>
+              </h2>
+              <p className="text-slate-300 text-xs sm:text-sm font-medium mt-1 max-w-xl">
+                Welcome to <strong className="text-white">{trainerProfile.studioName}</strong>. You have <strong className="text-emerald-300 font-bold">{todaysClasses} active sessions</strong> scheduled for today and <strong className="text-amber-300 font-bold">{activeLeaves.length} clients on leave</strong>.
+              </p>
+            </div>
+
+            {/* Quick Micro Stat Badges */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-950/60 border border-emerald-800/50 text-emerald-300 text-[11px] font-bold">
+                🟢 {todaysClasses} Classes Today
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-purple-950/60 border border-purple-800/50 text-purple-300 text-[11px] font-bold">
+                👥 {activeClients.length} Active Yogis
+              </span>
+              {activeLeaves.length > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-950/60 border border-amber-800/50 text-amber-300 text-[11px] font-bold">
+                  🏖️ {activeLeaves.length} on Leave
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-            <button
-              onClick={() => setIsAddClientOpen(true)}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white text-purple-700 font-bold text-xs shadow-lg hover:bg-purple-50 hover:scale-105 active:scale-95 transition-all"
-            >
-              <UserPlus className="w-4 h-4 text-purple-600" />
-              + Add Client
-            </button>
-            <button
-              onClick={() => {
-                setPaymentModalDefaultClientId(null);
-                setIsAddPaymentOpen(true);
-              }}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white/20 backdrop-blur-md text-white font-semibold text-xs border border-white/30 hover:bg-white/30 hover:scale-105 active:scale-95 transition-all"
-            >
-              <CreditCard className="w-4 h-4 text-emerald-300" />
-              + Add Payment
-            </button>
-            <button
-              onClick={() => setIsAddLeaveOpen(true)}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white/20 backdrop-blur-md text-white font-semibold text-xs border border-white/30 hover:bg-white/30 hover:scale-105 active:scale-95 transition-all"
-            >
-              <CalendarX className="w-4 h-4 text-rose-300" />
-              + Mark Leave
-            </button>
-            <button
-              onClick={() => setIsAddTrainerLeaveOpen(true)}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-amber-400 text-amber-950 font-extrabold text-xs shadow-md hover:bg-amber-300 hover:scale-105 active:scale-95 transition-all"
-            >
-              <UserX className="w-4 h-4 text-amber-950" />
-              + Instructor Leave
-            </button>
+          {/* Clean Action Toolbar */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            
+            {/* Share Registration Link Pill */}
             <button
               onClick={() => setIsShareLinkOpen(true)}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-extrabold text-xs shadow-lg hover:scale-105 active:scale-95 transition-all"
-              title="Copy or send 5-Step Client Registration Link to clients"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md hover:scale-105 active:scale-95 transition-all border border-purple-400/30"
+              title="Copy or share 5-Step Client Registration Link"
             >
               <Share2 className="w-4 h-4 text-purple-200" />
-              📋 Share Client Registration Link
+              <span>Share Registration Link</span>
             </button>
 
+            {/* Mark Client Leave Pill */}
             <button
-              onClick={() => setIsClientWebsiteMode(true)}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-pink-500 via-purple-600 to-indigo-600 text-white font-extrabold text-xs shadow-lg hover:scale-105 active:scale-95 transition-all ring-2 ring-purple-300/30"
-              title="Open & preview Yoganjali's official brand website & client portal"
+              onClick={() => setIsAddLeaveOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 hover:text-white font-bold text-xs border border-slate-700 shadow-xs hover:scale-105 active:scale-95 transition-all"
+              title="Log client leave date"
             >
-              <Globe className="w-4 h-4 text-pink-200" />
-              🌐 Open Yoganjali Website
+              <CalendarX className="w-4 h-4 text-rose-400" />
+              <span>Mark Client Leave</span>
             </button>
 
+            {/* Instructor Leave Pill */}
             <button
-              onClick={() => setActiveTab('dreams')}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 text-amber-950 font-extrabold text-xs shadow-lg hover:scale-105 active:scale-95 transition-all ring-2 ring-amber-300/40"
-              title="Open Trainer Dreams & Financial Vision Board"
+              onClick={() => setIsAddTrainerLeaveOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-bold text-xs shadow-xs hover:scale-105 active:scale-95 transition-all"
+              title="Log trainer/instructor leave"
             >
-              <Trophy className="w-4 h-4 text-amber-950" />
-              🎯 Dreams & Goals
+              <UserX className="w-4 h-4 text-amber-400" />
+              <span>Instructor Leave</span>
             </button>
+
           </div>
         </div>
       </div>
