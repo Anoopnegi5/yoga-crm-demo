@@ -313,20 +313,26 @@ export default async function handler(req, res) {
 
       const isOverwrite = payload.action === 'overwrite';
 
-      const combinedDeletedIds = isOverwrite 
-        ? (Array.isArray(payload.deletedIds) ? payload.deletedIds : [])
-        : Array.from(new Set([
-            ...(currentBlobData.deletedIds || []),
-            ...(payload.deletedIds || [])
-          ]));
+      const combinedDeletedIds = Array.from(new Set([
+        ...(currentBlobData.deletedIds || []),
+        ...(Array.isArray(payload.deletedIds) ? payload.deletedIds : [])
+      ]));
 
       const incomingDreams = Array.isArray(payload.trainerDreams) ? payload.trainerDreams : [];
-      const mergedClients = isOverwrite ? incomingClients.map(normalizeClient).filter(Boolean) : mergeClientLists(currentBlobData.clients || [], incomingClients, combinedDeletedIds);
-      const mergedPayments = isOverwrite ? incomingPayments : mergeClientLists(currentBlobData.payments || [], incomingPayments, combinedDeletedIds);
-      const mergedDreams = isOverwrite ? incomingDreams.map(normalizeTrainerDream).filter(Boolean) : mergeGenericLists(currentBlobData.trainerDreams || [], incomingDreams, combinedDeletedIds, normalizeTrainerDream);
-      const mergedLeaves = isOverwrite ? (payload.trainerLeaves || []) : mergeGenericLists(currentBlobData.trainerLeaves || [], payload.trainerLeaves || [], combinedDeletedIds);
+      const mergedClients = isOverwrite 
+        ? incomingClients.map(normalizeClient).filter(c => c && !combinedDeletedIds.includes(c.id)) 
+        : mergeClientLists(currentBlobData.clients || [], incomingClients, combinedDeletedIds);
+      const mergedPayments = isOverwrite 
+        ? incomingPayments.filter(p => p && !combinedDeletedIds.includes(p.id) && !combinedDeletedIds.includes(p.clientId)) 
+        : mergeClientLists(currentBlobData.payments || [], incomingPayments, combinedDeletedIds);
+      const mergedDreams = isOverwrite 
+        ? incomingDreams.map(normalizeTrainerDream).filter(d => d && !combinedDeletedIds.includes(d.id)) 
+        : mergeGenericLists(currentBlobData.trainerDreams || [], incomingDreams, combinedDeletedIds, normalizeTrainerDream);
+      const mergedLeaves = isOverwrite 
+        ? (payload.trainerLeaves || []).filter(tl => tl && !combinedDeletedIds.includes(tl.id)) 
+        : mergeGenericLists(currentBlobData.trainerLeaves || [], payload.trainerLeaves || [], combinedDeletedIds);
       const mergedAttendance = isOverwrite 
-        ? (payload.attendance || []).map(normalizeAttendance).filter(Boolean) 
+        ? (payload.attendance || []).map(normalizeAttendance).filter(a => a && !combinedDeletedIds.includes(a.id) && !combinedDeletedIds.includes(a.clientId)) 
         : mergeAttendanceLists(currentBlobData.attendance || [], payload.attendance || [], combinedDeletedIds);
 
       const incomingDeletedGroupBatches = Array.from(new Set([

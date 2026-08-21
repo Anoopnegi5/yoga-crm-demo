@@ -213,9 +213,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const deleteBlogPost = (id: string) => {
     const updated = blogs.filter(b => b.id !== id);
     setBlogs(updated);
-    const newDeleted = Array.from(new Set([...deletedIds, id]));
+    const newDeleted = Array.from(new Set([...deletedIdsRef.current, id]));
+    deletedIdsRef.current = newDeleted;
     setDeletedIds(newDeleted);
     try {
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(newDeleted));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(newDeleted));
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
     } catch (e) {}
 
@@ -343,13 +346,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } catch (e) {}
     }
 
-    const nextDeletedIds = Array.from(new Set([...deletedIds, id]));
+    const nextDeletedIds = Array.from(new Set([...deletedIdsRef.current, id]));
+    deletedIdsRef.current = nextDeletedIds;
     const updatedPayments = payments.filter(p => p.id !== id);
 
     setDeletedIds(nextDeletedIds);
     setPayments(updatedPayments);
 
     try {
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(nextDeletedIds));
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
     } catch (e) {}
@@ -370,13 +375,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteTrainerDream = (id: string) => {
-    const nextDeletedIds = Array.from(new Set([...deletedIds, id]));
+    const nextDeletedIds = Array.from(new Set([...deletedIdsRef.current, id]));
+    deletedIdsRef.current = nextDeletedIds;
     const updatedDreams = trainerDreams.filter(d => d.id !== id);
 
     setDeletedIds(nextDeletedIds);
     setTrainerDreams(updatedDreams);
 
     try {
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(nextDeletedIds));
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(updatedDreams));
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainerDreams`, JSON.stringify(updatedDreams));
@@ -550,12 +557,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const [deletedIds, setDeletedIds] = useState<string[]>(() => {
-    const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_deleted_ids`);
+    const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_deleted_ids`) || safeStorage.getItem(`${LOCAL_STORAGE_KEY}_deletedIds`);
     return saved ? JSON.parse(saved) : [];
   });
+  const deletedIdsRef = useRef<string[]>(deletedIds);
 
   useEffect(() => {
+    deletedIdsRef.current = deletedIds;
     safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(deletedIds));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(deletedIds));
   }, [deletedIds]);
 
   const [isSyncingCloud, setIsSyncingCloud] = useState<boolean>(false);
@@ -566,8 +576,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try {
       const remote = await fetchCloudSyncData();
 
-      const allDeleted = Array.from(new Set([...deletedIds, ...(remote?.deletedIds || [])]));
+      const allDeleted = Array.from(new Set([...deletedIdsRef.current, ...(remote?.deletedIds || [])]));
+      deletedIdsRef.current = allDeleted;
       setDeletedIds(allDeleted);
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(allDeleted));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(allDeleted));
 
       // Smart Deduplicated Array Merging across Phone and Laptop with Deletion Tracking
       const mergedClients = mergeArraysById(clients, remote?.clients || [], allDeleted);
@@ -597,8 +610,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         attendance: mergedAttendance,
         blogs: mergedBlogs,
         customGroupBatches: mergedBatches,
-        deletedIds: allDeleted
-      });
+        deletedIds: allDeleted,
+        action: 'overwrite'
+      } as any);
 
       setLastCloudSyncTime(new Date().toISOString());
       showSuccessToast(`☁️ Cloud Synced! Total ${mergedClients.length} Clients Merged Across All Devices.`);
@@ -640,8 +654,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const runSync = () => {
       fetchCloudSyncData().then(remote => {
         if (remote) {
-          const allDeleted = Array.from(new Set([...deletedIds, ...(remote.deletedIds || [])]));
+          const allDeleted = Array.from(new Set([...deletedIdsRef.current, ...(remote.deletedIds || [])]));
+          deletedIdsRef.current = allDeleted;
           setDeletedIds(allDeleted);
+          safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(allDeleted));
+          safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(allDeleted));
 
           setClients(prev => {
             const merged = mergeArraysById(prev, remote.clients || [], allDeleted);
@@ -850,10 +867,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showSuccessToast(`Updated profile for ${updatedClient.name}`);
   };
 
-  const deleteClient = (id: string) => {
+  const deleteClient = async (id: string) => {
     const target = clients.find(c => c.id === id);
-    const newDeletedIds = Array.from(new Set([...deletedIds, id]));
+    const newDeletedIds = Array.from(new Set([...deletedIdsRef.current, id]));
+    deletedIdsRef.current = newDeletedIds;
     setDeletedIds(newDeletedIds);
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(newDeletedIds));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(newDeletedIds));
 
     const updatedClients = clients.filter(c => c.id !== id);
     const updatedPayments = payments.filter(p => p.clientId !== id);
@@ -864,21 +884,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPayments(updatedPayments);
     setLeaves(updatedLeaves);
     setAttendance(updatedAttendance);
+
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(updatedLeaves));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(updatedAttendance));
     
     if (selectedClientId === id) {
       setSelectedClientId(null);
     }
 
-    pushCloudSyncData({
-      clients: updatedClients,
-      payments: updatedPayments,
-      trainerDreams,
-      trainerLeaves,
-      leaves: updatedLeaves,
-      attendance: updatedAttendance,
-      customGroupBatches,
-      deletedIds: newDeletedIds
-    });
+    try {
+      await pushCloudSyncData({
+        clients: updatedClients,
+        payments: updatedPayments,
+        trainerDreams,
+        trainerLeaves,
+        leaves: updatedLeaves,
+        attendance: updatedAttendance,
+        customGroupBatches,
+        deletedIds: newDeletedIds,
+        action: 'overwrite'
+      } as any);
+    } catch (err) {
+      console.warn('deleteClient cloud push error:', err);
+    }
 
     showSuccessToast(`Deleted client profile: ${target?.name || ''}`);
   };
@@ -1055,12 +1085,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteLeave = (id: string) => {
-    const nextDeletedIds = Array.from(new Set([...deletedIds, id]));
+    const nextDeletedIds = Array.from(new Set([...deletedIdsRef.current, id]));
+    deletedIdsRef.current = nextDeletedIds;
     const updatedLeaves = leaves.filter(l => l.id !== id);
 
     setDeletedIds(nextDeletedIds);
     setLeaves(updatedLeaves);
     try {
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(nextDeletedIds));
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(updatedLeaves));
     } catch (e) {}
@@ -1164,13 +1196,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteAttendanceRecord = (id: string) => {
-    const nextDeletedIds = Array.from(new Set([...deletedIds, id]));
+    const nextDeletedIds = Array.from(new Set([...deletedIdsRef.current, id]));
+    deletedIdsRef.current = nextDeletedIds;
     const updatedAttendance = attendance.filter(a => a.id !== id);
 
     setDeletedIds(nextDeletedIds);
     setAttendance(updatedAttendance);
 
     try {
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(nextDeletedIds));
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(updatedAttendance));
     } catch (e) {}
