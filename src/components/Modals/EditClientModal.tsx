@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Client, SessionType, TimeSlot, MembershipPlan, Gender, FeeType } from '../../types';
+import { compressImageFile } from '../../utils/imageCompressor';
 import { X, Check, Save, Upload, Sparkles, Users, Clock, Calendar, Trash2 } from 'lucide-react';
 
 const REASONS_LIST = [
@@ -115,14 +116,13 @@ export const EditClientModal: React.FC<EditClientModalProps> = ({ client, isOpen
     setGender(newGender);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotoUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      const compressed = await compressImageFile(file, 400, 0.82);
+      if (compressed) {
+        setPhotoUrl(compressed);
+      }
     }
   };
 

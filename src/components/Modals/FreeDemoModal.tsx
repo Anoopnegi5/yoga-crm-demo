@@ -51,7 +51,7 @@ export const FreeDemoModal: React.FC<FreeDemoModalProps> = ({
     (c.code || '').toLowerCase().includes((countrySearch || '').toLowerCase())
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const trimmedName = fullName.trim();
@@ -86,7 +86,7 @@ export const FreeDemoModal: React.FC<FreeDemoModalProps> = ({
 
     // 2. Feed Client Data into AppContext for Trainer Backend Management
     const todayStr = new Date().toISOString().split('T')[0];
-    addClient({
+    await addClient({
       name: trimmedName,
       gender: 'Female',
       phone: fullPhoneNumber,

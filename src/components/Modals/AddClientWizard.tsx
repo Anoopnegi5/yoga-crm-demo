@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { SessionType, TimeSlot, MembershipPlan, Gender, FeeType } from '../../types';
-import { X, Check, ArrowRight, ArrowLeft, Sparkles, User, Calendar, Heart, CreditCard, FileText, Upload, Image as ImageIcon, Smile, Users, Clock, Trash2, Save } from 'lucide-react';
+import { compressImageFile } from '../../utils/imageCompressor';
+import { X, Check, ArrowRight, ArrowLeft, Sparkles, User, Calendar, Heart, CreditCard, FileText, Upload, Image as ImageIcon, Smile, Users, Clock, Trash2, Save, Loader2 } from 'lucide-react';
 
 const REASONS_LIST = [
   'Weight Loss', 'Weight Gain', 'Back Pain', 'Neck Pain', 
@@ -26,6 +27,7 @@ export const AddClientWizard: React.FC = () => {
   } = useApp();
 
   const [step, setStep] = useState<number>(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Dynamic Group Batches strictly created by trainer
   const availableBatches = customGroupBatches && customGroupBatches.length > 0 
@@ -99,15 +101,14 @@ export const AddClientWizard: React.FC = () => {
     setGender(newGender);
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCustomPhotoUrl(reader.result as string);
+      const compressed = await compressImageFile(file, 400, 0.82);
+      if (compressed) {
+        setCustomPhotoUrl(compressed);
         setAvatarStyle('custom');
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -130,7 +131,7 @@ export const AddClientWizard: React.FC = () => {
   // Effective final Group Name
   const finalGroupName = selectedBatchDropdown === 'CUSTOM' ? customGroupName : selectedBatchDropdown;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Auto-save newly created custom group batch name
@@ -142,34 +143,42 @@ export const AddClientWizard: React.FC = () => {
     const effectiveGoal = goal.trim() || (selectedReasons.length > 0 ? selectedReasons.join(', ') : 'General Yoga & Wellness');
     const autoTimeSlot = (classTime || '').toUpperCase().includes('PM') ? 'Evening' : 'Morning';
 
-    addClient({
-      name,
-      gender,
-      phone,
-      whatsapp: sameAsPhone ? phone : (whatsapp || phone),
-      address: address || 'Local Studio',
-      joiningDate,
-      photoUrl: activePhotoUrl,
-      classTime,
-      days: selectedDays,
-      timeSlot: autoTimeSlot,
-      sessionType,
-      groupName: sessionType === 'Personal' ? '' : (finalGroupName.trim() || 'General Yoga Batch'),
-      reasonsForJoining: selectedReasons,
-      currentProblems: currentProblems.split(',').map(s => s.trim()).filter(Boolean),
-      feeType,
-      perSessionFee: feeType === 'Per Session' ? Number(perSessionFee) : 0,
-      monthlyFee: feeType === 'Per Session' ? 0 : Number(monthlyFee),
-      feeDueDate: feeType === 'Per Session' ? 'N/A' : feeDueDate,
-      membershipPlan: feeType === 'Per Session' ? 'Per Session' : 'Unlimited',
-      totalClasses: 30,
-      trainerNotes,
-      goal: effectiveGoal
-    });
+    setIsSubmitting(true);
+    try {
+      await addClient({
+        name: name.trim(),
+        gender,
+        phone: phone.trim(),
+        whatsapp: sameAsPhone ? phone.trim() : ((whatsapp || phone).trim()),
+        address: address.trim() || 'Local Studio',
+        joiningDate,
+        photoUrl: activePhotoUrl,
+        classTime,
+        days: selectedDays,
+        timeSlot: autoTimeSlot,
+        sessionType,
+        groupName: sessionType === 'Personal' ? '' : (finalGroupName.trim() || 'General Yoga Batch'),
+        reasonsForJoining: selectedReasons,
+        currentProblems: currentProblems.split(',').map(s => s.trim()).filter(Boolean),
+        feeType,
+        perSessionFee: feeType === 'Per Session' ? Number(perSessionFee) : 0,
+        monthlyFee: feeType === 'Per Session' ? 0 : Number(monthlyFee),
+        feeDueDate: feeType === 'Per Session' ? 'N/A' : feeDueDate,
+        membershipPlan: feeType === 'Per Session' ? 'Per Session' : 'Unlimited',
+        totalClasses: 30,
+        trainerNotes,
+        goal: effectiveGoal
+      });
 
-    setIsAddClientOpen(false);
-    setStep(1);
-    setCustomPhotoUrl(null);
+      setIsAddClientOpen(false);
+      setStep(1);
+      setCustomPhotoUrl(null);
+    } catch (err) {
+      console.error('Failed to save client:', err);
+      alert('Failed to save client. Please check connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -709,10 +718,22 @@ export const AddClientWizard: React.FC = () => {
             ) : (
               <button
                 type="submit"
-                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-emerald-600 text-white font-extrabold text-xs shadow-lg hover:scale-105 active:scale-95 transition-all"
+                disabled={isSubmitting}
+                className={`flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-emerald-600 text-white font-extrabold text-xs shadow-lg transition-all ${
+                  isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 active:scale-95'
+                }`}
               >
-                <Sparkles className="w-4 h-4 text-yellow-300" />
-                Save Yoga Client Profile
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    <span>Saving & Syncing to Cloud...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-yellow-300" />
+                    <span>Save Yoga Client Profile</span>
+                  </>
+                )}
               </button>
             )}
           </div>

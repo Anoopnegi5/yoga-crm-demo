@@ -21,7 +21,8 @@ import {
   Layers,
   Sparkles,
   UserX,
-  UserCheck
+  UserCheck,
+  RefreshCw
 } from 'lucide-react';
 
 export const Clients: React.FC = () => {
@@ -34,7 +35,9 @@ export const Clients: React.FC = () => {
     setIsAddPaymentOpen, 
     setPaymentModalDefaultClientId,
     markAttendance,
-    toggleClientStatus
+    toggleClientStatus,
+    syncCloudNow,
+    isSyncingCloud
   } = useApp();
 
   const [viewMode, setViewMode] = useState<'cards' | 'groups'>('cards');
@@ -133,6 +136,16 @@ export const Clients: React.FC = () => {
               Group Batches ({Object.keys(groupedBatchesMap).length})
             </button>
           </div>
+
+          <button
+            onClick={() => syncCloudNow()}
+            disabled={isSyncingCloud}
+            title="Fetch latest registrations & updates from studio cloud"
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:text-purple-700 hover:border-purple-300 font-bold text-xs shadow-sm transition-all active:scale-95 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 text-purple-600 ${isSyncingCloud ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{isSyncingCloud ? 'Syncing...' : 'Sync Cloud'}</span>
+          </button>
 
           <button
             onClick={() => setIsAddClientOpen(true)}

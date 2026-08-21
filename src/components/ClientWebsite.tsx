@@ -140,7 +140,7 @@ export const ClientWebsite: React.FC = () => {
     window.open(`https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(defaultMsg)}`, '_blank');
   };
 
-  const handleFullRegistrationSubmit = (e: React.FormEvent) => {
+  const handleFullRegistrationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone) {
       alert('Please fill out your Name and Phone number.');
@@ -150,7 +150,7 @@ export const ClientWebsite: React.FC = () => {
     const todayStr = new Date().toISOString().split('T')[0];
 
     // Feed Client Data into AppContext & localStorage
-    addClient({
+    await addClient({
       name,
       gender,
       phone,

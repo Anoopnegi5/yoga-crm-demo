@@ -3,7 +3,8 @@ import { useApp } from '../context/AppContext';
 import { SITE_CONFIG } from '../config/siteConfig';
 import { SessionType, TimeSlot, Gender, FeeType } from '../types';
 import { pushCloudSyncData } from '../utils/cloudSync';
-import { X, Check, ArrowRight, ArrowLeft, Sparkles, Upload, Users, Clock, Instagram, Youtube, MessageCircle, Globe } from 'lucide-react';
+import { compressImageFile } from '../utils/imageCompressor';
+import { X, Check, ArrowRight, ArrowLeft, Sparkles, Upload, Users, Clock, Instagram, Youtube, MessageCircle, Globe, Loader2 } from 'lucide-react';
 
 const REASONS_LIST = [
   'Weight Loss', 'Weight Gain', 'Back Pain', 'Neck Pain', 
@@ -21,6 +22,7 @@ export const ClientRegistrationWizard: React.FC = () => {
 
   const [step, setStep] = useState<number>(1);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Dynamic Group Batches strictly created by trainer
   const availableBatches = customGroupBatches && customGroupBatches.length > 0 
@@ -88,15 +90,14 @@ export const ClientRegistrationWizard: React.FC = () => {
 
   const activePhotoUrl = getAvatarUrl();
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCustomPhotoUrl(reader.result as string);
+      const compressed = await compressImageFile(file, 400, 0.82);
+      if (compressed) {
+        setCustomPhotoUrl(compressed);
         setAvatarStyle('custom');
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 
@@ -119,7 +120,7 @@ export const ClientRegistrationWizard: React.FC = () => {
   // Effective final Group Name
   const finalGroupName = selectedBatchDropdown === 'CUSTOM' ? customGroupName : selectedBatchDropdown;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !phone) {
       alert('Please fill out your Name and Phone number.');
@@ -127,36 +128,44 @@ export const ClientRegistrationWizard: React.FC = () => {
       return;
     }
 
-    const effectiveGoal = goal.trim() || (selectedReasons.length > 0 ? selectedReasons.join(', ') : 'General Yoga & Wellness');
-    const autoTimeSlot = (classTime || '').toUpperCase().includes('PM') ? 'Evening' : 'Morning';
+    setIsSubmitting(true);
+    try {
+      const effectiveGoal = goal.trim() || (selectedReasons.length > 0 ? selectedReasons.join(', ') : 'General Yoga & Wellness');
+      const autoTimeSlot = (classTime || '').toUpperCase().includes('PM') ? 'Evening' : 'Morning';
 
-    addClient({
-      name,
-      gender,
-      phone,
-      whatsapp: sameAsPhone ? phone : (whatsapp || phone),
-      address: address || 'Indiranagar, Bengaluru',
-      joiningDate,
-      photoUrl: activePhotoUrl,
-      classTime,
-      days: selectedDays,
-      timeSlot: autoTimeSlot,
-      sessionType,
-      groupName: sessionType === 'Personal' ? '' : (finalGroupName.trim() || 'General Yoga Batch'),
-      reasonsForJoining: selectedReasons,
-      currentProblems: currentProblems.split(',').map(s => s.trim()).filter(Boolean),
-      feeType,
-      perSessionFee: feeType === 'Per Session' ? Number(perSessionFee) : 0,
-      monthlyFee: feeType === 'Per Session' ? 0 : Number(monthlyFee),
-      feeDueDate: feeType === 'Per Session' ? 'N/A' : feeDueDate,
-      membershipPlan: (feeType === 'Per Session' ? 'Per Session' : 'Unlimited') as any,
-      totalClasses: 30,
-      trainerNotes,
-      goal: effectiveGoal
-    });
+      await addClient({
+        name: name.trim(),
+        gender,
+        phone: phone.trim(),
+        whatsapp: sameAsPhone ? phone.trim() : ((whatsapp || phone).trim()),
+        address: address.trim() || 'Indiranagar, Bengaluru',
+        joiningDate,
+        photoUrl: activePhotoUrl,
+        classTime,
+        days: selectedDays,
+        timeSlot: autoTimeSlot,
+        sessionType,
+        groupName: sessionType === 'Personal' ? '' : (finalGroupName.trim() || 'General Yoga Batch'),
+        reasonsForJoining: selectedReasons,
+        currentProblems: currentProblems.split(',').map(s => s.trim()).filter(Boolean),
+        feeType,
+        perSessionFee: feeType === 'Per Session' ? Number(perSessionFee) : 0,
+        monthlyFee: feeType === 'Per Session' ? 0 : Number(monthlyFee),
+        feeDueDate: feeType === 'Per Session' ? 'N/A' : feeDueDate,
+        membershipPlan: (feeType === 'Per Session' ? 'Per Session' : 'Unlimited') as any,
+        totalClasses: 30,
+        trainerNotes,
+        goal: effectiveGoal
+      });
 
-    setSubmitted(true);
-    showSuccessToast(`🎉 Client Data fed successfully! Welcome ${name} to Yoganjali Studio.`);
+      setSubmitted(true);
+      showSuccessToast(`🎉 Client Data fed successfully! Welcome ${name} to Yoganjali Studio.`);
+    } catch (err) {
+      console.error('Registration failed:', err);
+      alert('Registration failed. Please check your connection and try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -808,10 +817,22 @@ export const ClientRegistrationWizard: React.FC = () => {
               ) : (
                 <button
                   type="submit"
-                  className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-emerald-600 text-white font-extrabold text-xs shadow-lg hover:scale-105 active:scale-95 transition-all"
+                  disabled={isSubmitting}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-purple-600 to-emerald-600 text-white font-extrabold text-xs shadow-lg transition-all ${
+                    isSubmitting ? 'opacity-70 cursor-not-allowed' : 'hover:scale-105 active:scale-95'
+                  }`}
                 >
-                  <Sparkles className="w-4 h-4 text-yellow-300" />
-                  Save Yoga Client Profile
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Saving & Syncing to Studio...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 text-yellow-300" />
+                      <span>Save Yoga Client Profile</span>
+                    </>
+                  )}
                 </button>
               )}
             </div>

@@ -29,7 +29,7 @@ interface AppContextType {
   deleteTrainerDream: (id: string) => void;
 
   clients: Client[];
-  addClient: (client: Omit<Client, 'id' | 'completedClasses' | 'paymentStatus'> & Partial<Pick<Client, 'id'>>) => void;
+  addClient: (client: Omit<Client, 'id' | 'completedClasses' | 'paymentStatus'> & Partial<Pick<Client, 'id'>>) => Promise<Client | void>;
   updateClient: (client: Client) => void;
   deleteClient: (id: string) => void;
   toggleClientStatus: (id: string, status: 'Active' | 'Discontinued', reason?: string) => void;
@@ -780,7 +780,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showSuccessToast('Instructor leave record removed.');
   };
 
-  const addClient = (newClientData: Omit<Client, 'id' | 'completedClasses' | 'paymentStatus'> & Partial<Pick<Client, 'id'>>) => {
+  const addClient = async (newClientData: Omit<Client, 'id' | 'completedClasses' | 'paymentStatus'> & Partial<Pick<Client, 'id'>>): Promise<Client> => {
     const newId = newClientData.id || `c${Date.now()}`;
     const defaults: Omit<Client, 'id' | 'completedClasses' | 'paymentStatus'> = {
       name: '',
@@ -813,11 +813,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Active'
     };
 
+    let updatedClients: Client[] = [];
     setClients(prev => {
       const filtered = prev.filter(c => c.id !== newId);
       const updated = [newClient, ...filtered].sort((a, b) => b.id.localeCompare(a.id));
-      pushCloudSyncData({
-        clients: updated,
+      updatedClients = updated;
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updated));
+      return updated;
+    });
+
+    try {
+      await pushCloudSyncData({
+        clients: updatedClients.length > 0 ? updatedClients : [newClient, ...clients],
         payments,
         trainerDreams,
         trainerLeaves,
@@ -826,10 +833,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         customGroupBatches,
         deletedIds
       });
-      return updated;
-    });
+    } catch (err) {
+      console.warn('addClient pushCloudSyncData error:', err);
+    }
 
     showSuccessToast(`Added new client: ${newClient.name}`);
+    return newClient;
   };
 
   const updateClient = (updatedClient: Client) => {
