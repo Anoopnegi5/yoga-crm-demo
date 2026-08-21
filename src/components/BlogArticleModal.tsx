@@ -32,19 +32,20 @@ export const BlogArticleModal: React.FC<BlogArticleModalProps> = ({
   allPosts = [],
   onSelectPost
 }) => {
+  useEffect(() => {
+    if (isOpen && post) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = 'unset';
+      };
+    }
+  }, [isOpen, post]);
+
   if (!isOpen || !post) return null;
 
   const articleUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/blog/${post.slug}`
     : `https://www.yoganjaliyoga.com/blog/${post.slug}`;
-
-  useEffect(() => {
-    // Lock body scroll while reading
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
 
   const handleShareWhatsApp = () => {
     const text = `🌿 *${post.title}*\n\nRead this insightful yoga guide by Trainer Anjali Negi:\n${articleUrl}\n\n— Yoganjali Yoga Studio`;

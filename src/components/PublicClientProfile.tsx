@@ -50,14 +50,23 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   const [isPaymentCheckoutOpen, setIsPaymentCheckoutOpen] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [calDate, setCalDate] = useState(() => new Date(2026, 7, 1)); // Default to August 2026
 
   // Find target client by slug or ID
+  const cleanSlug = (clientSlug || '').toLowerCase().trim();
   const activeClients = clients.filter(c => c.status !== 'Discontinued');
   const targetClient: Client | undefined = activeClients.find(c => {
     if (clientId && c.id === clientId) return true;
-    if (clientSlug && slugifyName(c.name) === clientSlug.toLowerCase()) return true;
+    if (cleanSlug && slugifyName(c.name) === cleanSlug) return true;
+    if (cleanSlug && slugifyName(c.name.trim()) === cleanSlug) return true;
     return false;
-  }) || activeClients[0]; // fallback to first client if direct match not found
+  }) || (cleanSlug ? clients.find(c => slugifyName(c.name) === cleanSlug || slugifyName(c.name.trim()) === cleanSlug) : undefined) || activeClients[0];
+
+  useEffect(() => {
+    if (targetClient?.name) {
+      document.title = `🧘 ${targetClient.name.trim()} • Official Yogi Profile | Yoganjali`;
+    }
+  }, [targetClient]);
 
   if (!targetClient) {
     return (
@@ -171,12 +180,6 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
     ? `${window.location.origin}/yogi/${currentSlug}`
     : `https://www.yoganjaliyoga.com/yogi/${currentSlug}`;
 
-  useEffect(() => {
-    if (targetClient?.name) {
-      document.title = `🧘 ${targetClient.name} • Official Yogi Profile | Yoganjali`;
-    }
-  }, [targetClient]);
-
   const handleCopyLink = () => {
     navigator.clipboard.writeText(publicProfileUrl);
     setCopied(true);
@@ -272,8 +275,6 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   };
 
   // --- MONTHLY ATTENDANCE & LEAVE CALENDAR STATE & DATA ---
-  const [calDate, setCalDate] = useState(() => new Date(2026, 7, 1)); // Default to August 2026
-
   const calYear = calDate.getFullYear();
   const calMonth = calDate.getMonth();
   const monthNames = [
