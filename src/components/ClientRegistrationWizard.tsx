@@ -181,10 +181,11 @@ export const ClientRegistrationWizard: React.FC = () => {
                 {submitted ? 'Registration Successful' : 'Add New Yoga Client'}
               </h3>
               <p className="text-xs text-purple-100">
-                {submitted ? 'Yoganjali Studio Onboarding' : `Step ${step} of 4 — ${
+                {submitted ? 'Yoganjali Studio Onboarding' : `Step ${step} of 5 — ${
                   step === 1 ? 'Basic Details & Avatar' :
                   step === 2 ? 'Class & Group Batch' :
-                  step === 3 ? 'Health & Reasons' : 'Fee & Submit'
+                  step === 3 ? 'Health & Reasons' :
+                  step === 4 ? 'Fee & Billing Model' : 'Review & Register'
                 }`}
               </p>
             </div>
@@ -193,7 +194,7 @@ export const ClientRegistrationWizard: React.FC = () => {
 
         {/* Step Progress Indicators */}
         <div className="flex items-center justify-between px-6 py-3 bg-slate-50 border-b border-slate-100">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="flex items-center gap-1.5 cursor-pointer" onClick={() => i < step && setStep(i)}>
               <div className={`w-6 h-6 rounded-full text-[11px] font-bold flex items-center justify-center transition-all ${
                 step === i 
@@ -205,7 +206,7 @@ export const ClientRegistrationWizard: React.FC = () => {
                 {step > i ? <Check className="w-3.5 h-3.5" /> : i}
               </div>
               <span className="hidden sm:inline text-[11px] font-semibold text-slate-500">
-                {i === 1 ? 'Basic Details' : i === 2 ? 'Batch & Time' : i === 3 ? 'Health Goals' : 'Fee & Submit'}
+                {i === 1 ? 'Basic' : i === 2 ? 'Batch' : i === 3 ? 'Health' : i === 4 ? 'Fee' : 'Register'}
               </span>
             </div>
           ))}
@@ -756,6 +757,74 @@ export const ClientRegistrationWizard: React.FC = () => {
               </div>
             )}
 
+            {/* Step 5: Review Summary & Register (No extra input fields asked) */}
+            {step === 5 && (
+              <div className="space-y-5 animate-fadeIn">
+                <div className="bg-gradient-to-br from-emerald-50/80 via-teal-50/50 to-purple-50/50 p-5 sm:p-6 rounded-3xl border border-emerald-200/80 space-y-4 shadow-xs">
+                  
+                  {/* Yogi Profile Preview */}
+                  <div className="flex items-center gap-4 pb-4 border-b border-emerald-200/60">
+                    <img
+                      src={activePhotoUrl}
+                      alt={name || 'Client Avatar'}
+                      className="w-16 h-16 rounded-2xl object-cover ring-2 ring-emerald-500 shadow-md bg-white shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="font-black text-slate-900 text-lg">{name || 'Yoga Practitioner'}</h4>
+                        <span className="text-xs px-2 py-0.5 rounded-md font-bold bg-purple-100 text-purple-800">
+                          {gender}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 font-semibold mt-0.5">
+                        📱 {phone} {whatsapp && whatsapp !== phone ? `• WA: ${whatsapp}` : ''}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Summary Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100 space-y-1 shadow-xs">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Class & Schedule</span>
+                      <p className="font-extrabold text-slate-900 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{classTime} ({timeSlot})</span>
+                      </p>
+                      <p className="text-[11px] text-slate-600 font-semibold">Days: {selectedDays.join(' • ')}</p>
+                    </div>
+
+                    <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100 space-y-1 shadow-xs">
+                      <span className="text-[10px] font-black uppercase text-slate-400">Selected Fee Plan</span>
+                      <p className="font-extrabold text-emerald-900 text-sm">
+                        {feeType === 'Monthly' ? `₹${(monthlyFee || 0).toLocaleString()} / month` : `₹${perSessionFee || 800} / session`}
+                      </p>
+                      <p className="text-[11px] text-slate-600 font-semibold">
+                        {feeType === 'Monthly' ? `Due on: ${feeDueDate}` : 'Pay-As-You-Go'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Health Goal */}
+                  <div className="p-3 bg-white/90 rounded-2xl border border-emerald-100 space-y-1 shadow-xs">
+                    <span className="text-[10px] font-black uppercase text-slate-400">Health Focus</span>
+                    <p className="font-bold text-slate-800 text-xs">
+                      🎯 {selectedReasons.length > 0 ? selectedReasons.join(', ') : 'General Yoga & Wellness'}
+                    </p>
+                  </div>
+
+                </div>
+
+                <div className="text-center space-y-1">
+                  <p className="text-xs font-bold text-slate-700">
+                    Ready to complete registration? Click the button below to join.
+                  </p>
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    Your profile will be instantly synced to Trainer Anjali Negi's studio journal.
+                  </p>
+                </div>
+              </div>
+            )}
+
             {/* Navigation Controls */}
             <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
               {step > 1 ? (
@@ -770,7 +839,7 @@ export const ClientRegistrationWizard: React.FC = () => {
                 </button>
               ) : <div />}
 
-              {step < 4 ? (
+              {step < 5 ? (
                 <button
                   type="button"
                   onClick={() => {
@@ -780,7 +849,7 @@ export const ClientRegistrationWizard: React.FC = () => {
                     }
                     setStep(step + 1);
                   }}
-                  className="flex items-center gap-1.5 px-5 py-2.5 rounded-2xl bg-purple-600 text-white font-bold text-xs shadow-md hover:bg-purple-700 hover:scale-105 active:scale-95 transition-all"
+                  className="flex items-center gap-1.5 px-6 py-2.5 rounded-2xl bg-purple-600 text-white font-bold text-xs shadow-md hover:bg-purple-700 hover:scale-105 active:scale-95 transition-all"
                 >
                   <span>Next Step</span>
                   <ArrowRight className="w-4 h-4" />
@@ -789,17 +858,17 @@ export const ClientRegistrationWizard: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex items-center gap-2 px-7 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-extrabold text-xs shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-75"
+                  className="flex items-center gap-2 px-8 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white font-extrabold text-sm shadow-xl shadow-emerald-600/25 hover:scale-105 active:scale-95 transition-all disabled:opacity-75"
                 >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin text-white" />
-                      <span>Saving & Syncing to Studio...</span>
+                      <span>Registering & Syncing to Studio...</span>
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4 text-emerald-200" />
-                      <span>Complete & Submit Registration</span>
+                      <Sparkles className="w-4 h-4 text-yellow-300" />
+                      <span>Register Yoga Profile 🚀</span>
                     </>
                   )}
                 </button>
