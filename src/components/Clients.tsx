@@ -411,13 +411,15 @@ export const Clients: React.FC = () => {
 
                   {/* Session Type & Group Batch Chip */}
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold ${
-                      client.sessionType === 'Personal'
-                        ? 'bg-purple-50 text-purple-800 border border-purple-200/80'
-                        : 'bg-emerald-50 text-emerald-800 border border-emerald-200/80'
-                    }`}>
-                      {client.sessionType === 'Personal' ? '🧘 Personal 1-on-1' : `👥 Group: ${client.groupName || 'Yoga Batch'}`}
-                    </span>
+                    {(client.sessionType === 'Personal' || (client.groupName || '').toLowerCase().includes('personal')) ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-purple-50 text-purple-800 border border-purple-200/80 shadow-xs">
+                        <span>👥 Personal class</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200/80 shadow-xs">
+                        <span>👥 {client.groupName || 'Group Yoga Class'}</span>
+                      </span>
+                    )}
                   </div>
 
                   {/* Timing & Schedule Box */}
@@ -585,8 +587,12 @@ export const Clients: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="font-bold text-slate-800">{client.sessionType} • {client.classTime}</p>
-                        <p className="text-slate-500 text-[11px]">{client.groupName || 'Personal'}</p>
+                        <p className="font-bold text-slate-800">
+                          {(client.sessionType === 'Personal' || (client.groupName || '').toLowerCase().includes('personal')) ? 'Personal class' : (client.sessionType || 'Group')} • {client.classTime}
+                        </p>
+                        <p className="text-slate-500 text-[11px]">
+                          {(client.sessionType === 'Personal' || (client.groupName || '').toLowerCase().includes('personal')) ? 'Personal' : (client.groupName || 'Group Yoga Class')}
+                        </p>
                       </td>
                       <td className="px-6 py-4 font-semibold text-slate-600">
                         {client.days.join(', ')}
