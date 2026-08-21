@@ -3,6 +3,7 @@ import { Client, PaymentRecord, LeaveRecord, AttendanceRecord, TrainerProfile, T
 import { INITIAL_CLIENTS, INITIAL_PAYMENTS, INITIAL_LEAVES, INITIAL_ATTENDANCE, DEFAULT_TRAINER_PROFILE, INITIAL_TRAINER_LEAVES, INITIAL_TRAINER_DREAMS, INITIAL_BLOG_POSTS } from '../data/mockData';
 import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
 import { getTodayDateString } from '../utils/dateUtils';
+import { safeStorage } from "../utils/safeStorage";
 import { fetchCloudSyncData, pushCloudSyncData, mergeArraysById, normalizeClient, normalizePayment, normalizeAttendance, normalizeTrainerDream, normalizeLeave, normalizeBlog } from '../utils/cloudSync';
 
 interface AppContextType {
@@ -104,7 +105,7 @@ const LOCAL_STORAGE_KEY = 'yoganjali_app_state_v1';
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [trainerProfile, setTrainerProfile] = useState<TrainerProfile>(() => {
     try {
-      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_trainer_profile`);
+      const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_trainer_profile`);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
@@ -119,7 +120,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [websiteCMS, setWebsiteCMS] = useState<WebsiteCMS>(() => {
     try {
-      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_website_cms`);
+      const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_website_cms`);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
@@ -133,7 +134,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateWebsiteCMS = (newCMS: WebsiteCMS) => {
     setWebsiteCMS(newCMS);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_website_cms`, JSON.stringify(newCMS));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_website_cms`, JSON.stringify(newCMS));
     } catch (e) {
       console.warn('LocalStorage quota limit reached, saving in memory session:', e);
     }
@@ -142,7 +143,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [blogs, setBlogs] = useState<BlogPost[]>(() => {
     try {
-      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_blogs`);
+      const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_blogs`);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed.map(normalizeBlog).filter(Boolean);
@@ -167,7 +168,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updated = [newBlog, ...blogs];
     setBlogs(updated);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -190,7 +191,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updated = blogs.map(b => b.id === updatedBlog.id ? updatedBlog : b);
     setBlogs(updated);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -215,7 +216,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newDeleted = Array.from(new Set([...deletedIds, id]));
     setDeletedIds(newDeleted);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -238,7 +239,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updated = blogs.map(b => b.id === id ? { ...b, isPublished: !b.isPublished } : b);
     setBlogs(updated);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_blogs`, JSON.stringify(updated));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -260,7 +261,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [trainerLeaves, setTrainerLeaves] = useState<TrainerLeave[]>(() => {
     try {
-      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_trainer_leaves`);
+      const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_trainer_leaves`);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed;
@@ -271,7 +272,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [trainerDreams, setTrainerDreams] = useState<TrainerDreamGoal[]>(() => {
     try {
-      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`);
+      const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) return parsed.map(normalizeTrainerDream).filter(Boolean);
@@ -288,8 +289,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updatedDreams = [newDream, ...trainerDreams];
     setTrainerDreams(updatedDreams);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(updatedDreams));
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainerDreams`, JSON.stringify(updatedDreams));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(updatedDreams));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainerDreams`, JSON.stringify(updatedDreams));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -311,8 +312,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updatedDreams = trainerDreams.map(d => d.id === updated.id ? updated : d);
     setTrainerDreams(updatedDreams);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(updatedDreams));
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainerDreams`, JSON.stringify(updatedDreams));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(updatedDreams));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainerDreams`, JSON.stringify(updatedDreams));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -338,7 +339,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const updatedClients = clients.map(c => c.id === clientId ? { ...c, paymentStatus: 'Pending' as PaymentStatus } : c);
       setClients(updatedClients);
       try {
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
       } catch (e) {}
     }
 
@@ -349,8 +350,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPayments(updatedPayments);
 
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -376,9 +377,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTrainerDreams(updatedDreams);
 
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(updatedDreams));
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainerDreams`, JSON.stringify(updatedDreams));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(updatedDreams));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainerDreams`, JSON.stringify(updatedDreams));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -397,13 +398,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const [customGroupBatches, setCustomGroupBatches] = useState<string[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_custom_group_batches`);
+    const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_custom_group_batches`);
     return saved ? JSON.parse(saved) : ['Morning Vinyasa Batch (07:00 AM)', 'Evening Flow Batch (05:30 PM)'];
   });
 
   const [deletedGroupBatches, setDeletedGroupBatches] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_deleted_group_batches`);
+      const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_deleted_group_batches`);
       return saved ? JSON.parse(saved) : [];
     } catch (e) {
       return [];
@@ -411,11 +412,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   useEffect(() => {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_custom_group_batches`, JSON.stringify(customGroupBatches));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_custom_group_batches`, JSON.stringify(customGroupBatches));
   }, [customGroupBatches]);
 
   useEffect(() => {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_group_batches`, JSON.stringify(deletedGroupBatches));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_group_batches`, JSON.stringify(deletedGroupBatches));
   }, [deletedGroupBatches]);
 
   const addCustomGroupBatch = (name: string) => {
@@ -426,8 +427,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCustomGroupBatches(next);
     setDeletedGroupBatches(nextDeleted);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_custom_group_batches`, JSON.stringify(next));
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_group_batches`, JSON.stringify(nextDeleted));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_custom_group_batches`, JSON.stringify(next));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_group_batches`, JSON.stringify(nextDeleted));
     } catch (e) {}
     pushCloudSyncData({
       clients,
@@ -450,8 +451,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCustomGroupBatches(next);
     setDeletedGroupBatches(nextDeleted);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_custom_group_batches`, JSON.stringify(next));
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_group_batches`, JSON.stringify(nextDeleted));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_custom_group_batches`, JSON.stringify(next));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_group_batches`, JSON.stringify(nextDeleted));
     } catch (e) {}
     pushCloudSyncData({
       clients,
@@ -470,7 +471,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [clients, setClients] = useState<Client[]>(() => {
     try {
-      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_clients`);
+      const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_clients`);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
@@ -485,7 +486,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [payments, setPayments] = useState<PaymentRecord[]>(() => {
     try {
-      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_payments`);
+      const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_payments`);
       return saved ? JSON.parse(saved) : INITIAL_PAYMENTS;
     } catch (e) {
       return INITIAL_PAYMENTS;
@@ -494,7 +495,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [leaves, setLeaves] = useState<LeaveRecord[]>(() => {
     try {
-      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_leaves`);
+      const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_leaves`);
       return saved ? JSON.parse(saved) : INITIAL_LEAVES;
     } catch (e) {
       return INITIAL_LEAVES;
@@ -503,7 +504,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [attendance, setAttendance] = useState<AttendanceRecord[]>(() => {
     try {
-      const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_attendance`);
+      const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_attendance`);
       return saved ? JSON.parse(saved) : INITIAL_ATTENDANCE;
     } catch (e) {
       return INITIAL_ATTENDANCE;
@@ -534,7 +535,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Automatic Month Cycle Detection & Background Rollover
   useEffect(() => {
     const currentMonthStr = getTodayDateString().slice(0, 7); // e.g. "2026-08"
-    const lastActiveMonth = localStorage.getItem(`${LOCAL_STORAGE_KEY}_last_active_month`);
+    const lastActiveMonth = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_last_active_month`);
 
     if (lastActiveMonth && lastActiveMonth !== currentMonthStr) {
       // Automatic background rollover for new calendar month
@@ -545,16 +546,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       })));
     }
 
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_last_active_month`, currentMonthStr);
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_last_active_month`, currentMonthStr);
   }, []);
 
   const [deletedIds, setDeletedIds] = useState<string[]>(() => {
-    const saved = localStorage.getItem(`${LOCAL_STORAGE_KEY}_deleted_ids`);
+    const saved = safeStorage.getItem(`${LOCAL_STORAGE_KEY}_deleted_ids`);
     return saved ? JSON.parse(saved) : [];
   });
 
   useEffect(() => {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(deletedIds));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(deletedIds));
   }, [deletedIds]);
 
   const [isSyncingCloud, setIsSyncingCloud] = useState<boolean>(false);
@@ -726,38 +727,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Sync to local storage
   useEffect(() => {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_profile`, JSON.stringify(trainerProfile));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_profile`, JSON.stringify(trainerProfile));
   }, [trainerProfile]);
 
   useEffect(() => {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_leaves`, JSON.stringify(trainerLeaves));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_leaves`, JSON.stringify(trainerLeaves));
   }, [trainerLeaves]);
 
   useEffect(() => {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(trainerDreams));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(trainerDreams));
   }, [trainerDreams]);
 
   useEffect(() => {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(clients));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(clients));
   }, [clients]);
 
   useEffect(() => {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(payments));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(payments));
   }, [payments]);
 
   useEffect(() => {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(leaves));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(leaves));
   }, [leaves]);
 
   useEffect(() => {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(attendance));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(attendance));
   }, [attendance]);
 
   // Explicit Cloud Push happens strictly inside user actions (addClient, updateClient, deleteClient, forcePushCloud)
   // Background polling only FETCHES from cloud to avoid race-condition overwrites.
 
   useEffect(() => {
-    localStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(attendance));
+    safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(attendance));
   }, [attendance]);
 
   const updateTrainerProfile = (profile: TrainerProfile) => {
@@ -910,8 +911,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setPayments(updatedPayments);
       setClients(updatedClients);
       try {
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
       } catch (e) {}
 
       pushCloudSyncData({
@@ -946,8 +947,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPayments(updatedPayments);
     setClients(updatedClients);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -969,7 +970,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updatedPayments = payments.map(p => p.id === updatedPayment.id ? updatedPayment : p);
     setPayments(updatedPayments);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -1024,7 +1025,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const updatedLeaves = [newLeave, ...leaves];
     setLeaves(updatedLeaves);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(updatedLeaves));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(updatedLeaves));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -1051,8 +1052,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setDeletedIds(nextDeletedIds);
     setLeaves(updatedLeaves);
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(updatedLeaves));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(updatedLeaves));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -1134,8 +1135,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAttendance(updatedAttendance);
 
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(updatedAttendance));
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(updatedAttendance));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -1161,8 +1162,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAttendance(updatedAttendance);
 
     try {
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
-      localStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(updatedAttendance));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(nextDeletedIds));
+      safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(updatedAttendance));
     } catch (e) {}
 
     pushCloudSyncData({
@@ -1272,7 +1273,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       // CRITICAL: Wipe old deletedIds so restored client IDs are never filtered out by background polling!
       setDeletedIds([]);
       try {
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, '[]');
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, '[]');
       } catch (e) {}
 
       let importedClients: Client[] = [];
@@ -1284,47 +1285,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (rawClients.length > 0) {
         importedClients = rawClients.map(normalizeClient).filter(Boolean) as Client[];
         setClients(importedClients);
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(importedClients));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(importedClients));
       }
 
       if (rawPayments.length > 0) {
         importedPayments = rawPayments.map(normalizePayment).filter(Boolean) as PaymentRecord[];
         setPayments(importedPayments);
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(importedPayments));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(importedPayments));
       }
 
       if (rawAtt.length > 0) {
         importedAttendance = rawAtt.map(normalizeAttendance).filter(Boolean);
         setAttendance(importedAttendance);
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(importedAttendance));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(importedAttendance));
       }
 
       if (rawDreams.length > 0) {
         importedDreams = rawDreams;
         setTrainerDreams(importedDreams);
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(importedDreams));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_dreams`, JSON.stringify(importedDreams));
       }
 
       if (rawLeaves.length > 0) {
         importedLeaves = rawLeaves.map(normalizeLeave).filter(Boolean) as LeaveRecord[];
         setLeaves(importedLeaves);
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(importedLeaves));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(importedLeaves));
       }
 
       let payload = rawJson?.data || rawJson?.backup?.data || rawJson?.backup || rawJson;
       if (payload.trainerLeaves && Array.isArray(payload.trainerLeaves)) {
         setTrainerLeaves(payload.trainerLeaves);
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_leaves`, JSON.stringify(payload.trainerLeaves));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_leaves`, JSON.stringify(payload.trainerLeaves));
       }
 
       if (payload.trainerProfile) {
         setTrainerProfile(payload.trainerProfile);
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_profile`, JSON.stringify(payload.trainerProfile));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_trainer_profile`, JSON.stringify(payload.trainerProfile));
       }
 
       if (payload.websiteCMS) {
         setWebsiteCMS(payload.websiteCMS);
-        localStorage.setItem(`${LOCAL_STORAGE_KEY}_website_cms`, JSON.stringify(payload.websiteCMS));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_website_cms`, JSON.stringify(payload.websiteCMS));
       }
 
       const finalClients = importedClients.length > 0 ? importedClients : clients;

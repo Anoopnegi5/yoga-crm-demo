@@ -1,5 +1,6 @@
 // Direct Google Drive REST API & OAuth Integration Utility for Yoganjali
 // Handles automatic folder creation ('Yoganjali Studio Backups') and daily file overwriting
+import { safeStorage } from './safeStorage';
 
 const FOLDER_NAME = 'Yoganjali Studio Backups';
 const FILE_NAME = 'Yoganjali_Latest_Backup.json';
@@ -15,16 +16,16 @@ export interface GDriveStatus {
 }
 
 export function getStoredGDriveToken(): string | null {
-  return localStorage.getItem(GDRIVE_TOKEN_KEY);
+  return safeStorage.getItem(GDRIVE_TOKEN_KEY);
 }
 
 export function saveGDriveToken(token: string): void {
-  localStorage.setItem(GDRIVE_TOKEN_KEY, token);
+  safeStorage.setItem(GDRIVE_TOKEN_KEY, token);
 }
 
 export function clearGDriveToken(): void {
-  localStorage.removeItem(GDRIVE_TOKEN_KEY);
-  localStorage.removeItem(GDRIVE_FOLDER_ID_KEY);
+  safeStorage.removeItem(GDRIVE_TOKEN_KEY);
+  safeStorage.removeItem(GDRIVE_FOLDER_ID_KEY);
 }
 
 // Quick 1-Click Google OAuth Token Generator URL
@@ -35,7 +36,7 @@ export function openGoogleOAuthTokenPage(): void {
 }
 
 export function getStoredFolderId(): string | null {
-  return localStorage.getItem(GDRIVE_FOLDER_ID_KEY);
+  return safeStorage.getItem(GDRIVE_FOLDER_ID_KEY);
 }
 
 // 1. Find existing folder or create 'Yoganjali Studio Backups'
@@ -60,7 +61,7 @@ export async function findOrCreateYoganjaliFolder(accessToken: string): Promise<
   const data = await res.json();
   if (data.files && data.files.length > 0) {
     const folderId = data.files[0].id;
-    localStorage.setItem(GDRIVE_FOLDER_ID_KEY, folderId);
+    safeStorage.setItem(GDRIVE_FOLDER_ID_KEY, folderId);
     return folderId;
   }
 
@@ -82,7 +83,7 @@ export async function findOrCreateYoganjaliFolder(accessToken: string): Promise<
   }
 
   const newFolder = await createRes.json();
-  localStorage.setItem(GDRIVE_FOLDER_ID_KEY, newFolder.id);
+  safeStorage.setItem(GDRIVE_FOLDER_ID_KEY, newFolder.id);
   return newFolder.id;
 }
 

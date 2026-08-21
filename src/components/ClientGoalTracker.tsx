@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { SITE_CONFIG } from '../config/siteConfig';
+import { safeStorage } from '../utils/safeStorage';
 import { 
   Trophy, 
   Flame, 
@@ -57,7 +58,7 @@ export const ClientGoalTracker: React.FC = () => {
 
   // Load saved goal data
   useEffect(() => {
-    const saved = localStorage.getItem(goalStorageKey);
+    const saved = safeStorage.getItem(goalStorageKey);
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -77,7 +78,7 @@ export const ClientGoalTracker: React.FC = () => {
       targetDays: newTarget,
       logs: newLogs
     };
-    localStorage.setItem(goalStorageKey, JSON.stringify(data));
+    safeStorage.setItem(goalStorageKey, JSON.stringify(data));
   };
 
   // Check if today already logged

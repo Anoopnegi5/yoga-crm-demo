@@ -1,5 +1,6 @@
 // Supabase Integration & Multi-Device Realtime Engine for Yoganjali Studio
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { safeStorage } from './safeStorage';
 
 export interface SupabaseConfig {
   url: string;
@@ -17,24 +18,24 @@ export const getSupabaseConfig = (): SupabaseConfig => {
   }
   const metaEnv = (import.meta as any).env || {};
   return {
-    url: localStorage.getItem(STORAGE_URL_KEY) || metaEnv.VITE_SUPABASE_URL || '',
-    key: localStorage.getItem(STORAGE_ANON_KEY) || metaEnv.VITE_SUPABASE_ANON_KEY || '',
-    tableName: localStorage.getItem(STORAGE_TABLE_KEY) || 'yoganjali_sync'
+    url: safeStorage.getItem(STORAGE_URL_KEY) || metaEnv.VITE_SUPABASE_URL || '',
+    key: safeStorage.getItem(STORAGE_ANON_KEY) || metaEnv.VITE_SUPABASE_ANON_KEY || '',
+    tableName: safeStorage.getItem(STORAGE_TABLE_KEY) || 'yoganjali_sync'
   };
 };
 
 export const saveSupabaseConfig = (url: string, key: string, tableName = 'yoganjali_sync') => {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_URL_KEY, url.trim());
-  localStorage.setItem(STORAGE_ANON_KEY, key.trim());
-  localStorage.setItem(STORAGE_TABLE_KEY, tableName.trim());
+  safeStorage.setItem(STORAGE_URL_KEY, url.trim());
+  safeStorage.setItem(STORAGE_ANON_KEY, key.trim());
+  safeStorage.setItem(STORAGE_TABLE_KEY, tableName.trim());
 };
 
 export const clearSupabaseConfig = () => {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem(STORAGE_URL_KEY);
-  localStorage.removeItem(STORAGE_ANON_KEY);
-  localStorage.removeItem(STORAGE_TABLE_KEY);
+  safeStorage.removeItem(STORAGE_URL_KEY);
+  safeStorage.removeItem(STORAGE_ANON_KEY);
+  safeStorage.removeItem(STORAGE_TABLE_KEY);
 };
 
 let clientInstance: SupabaseClient | null = null;

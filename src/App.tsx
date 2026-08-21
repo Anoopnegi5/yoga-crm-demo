@@ -22,6 +22,7 @@ import { LoginScreen } from './components/LoginScreen';
 import { PublicClientProfile } from './components/PublicClientProfile';
 import { MemberDirectory } from './components/MemberDirectory';
 import { getSlugFromUrl } from './utils/slugUtils';
+import { safeStorage } from './utils/safeStorage';
 
 const AppShell: React.FC = () => {
   const { activeTab, isClientWebsiteMode, setIsClientWebsiteMode } = useApp();
@@ -30,7 +31,7 @@ const AppShell: React.FC = () => {
     if (typeof window === 'undefined') return false;
     return (
       sessionStorage.getItem('yoganjali_auth_token') === 'authenticated_true' ||
-      localStorage.getItem('yoganjali_auth_token') === 'authenticated_true'
+      safeStorage.getItem('yoganjali_auth_token') === 'authenticated_true'
     );
   });
 
@@ -59,8 +60,8 @@ const AppShell: React.FC = () => {
   }, [isYogiProfile, isMembersDirectory, isPanel, isRegisterLink]);
 
   const handleLogout = () => {
-    sessionStorage.removeItem('yoganjali_auth_token');
-    localStorage.removeItem('yoganjali_auth_token');
+    try { sessionStorage.removeItem('yoganjali_auth_token'); } catch (e) {}
+    safeStorage.removeItem('yoganjali_auth_token');
     setIsAuthenticated(false);
   };
 
@@ -165,14 +166,14 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, Error
   componentDidCatch(error: any, errorInfo: any) {
     console.error("App boundary caught error:", error, errorInfo);
     try {
-      localStorage.clear();
+      safeStorage.clear();
       sessionStorage.clear();
     } catch (e) {}
   }
 
   handleCleanReload = () => {
     try {
-      localStorage.clear();
+      safeStorage.clear();
       sessionStorage.clear();
     } catch (e) {}
     window.location.href = window.location.origin + '/panel';

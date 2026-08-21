@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Sparkles, Lock, User, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
+import { safeStorage } from '../utils/safeStorage';
 
 interface LoginScreenProps {
   onLoginSuccess: () => void;
@@ -23,8 +24,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     setTimeout(() => {
       // Case-insensitive username & trimmed password check
       if (cleanUsername === 'yoganjali' && cleanPassword === 'Accbk@567') {
-        sessionStorage.setItem('yoganjali_auth_token', 'authenticated_true');
-        localStorage.setItem('yoganjali_auth_token', 'authenticated_true');
+        try { sessionStorage.setItem('yoganjali_auth_token', 'authenticated_true'); } catch (e) {}
+        safeStorage.setItem('yoganjali_auth_token', 'authenticated_true');
         onLoginSuccess();
       } else {
         setErrorMsg('Invalid Username or Password. Please check and try again.');
