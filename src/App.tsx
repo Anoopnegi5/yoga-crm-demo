@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
-import { Navbar } from './components/Navbar';
+import { Sidebar } from './components/Sidebar';
+import { PanelHeader } from './components/PanelHeader';
 import { Dashboard } from './components/Dashboard';
 import { CalendarView } from './components/CalendarView';
 import { Clients } from './components/Clients';
@@ -8,6 +9,7 @@ import { Payments } from './components/Payments';
 import { Reports } from './components/Reports';
 import { Settings } from './components/Settings';
 import { TrainerDreamsView } from './components/TrainerDreamsView';
+import { BlogManagerCMS } from './components/BlogManagerCMS';
 import { ClientWebsite } from './components/ClientWebsite';
 import { ClientRegistrationWizard } from './components/ClientRegistrationWizard';
 import { ClientProfileModal } from './components/ClientProfileModal';
@@ -26,6 +28,7 @@ import { safeStorage } from './utils/safeStorage';
 
 const AppShell: React.FC = () => {
   const { activeTab, isClientWebsiteMode, setIsClientWebsiteMode } = useApp();
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
@@ -115,21 +118,41 @@ const AppShell: React.FC = () => {
 
   // 3. TRAINER ADMIN BACKEND PORTAL
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-purple-100 selection:text-purple-700">
+    <div className="min-h-screen bg-[#070A11] text-slate-900 font-sans selection:bg-emerald-500/20 selection:text-emerald-900 flex">
       
-      {/* Top Navigation */}
-      <Navbar />
+      {/* Left Vertical Sidebar (Desktop Fixed + Mobile Slide-over Drawer) */}
+      <Sidebar 
+        isOpenMobile={isMobileSidebarOpen}
+        onCloseMobile={() => setIsMobileSidebarOpen(false)}
+        onLogout={handleLogout}
+      />
 
-      {/* Dynamic Page Component */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 pb-16">
-        {activeTab === 'dashboard' && <Dashboard />}
-        {activeTab === 'calendar' && <CalendarView />}
-        {activeTab === 'clients' && <Clients />}
-        {activeTab === 'payments' && <Payments />}
-        {activeTab === 'reports' && <Reports />}
-        {activeTab === 'dreams' && <TrainerDreamsView />}
-        {activeTab === 'settings' && <Settings onLogout={handleLogout} />}
-      </main>
+      {/* Main Content Area (Offset for Left Sidebar on Desktop) */}
+      <div className="flex-1 lg:pl-72 flex flex-col min-h-screen min-w-0 bg-[#F8FAFC]">
+        
+        <div className="flex-1 px-4 sm:px-8 py-6 max-w-7xl w-full mx-auto">
+          {/* Modern Top Header matching user screenshot */}
+          <PanelHeader onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)} />
+
+          {/* Dynamic Page Component */}
+          <main className="pb-16 animate-fadeIn">
+            {activeTab === 'dashboard' && <Dashboard />}
+            {activeTab === 'clients' && <Clients />}
+            {activeTab === 'payments' && <Payments />}
+            {activeTab === 'calendar' && <CalendarView />}
+            {activeTab === 'dreams' && <TrainerDreamsView />}
+            {activeTab === 'blog' && <BlogManagerCMS />}
+            {activeTab === 'reports' && <Reports />}
+            {activeTab === 'settings' && <Settings onLogout={handleLogout} />}
+          </main>
+        </div>
+
+        {/* Minimal Modern Footer */}
+        <footer className="border-t border-slate-200/80 py-6 text-center text-xs font-semibold text-slate-400 bg-white/50">
+          <p>© {new Date().getFullYear()} Yoganjali Studio — Personal Yoga Client Journal & Fee Manager</p>
+        </footer>
+
+      </div>
 
       {/* Global Overlays & Modals */}
       <ClientProfileModal />
@@ -139,11 +162,6 @@ const AppShell: React.FC = () => {
       <AddTrainerLeaveModal />
       <SearchModal />
       <Toast />
-
-      {/* Minimal Modern Footer */}
-      <footer className="border-t border-slate-200/60 py-8 text-center text-xs font-semibold text-slate-400">
-        <p>Yoganjali — Modern Personal Yoga Client Journal & Fee Manager</p>
-      </footer>
     </div>
   );
 };
