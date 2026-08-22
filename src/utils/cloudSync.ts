@@ -75,7 +75,11 @@ export const normalizeClient = (c: any): any => {
     paymentStatus: c.paymentStatus || 'Pending',
     status: c.status || 'Active',
     trainerNotes: c.trainerNotes || '',
-    goal: c.goal || 'General Yoga'
+    goal: c.goal || 'General Yoga',
+    startingWeight: typeof c.startingWeight === 'number' ? c.startingWeight : undefined,
+    targetWeight: typeof c.targetWeight === 'number' ? c.targetWeight : undefined,
+    weightLogs: Array.isArray(c.weightLogs) ? c.weightLogs : [],
+    medicalPrecautions: Array.isArray(c.medicalPrecautions) ? c.medicalPrecautions : []
   };
 };
 

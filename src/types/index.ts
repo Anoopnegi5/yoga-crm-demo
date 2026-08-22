@@ -40,6 +40,13 @@ export interface TrainerDreamGoal {
   notes?: string;
 }
 
+export interface WeightLog {
+  id: string;
+  date: string; // e.g. "2026-08-22"
+  weight: number; // in kg e.g. 64.5
+  notes?: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -69,6 +76,10 @@ export interface Client {
   leftReason?: string;
   trainerNotes: string;
   goal: string;
+  startingWeight?: number;
+  targetWeight?: number;
+  weightLogs?: WeightLog[];
+  medicalPrecautions?: string[];
 }
 
 export interface AttendanceRecord {
