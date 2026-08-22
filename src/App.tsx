@@ -17,6 +17,7 @@ import { AddClientWizard } from './components/Modals/AddClientWizard';
 import { AddPaymentModal } from './components/Modals/AddPaymentModal';
 import { AddLeaveModal } from './components/Modals/AddLeaveModal';
 import { AddTrainerLeaveModal } from './components/Modals/AddTrainerLeaveModal';
+import { ShareLinkModal } from './components/Modals/ShareLinkModal';
 import { SearchModal } from './components/SearchModal';
 import { Toast } from './components/Toast';
 import { LoginScreen } from './components/LoginScreen';
@@ -27,7 +28,7 @@ import { getSlugFromUrl } from './utils/slugUtils';
 import { safeStorage } from './utils/safeStorage';
 
 const AppShell: React.FC = () => {
-  const { activeTab, isClientWebsiteMode, setIsClientWebsiteMode } = useApp();
+  const { activeTab, isClientWebsiteMode, setIsClientWebsiteMode, isShareLinkOpen, setIsShareLinkOpen } = useApp();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
@@ -160,6 +161,7 @@ const AppShell: React.FC = () => {
       <AddPaymentModal />
       <AddLeaveModal />
       <AddTrainerLeaveModal />
+      <ShareLinkModal isOpen={isShareLinkOpen} onClose={() => setIsShareLinkOpen(false)} />
       <SearchModal />
       <Toast />
     </div>

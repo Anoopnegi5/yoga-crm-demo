@@ -135,7 +135,6 @@ export const Dashboard: React.FC = () => {
   const [showIncomeModal, setShowIncomeModal] = useState(false);
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [selectedGroupModal, setSelectedGroupModal] = useState<{ groupName: string; members: Client[] } | null>(null);
-  const [isShareLinkOpen, setIsShareLinkOpen] = useState(false);
   const [editingClientModal, setEditingClientModal] = useState<Client | null>(null);
 
   const getGreeting = () => {
@@ -427,41 +426,6 @@ export const Dashboard: React.FC = () => {
                 </span>
               )}
             </div>
-          </div>
-
-          {/* Clean Action Toolbar */}
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            
-            {/* Share Registration Link Pill */}
-            <button
-              onClick={() => setIsShareLinkOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-md hover:scale-105 active:scale-95 transition-all border border-purple-400/30"
-              title="Copy or share 5-Step Client Registration Link"
-            >
-              <Share2 className="w-4 h-4 text-purple-200" />
-              <span>Share Registration Link</span>
-            </button>
-
-            {/* Mark Client Leave Pill */}
-            <button
-              onClick={() => setIsAddLeaveOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-200 hover:text-white font-bold text-xs border border-slate-700 shadow-xs hover:scale-105 active:scale-95 transition-all"
-              title="Log client leave date"
-            >
-              <CalendarX className="w-4 h-4 text-rose-400" />
-              <span>Mark Client Leave</span>
-            </button>
-
-            {/* Instructor Leave Pill */}
-            <button
-              onClick={() => setIsAddTrainerLeaveOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 font-bold text-xs shadow-xs hover:scale-105 active:scale-95 transition-all"
-              title="Log trainer/instructor leave"
-            >
-              <UserX className="w-4 h-4 text-amber-400" />
-              <span>Instructor Leave</span>
-            </button>
-
           </div>
         </div>
       </div>
@@ -1432,12 +1396,6 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Shareable Link Modal */}
-      <ShareLinkModal
-        isOpen={isShareLinkOpen}
-        onClose={() => setIsShareLinkOpen(false)}
-      />
 
       {/* Edit Client Modal from Pending Checklist */}
       <EditClientModal

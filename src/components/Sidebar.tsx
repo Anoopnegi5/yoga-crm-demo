@@ -14,7 +14,8 @@ import {
   Cloud, 
   Globe,
   ChevronRight,
-  X
+  X,
+  Share2
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -36,7 +37,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     trainerProfile, 
     isSyncingCloud, 
     syncCloudNow,
-    setIsClientWebsiteMode
+    setIsClientWebsiteMode,
+    setIsShareLinkOpen
   } = useApp();
 
   const activeClientsCount = clients.filter(c => c.status !== 'Discontinued').length;
@@ -212,6 +214,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </button>
               );
             })}
+
+            {/* Share Registration Link Tab Button */}
+            <div className="pt-2 pb-1">
+              <button
+                onClick={() => {
+                  setIsShareLinkOpen(true);
+                  if (isOpenMobile) onCloseMobile();
+                }}
+                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600/90 via-indigo-600/90 to-purple-700/90 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-lg shadow-purple-950/40 hover:scale-[1.02] active:scale-95 transition-all border border-purple-400/40 group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center">
+                    <Share2 className="w-3 h-3 text-white" />
+                  </div>
+                  <span>Share Registration Link</span>
+                </div>
+                <span className="text-[10px] font-black bg-white/20 px-2 py-0.5 rounded-full text-purple-100 group-hover:bg-white group-hover:text-purple-700 transition-colors">
+                  ↗
+                </span>
+              </button>
+            </div>
           </nav>
         </div>
 

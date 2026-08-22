@@ -10,7 +10,8 @@ import {
   Users,
   RefreshCw,
   Trophy,
-  BookOpen
+  BookOpen,
+  Share2
 } from 'lucide-react';
 
 interface PanelHeaderProps {
@@ -28,6 +29,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
     setIsAddClientOpen, 
     setIsAddPaymentOpen, 
     setIsSearchOpen,
+    setIsShareLinkOpen,
     syncCloudNow,
     isSyncingCloud
   } = useApp();
@@ -160,6 +162,14 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
           </button>
 
           <button
+            onClick={() => setIsShareLinkOpen(true)}
+            className="p-2 rounded-xl bg-purple-50 border border-purple-200 text-purple-700 text-xs shadow-xs"
+            title="Share Client Registration Link"
+          >
+            <Share2 className="w-4 h-4 text-purple-600" />
+          </button>
+
+          <button
             onClick={() => setIsAddClientOpen(true)}
             className="flex items-center gap-1 px-3 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs shadow-xs"
           >
@@ -219,6 +229,16 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
           >
             <RefreshCw className={`w-3.5 h-3.5 text-emerald-600 ${isSyncingCloud ? 'animate-spin' : ''}`} />
             <span>{isSyncingCloud ? 'Syncing...' : 'Sync Cloud'}</span>
+          </button>
+
+          {/* Share Registration Link Button */}
+          <button
+            onClick={() => setIsShareLinkOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-purple-50 hover:bg-purple-100 border border-purple-200/90 text-purple-700 hover:text-purple-800 text-xs font-extrabold shadow-xs transition-all hover:scale-105 active:scale-95"
+            title="Share 5-Step Client Registration Link"
+          >
+            <Share2 className="w-3.5 h-3.5 text-purple-600" />
+            <span>Share Link ↗</span>
           </button>
 
           {/* Primary Action Button (e.g. + Add Client) */}

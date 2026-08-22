@@ -72,6 +72,9 @@ interface AppContextType {
   isSearchOpen: boolean;
   setIsSearchOpen: (open: boolean) => void;
 
+  isShareLinkOpen: boolean;
+  setIsShareLinkOpen: (open: boolean) => void;
+
   paymentModalDefaultClientId: string | null;
   setPaymentModalDefaultClientId: (clientId: string | null) => void;
 
@@ -527,6 +530,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isAddLeaveOpen, setIsAddLeaveOpen] = useState(false);
   const [isAddTrainerLeaveOpen, setIsAddTrainerLeaveOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isShareLinkOpen, setIsShareLinkOpen] = useState(false);
   const [paymentModalDefaultClientId, setPaymentModalDefaultClientId] = useState<string | null>(null);
   const [isClientWebsiteMode, setIsClientWebsiteMode] = useState<boolean>(false);
 
@@ -1446,6 +1450,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsAddTrainerLeaveOpen,
         isSearchOpen,
         setIsSearchOpen,
+        isShareLinkOpen,
+        setIsShareLinkOpen,
         paymentModalDefaultClientId,
         setPaymentModalDefaultClientId,
         toastMessage,
