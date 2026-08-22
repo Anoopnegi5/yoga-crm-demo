@@ -4,7 +4,24 @@ import { SITE_CONFIG } from '../config/siteConfig';
 import { SessionType, TimeSlot, Gender, FeeType } from '../types';
 import { pushCloudSyncData } from '../utils/cloudSync';
 import { compressImageFile } from '../utils/imageCompressor';
-import { X, Check, ArrowRight, ArrowLeft, Sparkles, Upload, Users, Clock, Instagram, Youtube, MessageCircle, Globe, Loader2 } from 'lucide-react';
+import { slugifyName } from '../utils/slugUtils';
+import { 
+  X, 
+  Check, 
+  ArrowRight, 
+  ArrowLeft, 
+  Sparkles, 
+  Upload, 
+  Users, 
+  Clock, 
+  Instagram, 
+  Youtube, 
+  MessageCircle, 
+  Globe, 
+  Loader2,
+  ExternalLink,
+  Copy
+} from 'lucide-react';
 
 const REASONS_LIST = [
   'Weight Loss', 'Weight Gain', 'Back Pain', 'Neck Pain', 
@@ -23,6 +40,7 @@ export const ClientRegistrationWizard: React.FC = () => {
   const [step, setStep] = useState<number>(1);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copiedProfileUrl, setCopiedProfileUrl] = useState(false);
 
   // Dynamic Group Batches strictly created by trainer
   const availableBatches = customGroupBatches && customGroupBatches.length > 0 
@@ -241,10 +259,12 @@ export const ClientRegistrationWizard: React.FC = () => {
             </div>
 
             {/* Quick Registration Summary Badge Card */}
-            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 p-5 rounded-3xl border border-emerald-200 max-w-md mx-auto text-left space-y-2.5 shadow-sm">
-              <h4 className="text-[11px] font-black uppercase tracking-wider text-emerald-900 border-b border-emerald-200 pb-1.5 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 p-5 sm:p-6 rounded-3xl border border-emerald-200 max-w-md mx-auto text-left space-y-3.5 shadow-sm">
+              <h4 className="text-[11px] font-black uppercase tracking-wider text-emerald-900 border-b border-emerald-200/80 pb-2 flex items-center justify-between">
                 <span>📋 YOUR BATCH DETAILS</span>
-                <span className="text-emerald-700 font-extrabold">Active</span>
+                <span className="text-emerald-700 font-extrabold bg-emerald-100/80 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                  Active Yogi
+                </span>
               </h4>
               <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-800">
                 <p><span className="text-slate-500">Batch:</span> <strong>{selectedBatchDropdown}</strong></p>
@@ -252,23 +272,83 @@ export const ClientRegistrationWizard: React.FC = () => {
                 <p><span className="text-slate-500">Days:</span> <strong>{selectedDays.join(', ')}</strong></p>
                 <p><span className="text-slate-500">Billing:</span> <strong>{feeType}</strong></p>
               </div>
+
+              {/* 🧘 Direct Yogi Profile Access inside Batch Details */}
+              <div className="pt-2 border-t border-emerald-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
+                    <span>🧘 YOUR OFFICIAL YOGI PROFILE LINK</span>
+                  </span>
+                  <span className="text-[10px] font-extrabold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                    Live Portal
+                  </span>
+                </div>
+
+                <div className="p-3.5 bg-white rounded-2xl border border-emerald-200 shadow-2xs space-y-2.5">
+                  <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
+                    Track your daily attendance calendar, fee payment status & consistency score directly on your dedicated link.
+                  </p>
+                  
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`/yogi/${slugifyName(name)}`}
+                      className="flex-1 px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 text-center"
+                    >
+                      <span>Open My Yogi Profile</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const url = typeof window !== 'undefined' 
+                          ? `${window.location.origin}/yogi/${slugifyName(name)}` 
+                          : `https://www.yoganjaliyoga.com/yogi/${slugifyName(name)}`;
+                        navigator.clipboard.writeText(url);
+                        setCopiedProfileUrl(true);
+                        showSuccessToast('📋 Yogi Profile link copied to clipboard!');
+                        setTimeout(() => setCopiedProfileUrl(false), 3000);
+                      }}
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors flex items-center gap-1 shrink-0"
+                      title="Copy Profile URL"
+                    >
+                      {copiedProfileUrl ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span className="text-[11px]">{copiedProfileUrl ? 'Copied!' : 'Copy'}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Action Buttons: WhatsApp & Website */}
+            {/* Action Buttons: Yogi Profile, WhatsApp & Website */}
             <div className="pt-2 max-w-md mx-auto space-y-3">
+              
+              {/* Primary Profile Access Button */}
+              <a
+                href={`/yogi/${slugifyName(name)}`}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs sm:text-sm shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2.5 ring-2 ring-purple-400/30 text-center"
+              >
+                <span>🧘</span>
+                <span>View My Yogi Profile & Attendance Portal</span>
+                <ExternalLink className="w-4 h-4" />
+              </a>
+
               <button
                 onClick={() => {
                   const feeDetail = feeType === 'Monthly' ? `Monthly ₹${monthlyFee} (Due ${feeDueDate})` : `Per Session ₹${perSessionFee}/class`;
                   const reasonsText = selectedReasons.length > 0 ? selectedReasons.join(', ') : 'General Wellness';
                   const healthText = currentProblems.trim() ? currentProblems : 'None reported';
                   const daysText = selectedDays.join(', ');
+                  const profileLink = typeof window !== 'undefined' 
+                    ? `${window.location.origin}/yogi/${slugifyName(name)}` 
+                    : `https://www.yoganjaliyoga.com/yogi/${slugifyName(name)}`;
 
-                  const message = `Hi Anjali! 👋\n\nI have completed my Client Registration details for Yoganjali Studio.\n\n📌 REGISTRATION DETAILS:\n• Name: ${name} (${gender})\n• Phone/WhatsApp: ${phone}\n• Area/Address: ${address || 'Local Studio'}\n• Batch: ${selectedBatchDropdown}\n• Class Time: ${classTime} (${timeSlot})\n• Practice Days: ${daysText}\n• Reasons for Joining: ${reasonsText}\n• Health Notes: ${healthText}\n• Fee Billing Plan: ${feeDetail}\n• Joining Date: ${joiningDate}\n\nPlease review my profile and confirm my class timings. 🧘🌿`;
+                  const message = `Hi Anjali! 👋\n\nI have completed my Client Registration details for Yoganjali Studio.\n\n📌 REGISTRATION DETAILS:\n• Name: ${name} (${gender})\n• Phone/WhatsApp: ${phone}\n• Area/Address: ${address || 'Local Studio'}\n• Batch: ${selectedBatchDropdown}\n• Class Time: ${classTime} (${timeSlot})\n• Practice Days: ${daysText}\n• Reasons for Joining: ${reasonsText}\n• Health Notes: ${healthText}\n• Fee Billing Plan: ${feeDetail}\n• Joining Date: ${joiningDate}\n• My Yogi Profile Link: ${profileLink}\n\nPlease review my profile and confirm my class timings. 🧘🌿`;
                   
                   const waNumber = SITE_CONFIG.whatsappNumber.replace(/[^0-9]/g, '');
                   window.open(`https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(message)}`, '_blank');
                 }}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs sm:text-sm shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2.5 ring-2 ring-emerald-400/30"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2.5 ring-2 ring-emerald-400/30"
               >
                 <MessageCircle className="w-5 h-5 text-white" />
                 <span>Message Anjali on WhatsApp</span>
@@ -278,7 +358,7 @@ export const ClientRegistrationWizard: React.FC = () => {
                 onClick={() => {
                   window.location.href = '/?view=website';
                 }}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#4A5D3E] via-[#3F4D2A] to-[#2D3B27] hover:from-emerald-800 hover:to-[#2D3B27] text-white font-extrabold text-xs sm:text-sm shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2.5 border border-white/20"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#4A5D3E] via-[#3F4D2A] to-[#2D3B27] hover:from-emerald-800 hover:to-[#2D3B27] text-white font-extrabold text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2.5 border border-white/20"
               >
                 <Globe className="w-4.5 h-4.5 text-amber-300" />
                 <span>VISIT OUR WEBSITE</span>
