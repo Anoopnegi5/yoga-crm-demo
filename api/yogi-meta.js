@@ -158,7 +158,7 @@ export default async function handler(req, res) {
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
-  res.setHeader('Cache-Control', 'public, max-age=60, s-maxage=300');
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800');
   return res.status(200).send(html);
 }
 

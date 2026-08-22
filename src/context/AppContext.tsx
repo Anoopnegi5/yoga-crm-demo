@@ -724,9 +724,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     runSync();
-    // 10-Second Background Polling for Multi-Device Realtime Sync
-    const interval = setInterval(runSync, 10000);
-    return () => clearInterval(interval);
+    
+    // Smart Real-time Sync:
+    // 1. Sync immediately when tab becomes active / visible
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        runSync();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
+
+    // 2. Gentle 90-Second Polling only when tab is actively visible
+    const interval = setInterval(() => {
+      if (!document.hidden) {
+        runSync();
+      }
+    }, 90000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+      clearInterval(interval);
+    };
   }, []);
 
   // Instant Real-time Tab-to-Tab Synchronization (Same Device)
