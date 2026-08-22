@@ -30,15 +30,10 @@ import {
   CalendarX,
   XCircle,
   Instagram,
-  Youtube,
-  Scale,
-  TrendingDown,
-  TrendingUp,
-  AlertTriangle
+  Youtube
 } from 'lucide-react';
 import { PaymentCheckoutModal } from './Modals/PaymentCheckoutModal';
 import { ClientLeaveRequestModal } from './Modals/ClientLeaveRequestModal';
-import { getMedicalSafetyShield } from '../utils/safetyShield';
 
 interface PublicClientProfileProps {
   clientSlug?: string;
@@ -180,19 +175,6 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
       badge: currentRank <= 3 ? 'Top Performer' : 'Active Practitioner' 
     }
   ];
-
-  // Medical Safety Shield Calculations
-  const safetyPrecautions = getMedicalSafetyShield(
-    targetClient.reasonsForJoining,
-    targetClient.currentProblems,
-    targetClient.medicalPrecautions
-  );
-
-  // Weight & Transformation Calculations
-  const weightLogs = Array.isArray(targetClient.weightLogs) ? targetClient.weightLogs : [];
-  const latestWeight = weightLogs.length > 0 ? weightLogs[0].weight : targetClient.startingWeight;
-  const initialWeight = targetClient.startingWeight || (weightLogs.length > 0 ? weightLogs[weightLogs.length - 1].weight : undefined);
-  const totalWeightDiff = (initialWeight && latestWeight) ? (latestWeight - initialWeight) : 0;
 
   // Profile URL & Sharing
   const currentSlug = slugifyName(targetClient.name);
@@ -1052,178 +1034,6 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
             <p className="text-[11px] text-slate-400 font-medium italic text-center pt-1 flex items-center justify-center gap-1">
               <Lock className="w-3 h-3 text-slate-400" /> All fee transactions are securely recorded in Yoganjali Studio ledger.
             </p>
-          </div>
-
-          {/* 📈 FEATURE 1: Body Transformation & Weight Progress Card */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-purple-200 shadow-sm space-y-5">
-            <div className="flex items-center justify-between border-b border-purple-100 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">
-                  <Scale className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-serif font-extrabold text-lg sm:text-xl text-slate-900">
-                    My Yoga Transformation & Weight Progress
-                  </h4>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">
-                    Physical transformation, inch-loss & wellness journey at Yoganjali Studio
-                  </p>
-                </div>
-              </div>
-
-              <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700 font-black text-xs border border-purple-200 hidden sm:inline-block">
-                ✨ Wellness Milestone
-              </span>
-            </div>
-
-            {/* Metric Boxes */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Starting Weight</span>
-                <p className="text-xl font-extrabold text-slate-900 mt-1">
-                  {initialWeight ? `${initialWeight} kg` : 'Recorded in Studio'}
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-100">
-                <span className="text-[10px] font-black uppercase tracking-wider text-purple-700">Latest Weight</span>
-                <p className="text-xl font-extrabold text-purple-900 mt-1">
-                  {latestWeight ? `${latestWeight} kg` : 'Recorded in Studio'}
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-100">
-                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700">Target Goal</span>
-                <p className="text-xl font-extrabold text-indigo-900 mt-1">
-                  {targetClient.targetWeight ? `${targetClient.targetWeight} kg` : 'Fitness & Tone'}
-                </p>
-              </div>
-
-              <div className={`p-4 rounded-2xl border ${
-                totalWeightDiff < 0
-                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                  : totalWeightDiff > 0
-                  ? 'bg-amber-50 border-amber-200 text-amber-800'
-                  : 'bg-slate-50 border-slate-200 text-slate-700'
-              }`}>
-                <span className="text-[10px] font-black uppercase tracking-wider">Transformation</span>
-                <p className="text-lg sm:text-xl font-extrabold mt-1 flex items-center justify-center gap-1">
-                  {totalWeightDiff < 0 ? (
-                    <>
-                      <TrendingDown className="w-4 h-4 text-emerald-600" />
-                      <span>{Math.abs(totalWeightDiff).toFixed(1)} kg Loss 🎉</span>
-                    </>
-                  ) : totalWeightDiff > 0 ? (
-                    <>
-                      <TrendingUp className="w-4 h-4 text-amber-600" />
-                      <span>+{totalWeightDiff.toFixed(1)} kg Gain</span>
-                    </>
-                  ) : (
-                    <span>On Track 🧘</span>
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* Measurement Log Timeline if available */}
-            {weightLogs.length > 0 && (
-              <div className="pt-2 space-y-2">
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                  Logged Progress Timeline:
-                </span>
-                <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                  {weightLogs.map((log) => (
-                    <div key={log.id} className="flex items-center justify-between p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 text-xs">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-3.5 h-3.5 text-purple-600" />
-                        <span className="font-bold text-slate-800">{log.date}</span>
-                        {log.notes && (
-                          <span className="text-[11px] text-slate-500 font-medium italic">
-                            — {log.notes}
-                          </span>
-                        )}
-                      </div>
-                      <span className="font-extrabold text-purple-900 bg-purple-100 px-2.5 py-0.5 rounded-lg border border-purple-200">
-                        {log.weight} kg
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 🛡️ FEATURE 4: Personalized Yoga Safety Guidelines & Beneficial Postures */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-amber-200 shadow-sm space-y-5">
-            <div className="flex items-center justify-between border-b border-amber-100 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
-                  <ShieldCheck className="w-5 h-5 text-amber-700" />
-                </div>
-                <div>
-                  <h4 className="font-serif font-extrabold text-lg sm:text-xl text-slate-900">
-                    Personalized Yoga Safety Guidelines & Posture Alignment
-                  </h4>
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">
-                    Curated injury-prevention cues and healing asanas customized for your body
-                  </p>
-                </div>
-              </div>
-
-              <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-800 font-black text-xs border border-amber-200 hidden sm:inline-block">
-                🛡️ Safe Practice Guide
-              </span>
-            </div>
-
-            <div className="space-y-3">
-              {safetyPrecautions.map((prec, i) => (
-                <div key={i} className="p-4 bg-amber-50/40 rounded-2xl border border-amber-200/70 space-y-2.5">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                      <span>{prec.condition}</span>
-                    </span>
-                    <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md">
-                      Trainer Verified
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    {/* Avoid */}
-                    <div className="p-3 bg-rose-50 rounded-xl border border-rose-100 space-y-1">
-                      <span className="text-[10px] font-black uppercase text-rose-800 flex items-center gap-1">
-                        <XCircle className="w-3 h-3 text-rose-600" />
-                        <span>Precautions / Postures to Avoid</span>
-                      </span>
-                      <ul className="space-y-0.5 text-[11px] text-rose-950 font-semibold list-disc list-inside">
-                        {prec.avoid.map((a, j) => (
-                          <li key={j}>{a}</li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    {/* Recommended */}
-                    <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 space-y-1">
-                      <span className="text-[10px] font-black uppercase text-emerald-800 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                        <span>Recommended Healing Asanas</span>
-                      </span>
-                      <ul className="space-y-0.5 text-[11px] text-emerald-950 font-semibold list-disc list-inside">
-                        {prec.recommended.map((r, k) => (
-                          <li key={k}>{r}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  {prec.trainerNote && (
-                    <p className="text-[11px] text-slate-700 font-medium bg-white px-3 py-1.5 rounded-xl border border-amber-200/60">
-                      💡 <strong>Guidance:</strong> {prec.trainerNote}
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Instructor Information Card */}
