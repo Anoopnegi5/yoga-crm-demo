@@ -9,7 +9,15 @@ function getSupabaseEnv() {
   return { url, key };
 }
 
+let serverMemoryCache = null;
+let serverCacheTimestamp = 0;
+const CACHE_TTL_MS = 60000; // 60 seconds in-memory cache
+
 async function fetchFromSupabaseEnv() {
+  if (serverMemoryCache && (Date.now() - serverCacheTimestamp < CACHE_TTL_MS)) {
+    return serverMemoryCache;
+  }
+
   const { url, key } = getSupabaseEnv();
   if (!url || !key) return null;
   try {
@@ -24,6 +32,8 @@ async function fetchFromSupabaseEnv() {
     if (res.ok) {
       const rows = await res.json();
       if (Array.isArray(rows) && rows.length > 0 && rows[0].payload) {
+        serverMemoryCache = rows[0].payload;
+        serverCacheTimestamp = Date.now();
         return rows[0].payload;
       }
     }
@@ -34,6 +44,9 @@ async function fetchFromSupabaseEnv() {
 }
 
 async function pushToSupabaseEnv(payload) {
+  serverMemoryCache = payload;
+  serverCacheTimestamp = Date.now();
+
   const { url, key } = getSupabaseEnv();
   if (!url || !key) return false;
   try {

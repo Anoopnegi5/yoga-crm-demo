@@ -30,7 +30,15 @@ function getSupabaseEnv() {
   return { url, key };
 }
 
+let cachedClients = null;
+let cachedClientsAt = 0;
+const CLIENT_CACHE_TTL = 300000; // 5 minutes
+
 async function fetchClients() {
+  if (cachedClients && (Date.now() - cachedClientsAt < CLIENT_CACHE_TTL)) {
+    return cachedClients;
+  }
+
   const { url, key } = getSupabaseEnv();
   if (url && key) {
     try {
@@ -45,7 +53,9 @@ async function fetchClients() {
       if (res.ok) {
         const rows = await res.json();
         if (Array.isArray(rows) && rows.length > 0 && rows[0].payload && Array.isArray(rows[0].payload.clients)) {
-          return rows[0].payload.clients;
+          cachedClients = rows[0].payload.clients;
+          cachedClientsAt = Date.now();
+          return cachedClients;
         }
       }
     } catch (e) {
