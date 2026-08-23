@@ -160,32 +160,31 @@ export const getClientCurrentMonthPaymentStatus = (
   let status: PaymentStatus = 'Pending';
   let finalRemainingBalance = cumulativeRemainingBalance;
 
-  // If client is on full month leave this month, waive fee and set 0 balance & Paid status
-  if (isOnCurrentMonthLeave) {
+  // 1. If client is on full month leave this month, waive current fee
+  if (isOnCurrentMonthLeave && unpaidMonthsNames.length === 0) {
     status = 'Paid';
     finalRemainingBalance = 0;
-  } else if (client.paymentStatus === 'Paid') {
+  } else if (unpaidMonthsNames.length === 0 && cumulativeRemainingBalance === 0) {
+    // All active months (including previous dues) are fully paid!
     status = 'Paid';
     finalRemainingBalance = 0;
-  } else if (client.paymentStatus === 'Pending' || client.paymentStatus === 'Overdue') {
-    status = client.paymentStatus;
-    if (finalRemainingBalance === 0) {
-      finalRemainingBalance = client.monthlyFee || 1200;
-    }
-  } else if (cumulativeRemainingBalance === 0) {
-    status = 'Paid';
-  } else {
+  } else if (unpaidMonthsNames.length > 0 || cumulativeRemainingBalance > 0) {
+    // There are unpaid months (e.g. July 2026 or August 2026)
+    finalRemainingBalance = cumulativeRemainingBalance > 0 ? cumulativeRemainingBalance : (client.monthlyFee || 1200);
     const today = new Date();
     const currentDayNum = today.getDate();
     const dueDayNum = parseInt(client.feeDueDate, 10) || 5;
 
-    if (unpaidMonthsNames.length > 1 || (currentDayNum > dueDayNum && paidAmount === 0)) {
+    if (unpaidMonthsNames.length > 1 || unpaidMonthsNames.some(m => !m.includes(formatMonthName(currentMonthStr))) || currentDayNum > dueDayNum) {
       status = 'Overdue';
     } else if (paidAmount > 0) {
       status = 'Partial';
     } else {
       status = 'Pending';
     }
+  } else if (client.paymentStatus === 'Paid') {
+    status = 'Paid';
+    finalRemainingBalance = 0;
   }
 
   return {
