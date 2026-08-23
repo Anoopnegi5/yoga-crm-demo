@@ -142,13 +142,21 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   }
 
   const displayStreak = currentActiveStreak;
+  const isNewYogi = classesAttended === 0 && absentCount === 0;
 
   // Consistency Score
-  let consistencyScore = 'Outstanding 🏆';
-  if (attendanceRate >= 90) consistencyScore = 'Outstanding 🏆';
-  else if (attendanceRate >= 80) consistencyScore = 'Excellent ⭐';
-  else if (attendanceRate >= 70) consistencyScore = 'Strong 💪';
-  else consistencyScore = 'Regular 🌱';
+  let consistencyScore = 'New Yogi 🌱';
+  if (isNewYogi) {
+    consistencyScore = 'New Yogi 🌱';
+  } else if (attendanceRate >= 90) {
+    consistencyScore = 'Outstanding 🏆';
+  } else if (attendanceRate >= 80) {
+    consistencyScore = 'Excellent ⭐';
+  } else if (attendanceRate >= 70) {
+    consistencyScore = 'Strong 💪';
+  } else {
+    consistencyScore = 'Regular 🌱';
+  }
 
   // Badges Earned
   const achievements = [
@@ -604,9 +612,11 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
             <div className="bg-gradient-to-br from-amber-400 via-yellow-400 to-amber-500 p-5 rounded-3xl text-slate-950 text-center space-y-1 shadow-lg shadow-amber-500/20 border border-yellow-300 hover:scale-[1.03] transition-all">
               <span className="text-[10px] font-black text-amber-950 uppercase tracking-wider block">Consistency</span>
               <p className="text-sm font-black text-slate-950 bg-white/70 py-1 px-2 rounded-xl shadow-inner mt-1">
-                {consistencyScore.split(' ')[0]} ⭐
+                {isNewYogi ? 'New Yogi 🌱' : `${consistencyScore.split(' ')[0]} ⭐`}
               </p>
-              <span className="text-[10px] text-amber-950 font-black block">Studio Rating</span>
+              <span className="text-[10px] text-amber-950 font-black block">
+                {isNewYogi ? 'Welcome to Studio' : 'Studio Rating'}
+              </span>
             </div>
 
           </div>
