@@ -11,6 +11,7 @@ function getSupabaseEnv() {
 
 let serverMemoryCache = null;
 let serverCacheTimestamp = 0;
+let lastKnownUpdatedAt = '';
 const CACHE_TTL_MS = 60000; // 60 seconds in-memory cache
 
 async function fetchFromSupabaseEnv() {
@@ -20,7 +21,32 @@ async function fetchFromSupabaseEnv() {
 
   const { url, key } = getSupabaseEnv();
   if (!url || !key) return null;
+
   try {
+    // 1. Delta Check: If we already have serverMemoryCache, check only updated_at (tiny ~40 bytes response instead of 30KB)
+    if (serverMemoryCache && lastKnownUpdatedAt) {
+      try {
+        const headerRes = await fetch(`${url}/rest/v1/yoganjali_sync?id=eq.master_db&select=updated_at`, {
+          method: 'GET',
+          headers: {
+            'apikey': key,
+            'Authorization': `Bearer ${key}`,
+            'Accept': 'application/json'
+          }
+        });
+        if (headerRes.ok) {
+          const headerRows = await headerRes.json();
+          if (Array.isArray(headerRows) && headerRows.length > 0 && headerRows[0].updated_at === lastKnownUpdatedAt) {
+            serverCacheTimestamp = Date.now();
+            return serverMemoryCache;
+          }
+        }
+      } catch (hErr) {
+        // Fallback to full fetch
+      }
+    }
+
+    // 2. Fetch full payload if cache is empty or remote has newer data
     const res = await fetch(`${url}/rest/v1/yoganjali_sync?id=eq.master_db&select=*`, {
       method: 'GET',
       headers: {
@@ -33,6 +59,7 @@ async function fetchFromSupabaseEnv() {
       const rows = await res.json();
       if (Array.isArray(rows) && rows.length > 0 && rows[0].payload) {
         serverMemoryCache = rows[0].payload;
+        lastKnownUpdatedAt = rows[0].updated_at || rows[0].payload.lastUpdated || '';
         serverCacheTimestamp = Date.now();
         return rows[0].payload;
       }
@@ -44,7 +71,9 @@ async function fetchFromSupabaseEnv() {
 }
 
 async function pushToSupabaseEnv(payload) {
+  const nowIso = new Date().toISOString();
   serverMemoryCache = payload;
+  lastKnownUpdatedAt = nowIso;
   serverCacheTimestamp = Date.now();
 
   const { url, key } = getSupabaseEnv();
@@ -61,7 +90,7 @@ async function pushToSupabaseEnv(payload) {
       body: JSON.stringify({
         id: 'master_db',
         payload,
-        updated_at: new Date().toISOString()
+        updated_at: nowIso
       })
     });
     return res.ok;

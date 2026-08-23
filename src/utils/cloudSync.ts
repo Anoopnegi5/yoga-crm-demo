@@ -237,26 +237,16 @@ export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedId
   return list.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
 };
 
-// Fetch Cloud Data Across Devices (Supabase First, then Vercel Serverless Endpoint)
+// Fetch Cloud Data Across Devices (Cached /api/sync Proxy First, then Supabase Fallback)
 export const fetchCloudSyncData = async (): Promise<CloudDataPayload | null> => {
   if (typeof window === 'undefined' || !navigator.onLine) return null;
 
-  // 1. Try Supabase First
-  try {
-    const supabaseData = await fetchFromSupabase();
-    if (supabaseData && (Array.isArray(supabaseData.clients) || Array.isArray(supabaseData.payments))) {
-      return supabaseData as CloudDataPayload;
-    }
-  } catch (e) {
-    console.warn('Supabase fetch fallback:', e);
-  }
-
-  // 2. Fallback to Same-domain Vercel Serverless Sync API
+  // 1. Primary: Same-domain Vercel Serverless Sync API (Protected with Server-Side In-Memory Cache & Delta Checking)
   for (const url of ENDPOINTS) {
     try {
       const cacheBustUrl = url.includes('?') ? `${url}&t=${Date.now()}` : `${url}?t=${Date.now()}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       const res = await fetch(cacheBustUrl, {
         method: 'GET',
@@ -278,13 +268,24 @@ export const fetchCloudSyncData = async (): Promise<CloudDataPayload | null> => 
         }
       }
     } catch (e) {
-      console.warn(`Cloud fetch failed for ${url}:`, e);
+      console.warn(`Primary cloud fetch failed for ${url}:`, e);
     }
   }
+
+  // 2. Direct Supabase Fallback (Only if /api/sync is unreachable)
+  try {
+    const supabaseData = await fetchFromSupabase();
+    if (supabaseData && (Array.isArray(supabaseData.clients) || Array.isArray(supabaseData.payments))) {
+      return supabaseData as CloudDataPayload;
+    }
+  } catch (e) {
+    console.warn('Direct Supabase fetch fallback error:', e);
+  }
+
   return null;
 };
 
-// Push Local Changes to Cloud (Supabase First + Vercel Serverless Backup)
+// Push Local Changes to Cloud (/api/sync Primary + Direct Supabase Fallback)
 export const pushCloudSyncData = async (payload: Omit<CloudDataPayload, 'lastUpdated'>): Promise<boolean> => {
   if (typeof window === 'undefined' || !navigator.onLine) return false;
 
@@ -295,19 +296,11 @@ export const pushCloudSyncData = async (payload: Omit<CloudDataPayload, 'lastUpd
 
   let success = false;
 
-  // 1. Push to Supabase if configured
-  try {
-    const sbSuccess = await pushToSupabase(dataWithTimestamp);
-    if (sbSuccess) success = true;
-  } catch (e) {
-    console.warn('Supabase push error:', e);
-  }
-
-  // 2. Push to Vercel Serverless Endpoint Backup with 5-second timeout
+  // 1. Primary Push to /api/sync (Performs server-side merge, writes to Supabase, and updates cache)
   for (const url of ENDPOINTS) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       const res = await fetch(url, {
         method: 'POST',
@@ -322,10 +315,22 @@ export const pushCloudSyncData = async (payload: Omit<CloudDataPayload, 'lastUpd
 
       if (res.ok) {
         success = true;
+        return true;
       }
     } catch (e) {
-      console.warn(`Cloud push failed for ${url}:`, e);
+      console.warn(`Primary cloud push failed for ${url}:`, e);
     }
   }
+
+  // 2. Direct Supabase Fallback (Only if /api/sync fails)
+  if (!success) {
+    try {
+      const sbSuccess = await pushToSupabase(dataWithTimestamp);
+      if (sbSuccess) success = true;
+    } catch (e) {
+      console.warn('Direct Supabase push fallback error:', e);
+    }
+  }
+
   return success;
 };
