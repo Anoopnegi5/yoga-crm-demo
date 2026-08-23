@@ -5,6 +5,7 @@ import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
 import { getTodayDateString } from '../utils/dateUtils';
 import { safeStorage } from "../utils/safeStorage";
 import { fetchCloudSyncData, pushCloudSyncData, mergeArraysById, normalizeClient, normalizePayment, normalizeAttendance, normalizeTrainerDream, normalizeLeave, normalizeBlog } from '../utils/cloudSync';
+import { getClientBillingCycles } from '../utils/paymentUtils';
 
 interface AppContextType {
   trainerProfile: TrainerProfile;
@@ -1072,21 +1073,83 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!client) return;
 
     const todayStr = getTodayDateString();
-    
-    let dueAmount = client.monthlyFee;
-    if (client.feeType === 'Per Session') {
-      dueAmount = client.completedClasses * (client.perSessionFee || 1000);
+    const currentMonthStr = todayStr.slice(0, 7);
+
+    // For Per Session clients
+    if (client.feeType === 'Per Session' || client.membershipPlan === 'Per Session') {
+      const dueAmount = (client.completedClasses || 1) * (client.perSessionFee || 1000);
+      addPayment({
+        clientId: client.id,
+        clientName: client.name,
+        amount: dueAmount,
+        date: todayStr,
+        month: currentMonthStr,
+        status: 'Paid',
+        paymentMode: 'UPI',
+        notes: `Quick mark Per Session fee payment`
+      });
+      return;
     }
 
-    addPayment({
-      clientId: client.id,
-      clientName: client.name,
-      amount: dueAmount || client.monthlyFee || 1000,
-      date: todayStr,
-      status: 'Paid',
-      paymentMode: 'UPI',
-      notes: `Quick mark full fee payment`
-    });
+    // Find all billing cycles for this client
+    const cycles = getClientBillingCycles(client, payments, leaves, currentMonthStr);
+    const unpaidCycles = cycles.filter(c => c.status === 'Pending' || c.status === 'Overdue' || c.status === 'Partial');
+
+    if (unpaidCycles.length > 0) {
+      const newPaymentRecords: PaymentRecord[] = [];
+      unpaidCycles.forEach((cycle, idx) => {
+        const remainingDue = Math.max(0, cycle.dueAmount - cycle.paidAmount);
+        if (remainingDue > 0) {
+          newPaymentRecords.push({
+            id: `p${Date.now()}_${idx}`,
+            clientId: client.id,
+            clientName: client.name,
+            amount: remainingDue,
+            date: todayStr,
+            month: cycle.monthStr,
+            status: 'Paid',
+            paymentMode: 'UPI',
+            notes: `Cleared fee for ${cycle.monthName}`
+          });
+        }
+      });
+
+      const updatedPayments = [...newPaymentRecords, ...payments];
+      const updatedClients = clients.map(c => c.id === clientId ? { ...c, paymentStatus: 'Paid' as PaymentStatus } : c);
+
+      setPayments(updatedPayments);
+      setClients(updatedClients);
+
+      try {
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(updatedPayments));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
+      } catch (e) {}
+
+      pushCloudSyncData({
+        clients: updatedClients,
+        payments: updatedPayments,
+        trainerDreams,
+        trainerLeaves,
+        leaves,
+        attendance,
+        customGroupBatches,
+        deletedIds: deletedIdsRef.current,
+        action: 'overwrite'
+      } as any);
+
+      showSuccessToast(`✅ Cleared all pending fee dues for ${client.name}!`);
+    } else {
+      addPayment({
+        clientId: client.id,
+        clientName: client.name,
+        amount: client.monthlyFee || 1000,
+        date: todayStr,
+        month: currentMonthStr,
+        status: 'Paid',
+        paymentMode: 'UPI',
+        notes: `Quick mark full fee payment`
+      });
+    }
   };
 
   const addLeave = (leaveData: Omit<LeaveRecord, 'id' | 'clientName' | 'photoUrl'>) => {
