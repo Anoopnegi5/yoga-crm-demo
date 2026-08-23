@@ -125,19 +125,29 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   const totalClassesTarget = targetClient.totalClasses || 30;
   const attendanceRate = Math.min(100, Math.round((classesAttended / Math.max(1, classesAttended + absentCount)) * 100));
 
-  // Streak Calculation (100% Real data from actual attendance records)
-  const uniqueAttDates = Array.from(dateStatusMap.entries())
+  // Streak Calculation (Calculates both Current and Best Consecutive Practice Streaks)
+  const chronoAtt = Array.from(dateStatusMap.entries())
+    .map(([date, status]) => ({ date, status }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const clientAtt = Array.from(dateStatusMap.entries())
     .map(([date, status]) => ({ date, status }))
     .sort((a, b) => b.date.localeCompare(a.date));
 
-  const clientAtt = uniqueAttDates;
+  let maxStreak = 0;
+  let runningStreak = 0;
 
-  let streak = 0;
-  for (const a of uniqueAttDates) {
-    if (a.status === 'Present') streak++;
-    else if (a.status === 'Absent') break;
+  for (const a of chronoAtt) {
+    if (a.status === 'Present') {
+      runningStreak++;
+      if (runningStreak > maxStreak) maxStreak = runningStreak;
+    } else if (a.status === 'Absent') {
+      runningStreak = 0;
+    }
   }
-  const displayStreak = streak;
+
+  // Display Yogi's active streak or highest consecutive streak achieved
+  const displayStreak = runningStreak > 0 ? runningStreak : maxStreak;
 
   // Consistency Score
   let consistencyScore = 'Outstanding 🏆';
