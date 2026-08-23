@@ -189,10 +189,13 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
     }
   ];
 
-  // Real August 2026 Leaderboard Rankings
+  // Real August 2026 Leaderboard Rankings (with unique date deduplication)
   const rankedClients = [...activeClients].map(c => {
-    const cAttCount = attendance.filter(x => x.clientId === c.id && x.status === 'Present').length;
-    const effectiveAtt = cAttCount > 0 ? cAttCount : (c.completedClasses || 0);
+    const clientAttRaw = attendance.filter(a => a.clientId === c.id);
+    const uniquePresentDates = new Set(clientAttRaw.filter(a => a.status === 'Present').map(a => a.date));
+    const presentCount = uniquePresentDates.size;
+    const completedClasses = typeof c.completedClasses === 'number' ? c.completedClasses : 0;
+    const effectiveAtt = presentCount > 0 ? presentCount : completedClasses;
     return {
       ...c,
       attendedClasses: effectiveAtt
