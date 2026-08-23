@@ -157,6 +157,7 @@ export const normalizeLeave = (l: any): any => {
   if (!l || typeof l !== 'object') return null;
   const start = l.startDate || l.date || new Date().toISOString().split('T')[0];
   const end = l.endDate || start;
+  const isSingleDay = start === end;
   return {
     id: l.id || `leave-${Date.now()}`,
     clientId: l.clientId || '',
@@ -166,8 +167,8 @@ export const normalizeLeave = (l: any): any => {
     startDate: start,
     endDate: end,
     reason: l.reason || 'Leave / Rest Day',
-    duration: l.duration || '1 Day',
-    isFullMonthLeave: !!l.isFullMonthLeave
+    duration: isSingleDay ? `1 Day (${start})` : (l.duration || '1 Day'),
+    isFullMonthLeave: isSingleDay ? false : !!l.isFullMonthLeave
   };
 };
 

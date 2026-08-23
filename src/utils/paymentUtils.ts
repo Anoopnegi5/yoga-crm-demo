@@ -36,12 +36,9 @@ export const formatMonthName = (monthStr: string): string => {
   return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 };
 
-export const isClientOnFullMonthLeave = (
-  clientId: string,
-  monthStr: string,
-  leaves?: LeaveRecord[]
-): boolean => {
-  if (!leaves || !Array.isArray(leaves)) return false;
+export const isClientOnFullMonthLeave = (clientId: string, monthStr: string, leaves?: LeaveRecord[]): boolean => {
+  if (!leaves || !Array.isArray(leaves) || leaves.length === 0) return false;
+
   return leaves.some(l => {
     if (l.clientId !== clientId) return false;
     const start = l.startDate || l.date || '';
@@ -49,7 +46,12 @@ export const isClientOnFullMonthLeave = (
     const dur = (l.duration || '').toLowerCase();
     const reason = (l.reason || '').toLowerCase();
 
-    // 1. Explicit flag or full month keywords in duration / reason
+    // 1. Safety rule: If start date and end date are the exact same day, it is a single-day leave, NOT a full month leave!
+    if (start && end && start === end) {
+      return false;
+    }
+
+    // 2. Explicit flag or full month keywords in duration / reason
     if (
       l.isFullMonthLeave ||
       dur.includes('full month') ||
