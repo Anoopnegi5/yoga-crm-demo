@@ -49,6 +49,7 @@ export const EditClientModal: React.FC<EditClientModalProps> = ({ client, isOpen
   const [currentProblems, setCurrentProblems] = useState<string>('');
 
   const [feeType, setFeeType] = useState<FeeType>('Monthly');
+  const [feeStartMonth, setFeeStartMonth] = useState<string>('2026-08');
   const [perSessionFee, setPerSessionFee] = useState<number>(1000);
   const [monthlyFee, setMonthlyFee] = useState<number>(10000);
   const [feeDueDate, setFeeDueDate] = useState('5th');
@@ -83,6 +84,7 @@ export const EditClientModal: React.FC<EditClientModalProps> = ({ client, isOpen
       setSelectedReasons(client.reasonsForJoining || []);
       setCurrentProblems((client.currentProblems || []).join(', '));
       setFeeType(client.feeType || 'Monthly');
+      setFeeStartMonth(client.feeStartMonth || (client.joiningDate ? client.joiningDate.slice(0, 7) : '2026-08'));
       setPerSessionFee(client.perSessionFee || 1000);
       setMonthlyFee(client.monthlyFee || 10000);
       setFeeDueDate(client.feeDueDate);
@@ -170,6 +172,7 @@ export const EditClientModal: React.FC<EditClientModalProps> = ({ client, isOpen
       reasonsForJoining: selectedReasons,
       currentProblems: currentProblems.split(',').map(s => s.trim()).filter(Boolean),
       feeType,
+      feeStartMonth: feeType === 'Monthly' ? feeStartMonth : undefined,
       perSessionFee: feeType === 'Per Session' ? Number(perSessionFee) : 0,
       monthlyFee: feeType === 'Per Session' ? 0 : Number(monthlyFee),
       feeDueDate: feeType === 'Per Session' ? 'N/A' : feeDueDate,
@@ -530,6 +533,22 @@ export const EditClientModal: React.FC<EditClientModalProps> = ({ client, isOpen
                     onChange={(e) => setFeeDueDate(e.target.value)}
                     className="w-full px-4 py-3 rounded-2xl bg-white border border-slate-200 text-xs font-bold outline-none"
                   />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                    <span>Fee Billing Cycle Starts From</span>
+                    <span className="text-[10px] text-emerald-700 font-semibold">Select July 2026 if July fee is pending</span>
+                  </label>
+                  <select
+                    value={feeStartMonth}
+                    onChange={(e) => setFeeStartMonth(e.target.value)}
+                    className="w-full px-4 py-3 rounded-2xl bg-white border border-slate-200 text-xs font-extrabold text-slate-900 outline-none"
+                  >
+                    <option value="2026-08">August 2026 (Default Current Cycle)</option>
+                    <option value="2026-07">July 2026 (Include July 2026 Pending Fee Due)</option>
+                    <option value="2026-06">June 2026 (Include June & July Fee Dues)</option>
+                  </select>
                 </div>
               </div>
             ) : (

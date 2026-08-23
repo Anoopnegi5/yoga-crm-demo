@@ -118,13 +118,12 @@ export const getClientCurrentMonthPaymentStatus = (
   // --- 2. MONTHLY BATCH SUBSCRIPTION LOGIC ---
   const isOnCurrentMonthLeave = isClientOnFullMonthLeave(client.id, currentMonthStr, leaves);
   
-  // STRICT RULE: Fee journal operates STRICTLY from August 2026 (2026-08) onwards
-  const MIN_FEE_START_MONTH = '2026-08';
-  let rawJoiningMonthStr = (client.joiningDate || getTodayDateString()).slice(0, 7);
-  let effectiveJoiningMonthStr = rawJoiningMonthStr < MIN_FEE_START_MONTH ? MIN_FEE_START_MONTH : rawJoiningMonthStr;
+  // Fee journal start month: Supports July 2026 (2026-07) or earlier if set in client.feeStartMonth or joiningDate
+  const rawJoiningMonthStr = (client.feeStartMonth || client.joiningDate || '2026-08').slice(0, 7);
+  const effectiveJoiningMonthStr = rawJoiningMonthStr <= currentMonthStr ? rawJoiningMonthStr : currentMonthStr;
   
   const activeMonths = getMonthsListBetween(
-    effectiveJoiningMonthStr <= currentMonthStr ? effectiveJoiningMonthStr : currentMonthStr, 
+    effectiveJoiningMonthStr, 
     currentMonthStr
   );
 
@@ -240,12 +239,12 @@ export const getClientBillingCycles = (
     }];
   }
 
-  const MIN_FEE_START_MONTH = '2026-08';
-  const rawJoiningMonthStr = (client.joiningDate || getTodayDateString()).slice(0, 7);
-  const effectiveJoiningMonthStr = rawJoiningMonthStr < MIN_FEE_START_MONTH ? MIN_FEE_START_MONTH : rawJoiningMonthStr;
+  // Fee journal start month: Supports July 2026 (2026-07) or earlier if set in client.feeStartMonth or joiningDate
+  const rawJoiningMonthStr = (client.feeStartMonth || client.joiningDate || '2026-08').slice(0, 7);
+  const effectiveJoiningMonthStr = rawJoiningMonthStr <= currentMonthStr ? rawJoiningMonthStr : currentMonthStr;
 
   const activeMonths = getMonthsListBetween(
-    effectiveJoiningMonthStr <= currentMonthStr ? effectiveJoiningMonthStr : currentMonthStr,
+    effectiveJoiningMonthStr,
     currentMonthStr
   );
 

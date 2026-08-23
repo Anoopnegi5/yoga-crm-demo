@@ -66,6 +66,7 @@ export const normalizeClient = (c: any): any => {
     reasonsForJoining: Array.isArray(c.reasonsForJoining) ? c.reasonsForJoining : [],
     currentProblems: Array.isArray(c.currentProblems) ? c.currentProblems : [],
     feeType: c.feeType || 'Monthly',
+    feeStartMonth: c.feeStartMonth || undefined,
     perSessionFee: cleanPerSessionFee,
     monthlyFee: cleanMonthlyFee,
     feeDueDate: c.feeDueDate || '5th',

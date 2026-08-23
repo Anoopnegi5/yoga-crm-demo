@@ -122,6 +122,7 @@ function normalizeClient(c) {
     reasonsForJoining: Array.isArray(c.reasonsForJoining) ? c.reasonsForJoining : [],
     currentProblems: Array.isArray(c.currentProblems) ? c.currentProblems : [],
     feeType: c.feeType || 'Monthly',
+    feeStartMonth: c.feeStartMonth || undefined,
     perSessionFee: typeof c.perSessionFee === 'number' ? c.perSessionFee : 0,
     monthlyFee: typeof c.monthlyFee === 'number' ? c.monthlyFee : 0,
     feeDueDate: c.feeDueDate || '5th',

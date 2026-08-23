@@ -64,6 +64,7 @@ export interface Client {
   reasonsForJoining: string[];
   currentProblems: string[];
   feeType?: FeeType; // 'Monthly' | 'Per Session'
+  feeStartMonth?: string; // e.g. "2026-07" or "2026-08"
   perSessionFee?: number; // e.g. 800
   monthlyFee: number;
   feeDueDate: string; // e.g. "5th"

@@ -16,6 +16,7 @@ export const AddPaymentModal: React.FC = () => {
   const [clientId, setClientId] = useState<string>('');
   const [amount, setAmount] = useState<number>(4500);
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [billingMonth, setBillingMonth] = useState<string>('2026-08');
   const [paymentMode, setPaymentMode] = useState<PaymentMode>('UPI');
   const [status, setStatus] = useState<PaymentStatus>('Paid');
   const [notes, setNotes] = useState<string>('');
@@ -52,6 +53,7 @@ export const AddPaymentModal: React.FC = () => {
       clientName: selectedClient.name,
       amount: Number(amount),
       date,
+      month: billingMonth,
       paymentMode,
       status,
       notes
@@ -106,7 +108,21 @@ export const AddPaymentModal: React.FC = () => {
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">For Billing Month *</label>
+              <select
+                value={billingMonth}
+                onChange={(e) => setBillingMonth(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-extrabold text-slate-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+              >
+                <option value="2026-08">August 2026 (Current Cycle)</option>
+                <option value="2026-07">July 2026 (Previous Due Payment)</option>
+                <option value="2026-06">June 2026 (Previous Due Payment)</option>
+                <option value="2026-09">September 2026 (Advance Cycle)</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">Amount (₹) *</label>
               <input
@@ -117,17 +133,17 @@ export const AddPaymentModal: React.FC = () => {
                 className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-extrabold text-slate-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
               />
             </div>
+          </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Payment Date</label>
-              <input
-                type="date"
-                required
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
-              />
-            </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Payment Date</label>
+            <input
+              type="date"
+              required
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+            />
           </div>
 
           {/* Payment Mode */}
