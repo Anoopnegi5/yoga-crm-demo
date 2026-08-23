@@ -118,6 +118,19 @@ export const getClientCurrentMonthPaymentStatus = (
   // --- 2. MONTHLY BATCH SUBSCRIPTION LOGIC ---
   const isOnCurrentMonthLeave = isClientOnFullMonthLeave(client.id, currentMonthStr, leaves);
   
+  // If client is explicitly marked 'Paid' on profile for current month and has no prior months dues
+  if (client.paymentStatus === 'Paid' && (!client.feeStartMonth || client.feeStartMonth === currentMonthStr)) {
+    return {
+      status: 'Paid',
+      paidAmount: client.monthlyFee || 1200,
+      dueAmount: 0,
+      remainingBalance: 0,
+      unpaidMonthsCount: 0,
+      unpaidMonthsNames: [],
+      isOnFullMonthLeave: isOnCurrentMonthLeave
+    };
+  }
+
   // STRICT RULE: All billing operates from August 2026 ('2026-08') onwards by default.
   // ONLY if client.feeStartMonth is explicitly set (e.g. '2026-07' for Nicky Kawra or Anoop Negi), track previous dues!
   const DEFAULT_FEE_START_MONTH = '2026-08';
@@ -278,7 +291,7 @@ export const getClientBillingCycles = (
       monthStr: mStr,
       monthName,
       dueAmount: (isLeave && cycleStatus === 'Leave Waived') ? 0 : mDue,
-      paidAmount: mPaid,
+      paidAmount: cycleStatus === 'Paid' ? Math.max(mPaid, mDue) : mPaid,
       status: cycleStatus,
       isCurrentMonth: isCurrent,
       paidDate
