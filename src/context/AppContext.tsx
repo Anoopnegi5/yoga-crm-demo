@@ -338,18 +338,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deletePayment = (id: string) => {
-    // If the payment is a synthesized record (id format "syn-<clientId>")
+    let clientIdToReset: string | null = null;
     if (id.startsWith('syn-')) {
-      const clientId = id.replace('syn-', '');
-      // Update the client paymentStatus to empty (or appropriate) to prevent regeneration
-      const updatedClients = clients.map(c => c.id === clientId ? { ...c, paymentStatus: 'Pending' as PaymentStatus } : c);
-      setClients(updatedClients);
-      try {
-        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
-      } catch (e) {}
+      clientIdToReset = id.replace('syn-', '').replace('dash-', '').replace('persession-', '');
+    } else {
+      const targetPayment = payments.find(p => p.id === id);
+      if (targetPayment) {
+        clientIdToReset = targetPayment.clientId;
+      }
+    }
+
+    let updatedClients = clients;
+    if (clientIdToReset) {
+      const remainingClientPayments = payments.filter(p => p.id !== id && p.clientId === clientIdToReset && p.status === 'Paid');
+      if (remainingClientPayments.length === 0) {
+        updatedClients = clients.map(c => c.id === clientIdToReset ? { ...c, paymentStatus: 'Pending' as PaymentStatus } : c);
+        setClients(updatedClients);
+        try {
+          safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updatedClients));
+        } catch (e) {}
+      }
     }
 
     const nextDeletedIds = Array.from(new Set([...deletedIdsRef.current, id]));
+    if (clientIdToReset) {
+      nextDeletedIds.push(`syn-${clientIdToReset}`);
+      nextDeletedIds.push(`syn-dash-${clientIdToReset}`);
+    }
     deletedIdsRef.current = nextDeletedIds;
     const updatedPayments = payments.filter(p => p.id !== id);
 
@@ -363,7 +378,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
 
     pushCloudSyncData({
-      clients,
+      clients: updatedClients,
       payments: updatedPayments,
       trainerDreams,
       trainerLeaves,
@@ -374,7 +389,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       action: 'overwrite'
     } as any);
 
-    showSuccessToast('🗑️ Payment record deleted permanently across all devices!');
+    showSuccessToast('🗑️ Payment record removed!');
   };
 
   const deleteTrainerDream = (id: string) => {
