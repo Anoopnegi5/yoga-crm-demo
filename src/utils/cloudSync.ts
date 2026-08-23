@@ -218,10 +218,6 @@ export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedId
       } else {
         const localItem = map.get(item.id);
         const merged = { ...localItem, ...item };
-        // Protect local Paid status from being reverted by stale remote cloud payloads
-        if (localItem && localItem.paymentStatus === 'Paid' && item && item.paymentStatus !== 'Paid') {
-          merged.paymentStatus = 'Paid';
-        }
         map.set(item.id, merged);
       }
     }
