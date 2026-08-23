@@ -189,24 +189,20 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
     }
   ];
 
-  // Real August 2026 Leaderboard (June/July removed as per studio data availability)
-  const rankedClients = [...activeClients].sort((a, b) => {
-    const aAtt = Math.max(a.completedClasses || 0, attendance.filter(x => x.clientId === a.id && x.status === 'Present').length);
-    const bAtt = Math.max(b.completedClasses || 0, attendance.filter(x => x.clientId === b.id && x.status === 'Present').length);
-    return bAtt - aAtt;
-  });
+  // Real August 2026 Leaderboard Rankings
+  const rankedClients = [...activeClients].map(c => {
+    const cAttCount = attendance.filter(x => x.clientId === c.id && x.status === 'Present').length;
+    const effectiveAtt = cAttCount > 0 ? cAttCount : (c.completedClasses || 0);
+    return {
+      ...c,
+      attendedClasses: effectiveAtt
+    };
+  }).sort((a, b) => b.attendedClasses - a.attendedClasses);
 
+  const top3Yogis = rankedClients.slice(0, 3);
   const clientRankIndex = rankedClients.findIndex(c => c.id === targetClient.id);
   const currentRank = clientRankIndex >= 0 ? clientRankIndex + 1 : 1;
   const rankMedal = currentRank === 1 ? '🥇' : currentRank === 2 ? '🥈' : currentRank === 3 ? '🥉' : '⭐';
-
-  const leaderboardHistory = [
-    { 
-      month: 'August 2026 (Current Cycle)', 
-      rank: `Rank #${currentRank} ${rankMedal}`, 
-      badge: currentRank <= 3 ? 'Top Performer' : 'Active Practitioner' 
-    }
-  ];
 
   // Profile URL & Sharing
   const currentSlug = slugifyName(targetClient.name);
@@ -811,32 +807,94 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                   🏆
                 </div>
                 <div>
-                  <h4 className="font-extrabold text-slate-900 text-base">Studio Leaderboard History</h4>
-                  <p className="text-[11px] text-slate-500 font-medium">Monthly regularity rankings & feature analytics</p>
+                  <h4 className="font-extrabold text-slate-900 text-base">Studio Leaderboard</h4>
+                  <p className="text-[11px] text-slate-500 font-medium">Monthly Regularity & Hall of Fame</p>
                 </div>
               </div>
               <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-900 font-black text-xs border border-amber-200">
-                August 2026 Ranking
+                August 2026
               </span>
             </div>
 
             <div className="space-y-3">
-              {leaderboardHistory.map((h, i) => (
-                <div key={i} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/60 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="w-8 h-8 rounded-xl bg-white text-slate-800 font-extrabold text-xs flex items-center justify-center border border-slate-200 shadow-sm">
-                      #{i + 1}
-                    </span>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">{h.month}</p>
-                      <span className="text-[10px] text-emerald-700 font-semibold">{h.badge}</span>
+              {/* 1. TOP CARD: Current Yogi's Position */}
+              <div className="p-3.5 rounded-2xl bg-gradient-to-r from-purple-50/90 via-indigo-50/60 to-white border-2 border-purple-300 shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img
+                    src={targetClient.photoUrl}
+                    alt={targetClient.name}
+                    className="w-10 h-10 rounded-xl object-cover ring-2 ring-purple-400 shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-black text-slate-900 truncate">{targetClient.name}</p>
+                      <span className="px-1.5 py-0.5 rounded-md bg-purple-700 text-white text-[9px] font-black shrink-0">
+                        This Yogi
+                      </span>
                     </div>
+                    <span className="text-[11px] text-purple-700 font-bold block">
+                      {classesAttended} Sessions Attended
+                    </span>
                   </div>
-                  <span className="px-3 py-1 rounded-xl bg-amber-400/20 text-amber-900 font-extrabold text-xs border border-amber-300/40">
-                    {h.rank}
-                  </span>
                 </div>
-              ))}
+                <span className="px-3 py-1 rounded-xl bg-purple-100 text-purple-950 font-black text-xs border border-purple-200 shrink-0">
+                  Rank #{currentRank} {rankMedal}
+                </span>
+              </div>
+
+              {/* Sub-heading for Top 3 */}
+              <div className="pt-1 flex items-center justify-between border-t border-slate-100">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+                  Top 3 Regularity Performers
+                </span>
+              </div>
+
+              {/* 2. Top 3 Studio Performers (1st, 2nd, 3rd - Clean Non-clickable) */}
+              <div className="space-y-2">
+                {top3Yogis.map((yogi, idx) => {
+                  const rankNum = idx + 1;
+                  const medal = rankNum === 1 ? '🥇' : rankNum === 2 ? '🥈' : '🥉';
+                  const isCurrent = yogi.id === targetClient.id;
+
+                  return (
+                    <div 
+                      key={yogi.id} 
+                      className={`p-3 rounded-2xl border flex items-center justify-between cursor-default transition-all ${
+                        isCurrent 
+                          ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-200' 
+                          : 'bg-slate-50 border-slate-200/70'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span className="w-7 h-7 rounded-lg bg-white text-slate-800 font-black text-xs flex items-center justify-center border border-slate-200 shadow-2xs shrink-0">
+                          #{rankNum}
+                        </span>
+                        <img
+                          src={yogi.photoUrl}
+                          alt={yogi.name}
+                          className="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 truncate flex items-center gap-1.5">
+                            <span>{yogi.name}</span>
+                            {isCurrent && (
+                              <span className="text-[9px] font-black text-purple-700 bg-purple-100 px-1 py-0.2 rounded">
+                                (You)
+                              </span>
+                            )}
+                          </p>
+                          <span className="text-[10px] text-slate-500 font-semibold block">
+                            {yogi.attendedClasses} Classes Done
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-base shrink-0">
+                        {medal}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
