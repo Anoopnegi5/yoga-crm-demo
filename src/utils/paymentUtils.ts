@@ -253,19 +253,6 @@ export const getClientBillingCycles = (
     const isCurrent = mStr === currentMonthStr;
     const isLeave = isClientOnFullMonthLeave(client.id, mStr, leaves);
     const monthName = formatMonthName(mStr);
-
-    if (isLeave) {
-      cycles.push({
-        monthStr: mStr,
-        monthName,
-        dueAmount: 0,
-        paidAmount: 0,
-        status: 'Leave Waived',
-        isCurrentMonth: isCurrent,
-      });
-      return;
-    }
-
     const mDue = client.monthlyFee || 1200;
     const monthPayments = clientPayments.filter(p => (p.month === mStr || (p.date && p.date.startsWith(mStr))));
     const mPaid = monthPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -273,11 +260,12 @@ export const getClientBillingCycles = (
 
     let cycleStatus: 'Paid' | 'Pending' | 'Overdue' | 'Partial' | 'Leave Waived' = 'Pending';
     
-    // If client paymentStatus is explicitly Paid and this is current month
-    if (client.paymentStatus === 'Paid' && isCurrent) {
+    // 1. If client has paid or marked Paid for this month -> ALWAYS 'Paid'
+    if (mPaid >= mDue || (client.paymentStatus === 'Paid' && isCurrent)) {
       cycleStatus = 'Paid';
-    } else if (mPaid >= mDue) {
-      cycleStatus = 'Paid';
+    } else if (isLeave && mPaid === 0) {
+      // 2. Only show Leave Waived if no payments exist and client is on full month leave
+      cycleStatus = 'Leave Waived';
     } else if (mPaid > 0) {
       cycleStatus = 'Partial';
     } else {
@@ -287,11 +275,11 @@ export const getClientBillingCycles = (
     cycles.push({
       monthStr: mStr,
       monthName,
-      dueAmount: mDue,
+      dueAmount: (isLeave && cycleStatus === 'Leave Waived') ? 0 : mDue,
       paidAmount: mPaid,
       status: cycleStatus,
-      paidDate,
       isCurrentMonth: isCurrent,
+      paidDate
     });
   });
 
