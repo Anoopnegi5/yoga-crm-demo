@@ -118,9 +118,10 @@ export const getClientCurrentMonthPaymentStatus = (
   // --- 2. MONTHLY BATCH SUBSCRIPTION LOGIC ---
   const isOnCurrentMonthLeave = isClientOnFullMonthLeave(client.id, currentMonthStr, leaves);
   
-  // Fee journal start month: Supports July 2026 (2026-07) or earlier if set in client.feeStartMonth or joiningDate
-  const rawJoiningMonthStr = (client.feeStartMonth || client.joiningDate || '2026-08').slice(0, 7);
-  const effectiveJoiningMonthStr = rawJoiningMonthStr <= currentMonthStr ? rawJoiningMonthStr : currentMonthStr;
+  // STRICT RULE: All billing operates from August 2026 ('2026-08') onwards by default.
+  // ONLY if client.feeStartMonth is explicitly set (e.g. '2026-07' for Nicky Kawra or Anoop Negi), track previous dues!
+  const DEFAULT_FEE_START_MONTH = '2026-08';
+  const effectiveJoiningMonthStr = client.feeStartMonth || DEFAULT_FEE_START_MONTH;
   
   const activeMonths = getMonthsListBetween(
     effectiveJoiningMonthStr, 
@@ -238,9 +239,10 @@ export const getClientBillingCycles = (
     }];
   }
 
-  // Fee journal start month: Supports July 2026 (2026-07) or earlier if set in client.feeStartMonth or joiningDate
-  const rawJoiningMonthStr = (client.feeStartMonth || client.joiningDate || '2026-08').slice(0, 7);
-  const effectiveJoiningMonthStr = rawJoiningMonthStr <= currentMonthStr ? rawJoiningMonthStr : currentMonthStr;
+  // STRICT RULE: All billing operates from August 2026 ('2026-08') onwards by default.
+  // ONLY if client.feeStartMonth is explicitly set (e.g. '2026-07' for Nicky Kawra or Anoop Negi), track previous dues!
+  const DEFAULT_FEE_START_MONTH = '2026-08';
+  const effectiveJoiningMonthStr = client.feeStartMonth || DEFAULT_FEE_START_MONTH;
 
   const activeMonths = getMonthsListBetween(
     effectiveJoiningMonthStr,
