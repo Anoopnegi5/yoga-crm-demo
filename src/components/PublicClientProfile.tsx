@@ -92,20 +92,48 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
     );
   }
 
-  // 📊 CALCULATE PUBLIC PERFORMANCE METRICS
-  const clientAtt = attendance.filter(a => a.clientId === targetClient.id);
-  const presentCount = clientAtt.filter(a => a.status === 'Present').length;
-  const absentCount = clientAtt.filter(a => a.status === 'Absent').length;
-  const leavesCount = leaves.filter(l => l.clientId === targetClient.id).length;
+  // 📊 CALCULATE PUBLIC PERFORMANCE METRICS WITH DATE-LEVEL DEDUPLICATION
+  const clientLeaves = leaves.filter(l => l.clientId === targetClient.id);
+  const clientAttRaw = attendance.filter(a => a.clientId === targetClient.id);
 
-  const classesAttended = Math.max(targetClient.completedClasses || 0, presentCount);
+  // Map each unique date to its effective status
+  const dateStatusMap = new Map<string, string>();
+  clientAttRaw.forEach(a => {
+    if (a.date && a.status) {
+      dateStatusMap.set(a.date, a.status);
+    }
+  });
+  // Approved leaves take precedence for leave dates
+  clientLeaves.forEach(l => {
+    const start = l.startDate || l.date || '';
+    if (start) {
+      dateStatusMap.set(start, 'Leave');
+    }
+  });
+
+  let presentCount = 0;
+  let absentCount = 0;
+  let leavesCount = clientLeaves.length;
+
+  dateStatusMap.forEach((status) => {
+    if (status === 'Present') presentCount++;
+    else if (status === 'Absent') absentCount++;
+    else if (status === 'Leave' && leavesCount === 0) leavesCount++;
+  });
+
+  const classesAttended = presentCount > 0 ? presentCount : (targetClient.completedClasses || 0);
   const totalClassesTarget = targetClient.totalClasses || 30;
   const attendanceRate = Math.min(100, Math.round((classesAttended / Math.max(1, classesAttended + absentCount)) * 100));
 
   // Streak Calculation (100% Real data from actual attendance records)
-  const sortedAtt = [...clientAtt].sort((a, b) => b.date.localeCompare(a.date));
+  const uniqueAttDates = Array.from(dateStatusMap.entries())
+    .map(([date, status]) => ({ date, status }))
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  const clientAtt = uniqueAttDates;
+
   let streak = 0;
-  for (const a of sortedAtt) {
+  for (const a of uniqueAttDates) {
     if (a.status === 'Present') streak++;
     else if (a.status === 'Absent') break;
   }
@@ -930,13 +958,13 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                 <div className="grid grid-cols-2 gap-2.5">
                   <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-center">
                     <span className="text-[10px] font-bold text-slate-500 uppercase block">Completed Sessions</span>
-                    <strong className="text-lg font-black text-slate-900">{targetClient.completedClasses || 0} Attended</strong>
+                    <strong className="text-lg font-black text-slate-900">{classesAttended} Attended</strong>
                     <span className="text-[10px] text-slate-500 font-medium block mt-0.5">Pay-as-you-go plan</span>
                   </div>
                   <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-center">
                     <span className="text-[10px] font-bold text-emerald-800 uppercase block">Total Fees Paid</span>
                     <strong className="text-lg font-black text-emerald-900">₹{paidAmount.toLocaleString()}</strong>
-                    <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">All {targetClient.completedClasses || 0} Classes Paid ✓</span>
+                    <span className="text-[10px] text-emerald-700 font-bold block mt-0.5">All {classesAttended} Classes Paid ✓</span>
                   </div>
                 </div>
 
@@ -962,7 +990,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                     <div className="p-3 rounded-2xl bg-emerald-50/60 border border-emerald-200 text-xs flex items-center justify-between">
                       <div>
                         <span className="font-bold text-emerald-950 block">✓ Pay-as-you-go session pass active</span>
-                        <span className="text-[11px] text-emerald-800">Fee collected per attended session (₹{targetClient.perSessionFee || 800} × {targetClient.completedClasses || 0} classes)</span>
+                        <span className="text-[11px] text-emerald-800">Fee collected per attended session (₹{targetClient.perSessionFee || 800} × {classesAttended} classes)</span>
                       </div>
                       <span className="font-black text-emerald-900 bg-emerald-100 px-2.5 py-1 rounded-xl border border-emerald-300">
                         ₹{paidAmount.toLocaleString()} PAID ✓

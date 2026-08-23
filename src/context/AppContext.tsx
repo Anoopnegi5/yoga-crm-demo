@@ -1152,52 +1152,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return;
     }
 
-    let updatedAttendance = [...attendance];
-    let classDelta = 0;
+    // Clean any prior duplicate/conflicting records for the exact same date
+    const cleanPriorAttendance = attendance.filter(
+      a => !(a.clientId === clientId && a.date === dateToUse)
+    );
 
-    if (existingRecord) {
-      // Record exists, updating status for today
-      const prevStatus = existingRecord.status;
-      if (prevStatus !== 'Present' && status === 'Present') {
-        classDelta = 1;
-      } else if (prevStatus !== 'Present' && status !== 'Present') {
-        classDelta = -1;
+    const newAttendanceRecord = {
+      id: existingRecord?.id || `att-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      clientId,
+      clientName: client.name,
+      date: dateToUse,
+      status
+    };
+
+    const updatedAttendance = [newAttendanceRecord, ...cleanPriorAttendance];
+
+    // Compute actual present classes count from real unique attendance dates
+    const realPresentCount = updatedAttendance.filter(
+      a => a.clientId === clientId && a.status === 'Present'
+    ).length;
+
+    const updatedClients = clients.map(c => {
+      if (c.id === clientId) {
+        return {
+          ...c,
+          completedClasses: realPresentCount
+        };
       }
-
-      updatedAttendance = updatedAttendance.map(a => 
-        (a.clientId === clientId && a.date === dateToUse) 
-          ? { ...a, status, clientName: client.name } 
-          : a
-      );
-    } else {
-      // New record for today
-      if (status === 'Present') {
-        classDelta = 1;
-      }
-      updatedAttendance.push({
-        id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-        clientId,
-        clientName: client.name,
-        date: dateToUse,
-        status
-      });
-    }
-
-    let updatedClients = clients;
-    if (classDelta !== 0) {
-      updatedClients = clients.map(c => {
-        if (c.id === clientId) {
-          return {
-            ...c,
-            completedClasses: Math.max(0, (c.completedClasses || 0) + classDelta)
-          };
-        }
-        return c;
-      });
-      setClients(updatedClients);
-    }
+      return c;
+    });
 
     setAttendance(updatedAttendance);
+    setClients(updatedClients);
 
     try {
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(updatedAttendance));
