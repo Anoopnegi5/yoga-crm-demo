@@ -718,9 +718,15 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                 return (
                   <div
                     key={dateStr}
-                    className={`min-h-[56px] sm:min-h-[68px] p-2 rounded-2xl border transition-all flex flex-col justify-between ${
-                      hasPayment
-                        ? 'bg-gradient-to-br from-amber-50 via-emerald-50/60 to-amber-100/70 border-amber-400 ring-2 ring-amber-400 shadow-md'
+                    className={`min-h-[60px] sm:min-h-[72px] p-2 rounded-2xl border transition-all flex flex-col justify-between ${
+                      hasPayment && isPresent
+                        ? 'bg-gradient-to-br from-emerald-50 via-emerald-100/40 to-amber-50/80 border-amber-400 ring-2 ring-amber-400 shadow-md'
+                        : hasPayment && isAbsent
+                        ? 'bg-gradient-to-br from-rose-50 via-rose-100/40 to-amber-50/80 border-amber-400 ring-2 ring-amber-400 shadow-md'
+                        : hasPayment && clientLeave
+                        ? 'bg-gradient-to-br from-amber-50 via-amber-100/60 to-amber-50 border-amber-400 ring-2 ring-amber-400 shadow-md'
+                        : hasPayment
+                        ? 'bg-gradient-to-br from-amber-50 to-amber-100/70 border-amber-400 ring-2 ring-amber-400 shadow-md'
                         : isPresent
                         ? 'bg-emerald-50/90 border-emerald-300 ring-1 ring-emerald-200'
                         : isAbsent
@@ -744,18 +750,45 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
                       }`}>
                         {dayNum}
                       </span>
-                      {hasPayment && <span className="text-xs shrink-0" title={`Payment Paid ₹${totalPaidOnDate.toLocaleString()}`}>💰</span>}
-                      {!hasPayment && isPresent && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
-                      {!hasPayment && isAbsent && <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />}
-                      {!hasPayment && clientLeave && <span className="text-xs">🌴</span>}
-                      {!hasPayment && trainerLeave && <span className="text-xs">🧘‍♀️</span>}
+                      {hasPayment ? (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs shrink-0" title={`Payment Paid ₹${totalPaidOnDate.toLocaleString()}`}>💰</span>
+                          {isPresent && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+                          {isAbsent && <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />}
+                          {clientLeave && <span className="text-xs">🌴</span>}
+                        </div>
+                      ) : (
+                        <>
+                          {isPresent && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />}
+                          {isAbsent && <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />}
+                          {clientLeave && <span className="text-xs">🌴</span>}
+                          {trainerLeave && <span className="text-xs">🧘‍♀️</span>}
+                        </>
+                      )}
                     </div>
 
                     <div className="pt-1 space-y-0.5">
                       {hasPayment ? (
-                        <span className="text-[9px] font-black text-amber-950 bg-amber-300/90 px-1 py-0.5 rounded-md block text-center truncate shadow-sm">
-                          💳 Paid ₹{totalPaidOnDate.toLocaleString()}
-                        </span>
+                        <>
+                          <span className="text-[8px] sm:text-[9px] font-black text-amber-950 bg-amber-300/90 px-1 py-0.5 rounded-md block text-center truncate shadow-xs">
+                            💳 Paid ₹{totalPaidOnDate.toLocaleString()}
+                          </span>
+                          {isPresent && (
+                            <span className="text-[8px] sm:text-[9px] font-black text-emerald-900 bg-emerald-200/80 px-1 py-0.5 rounded-md block text-center truncate">
+                              Present
+                            </span>
+                          )}
+                          {isAbsent && (
+                            <span className="text-[8px] sm:text-[9px] font-black text-rose-900 bg-rose-200/80 px-1 py-0.5 rounded-md block text-center truncate">
+                              Absent
+                            </span>
+                          )}
+                          {clientLeave && (
+                            <span className="text-[8px] sm:text-[9px] font-bold text-amber-900 bg-amber-200/80 px-1 py-0.5 rounded-md block text-center truncate">
+                              Leave
+                            </span>
+                          )}
+                        </>
                       ) : isPresent ? (
                         <span className="text-[9px] font-black text-emerald-800 bg-emerald-200/60 px-1 py-0.5 rounded-md block text-center truncate">
                           Present
