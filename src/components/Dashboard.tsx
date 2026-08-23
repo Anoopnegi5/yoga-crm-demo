@@ -198,18 +198,22 @@ export const Dashboard: React.FC = () => {
   const todaysScheduledClients = activeClients.filter(c => {
     const hasJoined = !c.joiningDate || c.joiningDate <= todayDateStr;
     const isScheduledToday = Array.isArray(c.days) && c.days.includes(todayDayShort);
-    const hasAttendanceToday = attendance.some(a => a.clientId === c.id && a.date === todayDateStr);
     
-    // Check if client is currently on leave today
-    const isOnLeaveToday = leaves.some(l => {
+    // Check if client is currently on leave today (in leaves array OR marked as 'Leave' in attendance)
+    const todayAtt = attendance.find(a => a.clientId === c.id && a.date === todayDateStr);
+    const isMarkedLeaveInAtt = todayAtt?.status === 'Leave';
+    
+    const isOnLeaveToday = isMarkedLeaveInAtt || leaves.some(l => {
       if (l.clientId !== c.id) return false;
       const start = l.startDate || l.date || '';
       const end = l.endDate || start;
       return todayDateStr >= start && todayDateStr <= end;
     });
 
-    // Exclude client if they are currently on leave today!
-    return hasJoined && !isOnLeaveToday && (isScheduledToday || hasAttendanceToday);
+    const hasExplicitPresentOrAbsent = todayAtt && (todayAtt.status === 'Present' || todayAtt.status === 'Absent');
+
+    // Exclude client if they are currently on leave today or not scheduled today!
+    return hasJoined && !isOnLeaveToday && (isScheduledToday || hasExplicitPresentOrAbsent);
   });
 
   // Grouped Sort:
