@@ -761,6 +761,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (e.key === `${LOCAL_STORAGE_KEY}_payments` && e.newValue) {
         try { setPayments(JSON.parse(e.newValue)); } catch (err) {}
       }
+      if (e.key === `${LOCAL_STORAGE_KEY}_attendance` && e.newValue) {
+        try { setAttendance(JSON.parse(e.newValue)); } catch (err) {}
+      }
+      if (e.key === `${LOCAL_STORAGE_KEY}_leaves` && e.newValue) {
+        try { setLeaves(JSON.parse(e.newValue)); } catch (err) {}
+      }
       if (e.key === `${LOCAL_STORAGE_KEY}_trainer_dreams` && e.newValue) {
         try { setTrainerDreams(JSON.parse(e.newValue)); } catch (err) {}
       }

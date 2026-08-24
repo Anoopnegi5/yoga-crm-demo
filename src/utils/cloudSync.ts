@@ -250,14 +250,14 @@ export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedId
 
 // Fetch Cloud Data Across Devices (Cached /api/sync Proxy First, then Supabase Fallback)
 export const fetchCloudSyncData = async (): Promise<CloudDataPayload | null> => {
-  if (typeof window === 'undefined' || !navigator.onLine) return null;
+  if (typeof window === 'undefined') return null;
 
   // 1. Primary: Same-domain Vercel Serverless Sync API (Protected with Server-Side In-Memory Cache & Delta Checking)
   for (const url of ENDPOINTS) {
     try {
-      const cacheBustUrl = url.includes('?') ? `${url}&t=${Date.now()}` : `${url}?t=${Date.now()}`;
+      const cacheBustUrl = `${url}?t=${Date.now()}&_r=${Math.random().toString(36).substring(2, 7)}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
 
       const res = await fetch(cacheBustUrl, {
         method: 'GET',
@@ -266,7 +266,9 @@ export const fetchCloudSyncData = async (): Promise<CloudDataPayload | null> => 
         headers: { 
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
         }
       });
       clearTimeout(timeoutId);
@@ -274,7 +276,7 @@ export const fetchCloudSyncData = async (): Promise<CloudDataPayload | null> => 
       if (res.ok) {
         const data = await res.json();
         const payload = data.data || data;
-        if (payload && (Array.isArray(payload.clients) || Array.isArray(payload.payments))) {
+        if (payload && (Array.isArray(payload.clients) || Array.isArray(payload.payments) || Array.isArray(payload.attendance))) {
           return payload as CloudDataPayload;
         }
       }
@@ -286,7 +288,7 @@ export const fetchCloudSyncData = async (): Promise<CloudDataPayload | null> => 
   // 2. Direct Supabase Fallback (Only if /api/sync is unreachable)
   try {
     const supabaseData = await fetchFromSupabase();
-    if (supabaseData && (Array.isArray(supabaseData.clients) || Array.isArray(supabaseData.payments))) {
+    if (supabaseData && (Array.isArray(supabaseData.clients) || Array.isArray(supabaseData.payments) || Array.isArray(supabaseData.attendance))) {
       return supabaseData as CloudDataPayload;
     }
   } catch (e) {
@@ -298,7 +300,7 @@ export const fetchCloudSyncData = async (): Promise<CloudDataPayload | null> => 
 
 // Push Local Changes to Cloud (/api/sync Primary + Direct Supabase Fallback)
 export const pushCloudSyncData = async (payload: Omit<CloudDataPayload, 'lastUpdated'>): Promise<boolean> => {
-  if (typeof window === 'undefined' || !navigator.onLine) return false;
+  if (typeof window === 'undefined') return false;
 
   const dataWithTimestamp: CloudDataPayload = {
     ...payload,
@@ -310,15 +312,18 @@ export const pushCloudSyncData = async (payload: Omit<CloudDataPayload, 'lastUpd
   // 1. Primary Push to /api/sync (Performs server-side merge, writes to Supabase, and updates cache)
   for (const url of ENDPOINTS) {
     try {
+      const pushUrl = `${url}?t=${Date.now()}`;
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-      const res = await fetch(url, {
+      const res = await fetch(pushUrl, {
         method: 'POST',
         signal: controller.signal,
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache'
         },
         body: JSON.stringify(dataWithTimestamp)
       });
