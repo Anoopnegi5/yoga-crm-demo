@@ -682,19 +682,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
           setClients(prev => {
             const merged = mergeArraysById(prev, remote.clients || [], allDeleted);
-            // If local device has clients that are not yet in Cloud, auto-push to Cloud!
-            if (prev.length > (remote.clients?.length || 0)) {
-              pushCloudSyncData({
-                clients: merged,
-                payments,
-                trainerDreams,
-                trainerLeaves,
-                leaves,
-                attendance,
-                customGroupBatches,
-                deletedIds: allDeleted
-              });
-            }
             return merged;
           });
 
@@ -742,7 +729,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     runSync();
     
     // Smart Real-time Sync:
-    // 1. Sync immediately when tab becomes active / visible
+    // 1. Sync immediately when tab becomes active / visible / focused
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         runSync();
@@ -751,12 +738,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleVisibilityChange);
 
-    // 2. Gentle 90-Second Polling only when tab is actively visible
+    // 2. High-speed 5-Second Real-Time Polling across all devices
     const interval = setInterval(() => {
       if (!document.hidden) {
         runSync();
       }
-    }, 90000);
+    }, 5000);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
@@ -1276,7 +1263,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       leaves,
       attendance: updatedAttendance,
       customGroupBatches,
-      deletedIds,
+      deletedIds: deletedIdsRef.current,
       action: 'overwrite'
     } as any);
 

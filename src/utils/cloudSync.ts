@@ -198,27 +198,40 @@ export const normalizeBlog = (b: any): any => {
   };
 };
 
-// Smart Array Merging by Item ID (Deduplication) with Deletion Filtering
+// Smart Array Merging by Item ID (and ClientId_Date for Attendance) with Deletion Filtering
 export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedIds: string[] = []): any[] => {
   const map = new Map<string, any>();
   const deletedSet = new Set(deletedIds || []);
 
+  const getItemKey = (item: any): string => {
+    if (!item) return '';
+    // Attendance records are uniquely identified per client per date
+    if (item.clientId && item.date && item.status && item.amount === undefined && item.reason === undefined) {
+      return `att_${item.clientId}_${item.date}`;
+    }
+    return item.id || '';
+  };
+
   // Add local items (skipping deleted)
   (local || []).forEach(item => {
     if (item && item.id && !deletedSet.has(item.id)) {
-      map.set(item.id, item);
+      const key = getItemKey(item);
+      if (key) map.set(key, item);
     }
   });
 
-  // Merge remote items (skipping deleted)
+  // Merge remote items (skipping deleted) - remote update wins for latest device sync
   (remote || []).forEach(item => {
     if (item && item.id && !deletedSet.has(item.id)) {
-      if (!map.has(item.id)) {
-        map.set(item.id, item);
-      } else {
-        const localItem = map.get(item.id);
-        const merged = { ...localItem, ...item };
-        map.set(item.id, merged);
+      const key = getItemKey(item);
+      if (key) {
+        if (!map.has(key)) {
+          map.set(key, item);
+        } else {
+          const localItem = map.get(key);
+          const merged = { ...localItem, ...item };
+          map.set(key, merged);
+        }
       }
     }
   });
