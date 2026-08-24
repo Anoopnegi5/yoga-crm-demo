@@ -1229,11 +1229,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
 
     const newAttendanceRecord = {
-      id: existingRecord?.id || `att-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
       clientId,
       clientName: client.name,
       date: dateToUse,
-      status
+      status,
+      updatedAt: new Date().toISOString()
     };
 
     const updatedAttendance = [newAttendanceRecord, ...cleanPriorAttendance];

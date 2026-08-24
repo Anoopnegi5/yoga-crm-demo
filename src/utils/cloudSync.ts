@@ -198,7 +198,7 @@ export const normalizeBlog = (b: any): any => {
   };
 };
 
-// Smart Array Merging by Item ID (and ClientId_Date for Attendance) with Deletion Filtering
+// Smart Array Merging by Item ID (and ClientId_Date for Attendance) with Timestamp Conflict Resolution
 export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedIds: string[] = []): any[] => {
   const map = new Map<string, any>();
   const deletedSet = new Set(deletedIds || []);
@@ -212,25 +212,43 @@ export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedId
     return item.id || '';
   };
 
-  // Add local items (skipping deleted)
-  (local || []).forEach(item => {
+  const getTimestamp = (item: any): number => {
+    if (!item) return 0;
+    if (item.updatedAt) {
+      const t = new Date(item.updatedAt).getTime();
+      if (!isNaN(t)) return t;
+    }
+    if (typeof item.id === 'string') {
+      const match = item.id.match(/\d{10,13}/);
+      if (match) return parseInt(match[0], 10);
+    }
+    return 0;
+  };
+
+  // 1. Put all remote items first
+  (remote || []).forEach(item => {
     if (item && item.id && !deletedSet.has(item.id)) {
       const key = getItemKey(item);
       if (key) map.set(key, item);
     }
   });
 
-  // Merge remote items (skipping deleted) - remote update wins for latest device sync
-  (remote || []).forEach(item => {
+  // 2. Merge local items: if local has newer/equal timestamp, local action wins; otherwise remote wins
+  (local || []).forEach(item => {
     if (item && item.id && !deletedSet.has(item.id)) {
       const key = getItemKey(item);
       if (key) {
         if (!map.has(key)) {
           map.set(key, item);
         } else {
-          const localItem = map.get(key);
-          const merged = { ...localItem, ...item };
-          map.set(key, merged);
+          const remoteItem = map.get(key);
+          const localTs = getTimestamp(item);
+          const remoteTs = getTimestamp(remoteItem);
+          if (localTs >= remoteTs) {
+            map.set(key, { ...remoteItem, ...item });
+          } else {
+            map.set(key, { ...item, ...remoteItem });
+          }
         }
       }
     }
