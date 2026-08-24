@@ -621,21 +621,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setBlogs(mergedBlogs);
       setCustomGroupBatches(mergedBatches);
 
-      await pushCloudSyncData({
-        clients: mergedClients,
-        payments: mergedPayments,
-        trainerDreams: mergedDreams,
-        trainerLeaves: mergedTrainerLeaves,
-        leaves: mergedLeaves,
-        attendance: mergedAttendance,
-        blogs: mergedBlogs,
-        customGroupBatches: mergedBatches,
-        deletedIds: allDeleted,
-        action: 'overwrite'
-      } as any);
+      try {
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(mergedClients));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(mergedPayments));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(mergedAttendance));
+        safeStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(mergedLeaves));
+      } catch (e) {}
 
       setLastCloudSyncTime(new Date().toISOString());
-      showSuccessToast(`☁️ Cloud Synced! Total ${mergedClients.length} Clients Merged Across All Devices.`);
+      showSuccessToast(`☁️ Cloud Synced! Updated with live cloud database.`);
     } catch (e) {
       console.warn('Cloud sync error:', e);
     } finally {
