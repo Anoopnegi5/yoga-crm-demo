@@ -225,29 +225,31 @@ export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedId
     return 0;
   };
 
-  // 1. Put all remote items first
-  (remote || []).forEach(item => {
+  // 1. Put local items first
+  (local || []).forEach(item => {
     if (item && item.id && !deletedSet.has(item.id)) {
       const key = getItemKey(item);
       if (key) map.set(key, item);
     }
   });
 
-  // 2. Merge local items: if local has newer/equal timestamp, local action wins; otherwise remote wins
-  (local || []).forEach(item => {
+  // 2. Merge remote items over local items:
+  // Remote cloud data is the shared source of truth across all devices.
+  (remote || []).forEach(item => {
     if (item && item.id && !deletedSet.has(item.id)) {
       const key = getItemKey(item);
       if (key) {
         if (!map.has(key)) {
           map.set(key, item);
         } else {
-          const remoteItem = map.get(key);
-          const localTs = getTimestamp(item);
-          const remoteTs = getTimestamp(remoteItem);
-          if (localTs >= remoteTs) {
-            map.set(key, { ...remoteItem, ...item });
+          const localItem = map.get(key);
+          const localTs = getTimestamp(localItem);
+          const remoteTs = getTimestamp(item);
+          // If local action is strictly newer and happened within last 15 seconds, keep local; otherwise remote wins!
+          if (localTs > remoteTs && (Date.now() - localTs < 15000)) {
+            map.set(key, { ...item, ...localItem });
           } else {
-            map.set(key, { ...item, ...remoteItem });
+            map.set(key, { ...localItem, ...item });
           }
         }
       }
