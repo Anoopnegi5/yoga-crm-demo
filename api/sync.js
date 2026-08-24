@@ -12,7 +12,7 @@ function getSupabaseEnv() {
 let serverMemoryCache = null;
 let serverCacheTimestamp = 0;
 let lastKnownUpdatedAt = '';
-const CACHE_TTL_MS = 60000; // 60 seconds in-memory cache
+const CACHE_TTL_MS = 500; // 500ms low-latency debounce
 
 async function fetchFromSupabaseEnv() {
   if (serverMemoryCache && (Date.now() - serverCacheTimestamp < CACHE_TTL_MS)) {
@@ -358,7 +358,7 @@ export default async function handler(req, res) {
       const incomingClients = Array.isArray(payload.clients) ? payload.clients : [];
       const incomingPayments = Array.isArray(payload.payments) ? payload.payments : [];
 
-      const isOverwrite = payload.action === 'overwrite';
+      const isForceRestore = payload.action === 'force_restore';
 
       const combinedDeletedIds = Array.from(new Set([
         ...(currentBlobData.deletedIds || []),
@@ -366,19 +366,22 @@ export default async function handler(req, res) {
       ]));
 
       const incomingDreams = Array.isArray(payload.trainerDreams) ? payload.trainerDreams : [];
-      const mergedClients = isOverwrite 
+      const mergedClients = isForceRestore 
         ? incomingClients.map(normalizeClient).filter(c => c && !combinedDeletedIds.includes(c.id)) 
         : mergeClientLists(currentBlobData.clients || [], incomingClients, combinedDeletedIds);
-      const mergedPayments = isOverwrite 
+      const mergedPayments = isForceRestore 
         ? incomingPayments.filter(p => p && !combinedDeletedIds.includes(p.id) && !combinedDeletedIds.includes(p.clientId)) 
-        : mergeClientLists(currentBlobData.payments || [], incomingPayments, combinedDeletedIds);
-      const mergedDreams = isOverwrite 
+        : mergeGenericLists(currentBlobData.payments || [], incomingPayments, combinedDeletedIds, normalizePayment);
+      const mergedDreams = isForceRestore 
         ? incomingDreams.map(normalizeTrainerDream).filter(d => d && !combinedDeletedIds.includes(d.id)) 
         : mergeGenericLists(currentBlobData.trainerDreams || [], incomingDreams, combinedDeletedIds, normalizeTrainerDream);
-      const mergedLeaves = isOverwrite 
+      const mergedLeaves = isForceRestore 
         ? (payload.trainerLeaves || []).filter(tl => tl && !combinedDeletedIds.includes(tl.id)) 
         : mergeGenericLists(currentBlobData.trainerLeaves || [], payload.trainerLeaves || [], combinedDeletedIds);
-      const mergedAttendance = isOverwrite 
+      const mergedClientLeaves = isForceRestore
+        ? (payload.leaves || []).filter(l => l && !combinedDeletedIds.includes(l.id))
+        : mergeGenericLists(currentBlobData.leaves || [], payload.leaves || [], combinedDeletedIds);
+      const mergedAttendance = isForceRestore 
         ? (payload.attendance || []).map(normalizeAttendance).filter(a => a && !combinedDeletedIds.includes(a.id) && !combinedDeletedIds.includes(a.clientId)) 
         : mergeAttendanceLists(currentBlobData.attendance || [], payload.attendance || [], combinedDeletedIds);
 
@@ -387,19 +390,21 @@ export default async function handler(req, res) {
         ...(payload.deletedGroupBatches || [])
       ]));
 
-      const finalCustomGroupBatches = isOverwrite
+      const finalCustomGroupBatches = isForceRestore
         ? (Array.isArray(payload.customGroupBatches) ? payload.customGroupBatches : [])
-        : (Array.isArray(payload.customGroupBatches)
-            ? payload.customGroupBatches.filter(b => !incomingDeletedGroupBatches.includes(b))
-            : (currentBlobData.customGroupBatches || []).filter(b => !incomingDeletedGroupBatches.includes(b)));
+        : Array.from(new Set([
+            ...(currentBlobData.customGroupBatches || []).filter(b => !incomingDeletedGroupBatches.includes(b)),
+            ...(Array.isArray(payload.customGroupBatches) ? payload.customGroupBatches.filter(b => !incomingDeletedGroupBatches.includes(b)) : [])
+          ]));
 
       const mergedPayload = {
-        ...(isOverwrite ? {} : currentBlobData),
+        ...currentBlobData,
         ...payload,
         clients: mergedClients,
         payments: mergedPayments,
         trainerDreams: mergedDreams,
         trainerLeaves: mergedLeaves,
+        leaves: mergedClientLeaves,
         attendance: mergedAttendance,
         customGroupBatches: finalCustomGroupBatches,
         deletedGroupBatches: incomingDeletedGroupBatches,
