@@ -179,7 +179,8 @@ function normalizeAttendance(a) {
     clientName: a.clientName || 'Yoga Client',
     date: a.date || new Date().toISOString().split('T')[0],
     status: a.status || 'Present',
-    timeSlot: a.timeSlot || 'Morning'
+    timeSlot: a.timeSlot || 'Morning',
+    updatedAt: a.updatedAt || new Date().toISOString()
   };
 }
 

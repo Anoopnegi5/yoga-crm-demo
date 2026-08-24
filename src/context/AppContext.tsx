@@ -644,6 +644,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const isInitialFetchDoneRef = useRef(false);
+  const lastUserActionTimeRef = useRef<number>(0);
 
   const forcePushCloud = async () => {
     setIsSyncingCloud(true);
@@ -672,6 +673,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Initial Startup & 10-Second Background Real-Time Cloud Polling with Smart Push
   useEffect(() => {
     const runSync = () => {
+      // Pause background sync if user recently clicked or performed a mutation locally
+      if (Date.now() - lastUserActionTimeRef.current < 6000) {
+        return;
+      }
       fetchCloudSyncData().then(remote => {
         if (remote) {
           const allDeleted = Array.from(new Set([...deletedIdsRef.current, ...(remote.deletedIds || [])]));
@@ -1211,6 +1216,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
 
+    // Lock background sync to avoid in-flight race condition reverts
+    lastUserActionTimeRef.current = Date.now();
+
     const dateToUse = targetDateStr || getTodayDateString();
 
     const existingRecord = attendance.find(
@@ -1272,7 +1280,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       customGroupBatches,
       deletedIds: deletedIdsRef.current,
       action: 'overwrite'
-    } as any);
+    } as any).then(() => {
+      setTimeout(() => {
+        lastUserActionTimeRef.current = 0;
+      }, 1500);
+    });
 
     showSuccessToast(`Recorded ${status} for ${client.name}!`);
   };
