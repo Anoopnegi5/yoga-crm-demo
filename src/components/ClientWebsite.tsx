@@ -27,24 +27,23 @@ import {
   Compass, 
   Zap, 
   Sun, 
-  Moon, 
-  Feather, 
-  Smile, 
   Activity,
   Globe,
   Sparkle,
   Shield,
   Layers,
-  CheckCircle,
-  UserPlus,
-  FileText,
   BookOpen,
-  Calendar
+  Calendar,
+  ExternalLink,
+  TrendingUp,
+  Dumbbell,
+  Music,
+  CheckCircle
 } from 'lucide-react';
 import { Gender, SessionType, FeeType, BlogPost } from '../types';
 
 export const ClientWebsite: React.FC = () => {
-  const { addClient, setIsClientWebsiteMode, showSuccessToast, websiteCMS, blogs } = useApp();
+  const { addClient, showSuccessToast, websiteCMS, blogs } = useApp();
   const cms = websiteCMS || DEFAULT_WEBSITE_CMS;
 
   // URL check for Share Demo / Join Link (/join, /demo, ?demo=true, ?join=true)
@@ -57,34 +56,17 @@ export const ClientWebsite: React.FC = () => {
 
   // State
   const [activeTab, setActiveTab] = useState<'home' | 'register' | 'leaderboard' | 'myProfile'>('home');
+  const [selectedStudioCategory, setSelectedStudioCategory] = useState<'yoga' | 'gym' | 'dance' | 'martial' | 'fitness'>('yoga');
   const [isDemoModalOpen, setIsDemoModalOpen] = useState(isJoinLink);
   const [selectedGoalForModal, setSelectedGoalForModal] = useState('');
   const [selectedProgramForModal, setSelectedProgramForModal] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedFaqIndex, setExpandedFaqIndex] = useState<number | null>(0);
-  const [activeGoalCard, setActiveGoalCard] = useState<string | null>(null);
 
   // Blog State
   const [selectedBlogForModal, setSelectedBlogForModal] = useState<BlogPost | null>(null);
   const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
   const [blogFilterCategory, setBlogFilterCategory] = useState<string>('All');
-
-  // Full Onboarding Form State
-  const [name, setName] = useState('');
-  const [gender, setGender] = useState<Gender>('Female');
-  const [phone, setPhone] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
-  const [address, setAddress] = useState('');
-  const [classTime, setClassTime] = useState('07:00 AM');
-  const [selectedDays, setSelectedDays] = useState<string[]>(['Mon', 'Wed', 'Fri']);
-  const [sessionType, setSessionType] = useState<SessionType>('Group');
-  const [groupName, setGroupName] = useState('Morning Vinyasa Batch');
-  const [feeType, setFeeType] = useState<FeeType>('Monthly');
-  const [monthlyFee, setMonthlyFee] = useState<number>(10000);
-  const [perSessionFee, setPerSessionFee] = useState<number>(1000);
-  const [selectedGoals, setSelectedGoals] = useState<string[]>(['Flexibility & Posture', 'Stress Relief & Peace']);
-  const [healthNotes, setHealthNotes] = useState('');
-  const [registrationSubmitted, setRegistrationSubmitted] = useState(false);
 
   // Auto-open modal if opened via Share Join link
   useEffect(() => {
@@ -135,282 +117,185 @@ export const ClientWebsite: React.FC = () => {
   };
 
   const handleDirectWhatsAppChat = (customText?: string) => {
-    const defaultMsg = customText || `Hi! 👋 I found your website ${cms.brandName || 'Yoga Studio'} and would like to chat about yoga classes. 🌿`;
+    const defaultMsg = customText || `Hi! 👋 I would like to know more about classes and trial sessions at ${cms.brandName || 'Studio'}. 🌿`;
     const waNumber = (cms.displayPhone || SITE_CONFIG.whatsappNumber).replace(/[^0-9]/g, '');
     window.open(`https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(defaultMsg)}`, '_blank');
   };
 
-  const handleFullRegistrationSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !phone) {
-      alert('Please fill out your Name and Phone number.');
-      return;
-    }
+  const studioCategories = [
+    { id: 'yoga', label: 'Yoga & Meditation', icon: '🧘', desc: 'Live flows, pranayama & restorative sessions' },
+    { id: 'gym', label: 'Gym & Fitness', icon: '🏋️', desc: 'Strength training, HIIT & body conditioning' },
+    { id: 'dance', label: 'Dance Academy', icon: '💃', desc: 'Kathak, contemporary, salsa & freestyle' },
+    { id: 'martial', label: 'Martial Arts & MMA', icon: '🥋', desc: 'Karate, boxing, self-defense & discipline' },
+    { id: 'fitness', label: 'Pilates & Wellness', icon: '✨', desc: 'Core posture, flexibility & holistic health' },
+  ];
 
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    // Feed Client Data into AppContext & localStorage
-    await addClient({
-      name,
-      gender,
-      phone,
-      whatsapp: whatsapp || phone,
-      address: address || 'Online Resident',
-      joiningDate: todayStr,
-      photoUrl: `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(name)}`,
-      classTime,
-      days: selectedDays,
-      timeSlot: parseInt(classTime, 10) < 12 ? 'Morning' : 'Evening',
-      sessionType,
-      groupName: sessionType === 'Group' ? groupName : 'Personal Session',
-      reasonsForJoining: selectedGoals,
-      currentProblems: healthNotes ? [healthNotes] : [],
-      feeType,
-      monthlyFee: feeType === 'Monthly' ? monthlyFee : 0,
-      perSessionFee: feeType === 'Per Session' ? perSessionFee : undefined,
-      feeDueDate: '5th',
-      membershipPlan: feeType === 'Monthly' ? '12 Classes' : 'Per Session',
-      totalClasses: feeType === 'Monthly' ? 12 : 1,
-      trainerNotes: `Self-Registered via Shareable Link on ${todayStr}. Health Notes: ${healthNotes || 'None'}`,
-      goal: selectedGoals.join(', ') || 'Overall Wellness'
-    });
-
-    setRegistrationSubmitted(true);
-    showSuccessToast(`🎉 Client Data fed successfully! Welcome ${name} to ${cms.brandName || 'our Studio'}.`);
-
-    // Send WhatsApp confirmation to Instructor
-    const message = `Hi! 👋\n\nI have completed my Client Registration details for ${cms.brandName || 'Yoga Studio'}.\n\n• Name: ${name}\n• Phone/WhatsApp: ${phone}\n• Session Choice: ${sessionType} (${classTime})\n• Days: ${selectedDays.join(', ')}\n• Goals: ${selectedGoals.join(', ')}\n• Health Notes: ${healthNotes || 'None'}\n\nPlease review my profile. 🧘🌿`;
-    const waNumber = (cms.displayPhone || SITE_CONFIG.whatsappNumber).replace(/[^0-9]/g, '');
-    window.open(`https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(message)}`, '_blank');
-  };
-
-  const toggleDay = (day: string) => {
-    setSelectedDays(prev => 
-      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
-    );
-  };
-
-  const toggleGoal = (goal: string) => {
-    setSelectedGoals(prev => 
-      prev.includes(goal) ? prev.filter(g => g !== goal) : [...prev, goal]
-    );
-  };
-
-  // Section 8: Goal-Based Yoga Interactive Data
   const goalsData = [
     {
       id: 'weight',
-      title: 'Weight Management',
+      title: 'Weight & Fat Loss',
       icon: '🔥',
       themeColor: 'from-amber-500 to-rose-600',
-      badgeBg: 'bg-amber-100 text-amber-800 border-amber-200',
-      desc: 'Yoga supports healthy body composition when combined with active posture flows, metabolic breathing, and consistent practice.'
+      badgeBg: 'bg-amber-50 text-amber-900 border-amber-200',
+      desc: 'Active functional flows, metabolic interval conditioning, and consistent habit tracking for sustainable fat loss.'
     },
     {
       id: 'flexibility',
-      title: 'Flexibility & Posture',
+      title: 'Flexibility & Alignment',
       icon: '🧘‍♀️',
       themeColor: 'from-emerald-500 to-teal-700',
-      badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      desc: 'Gradual, gentle stretching designed to release tight hamstrings, hips, and shoulders at your body\'s natural pace.'
+      badgeBg: 'bg-emerald-50 text-emerald-900 border-emerald-200',
+      desc: 'Gradual, guided mobility routines designed to release tight hamstrings, hips, and shoulders at your natural pace.'
     },
     {
       id: 'strength',
-      title: 'Core & Body Strength',
+      title: 'Functional Body Strength',
       icon: '💪',
       themeColor: 'from-indigo-600 to-purple-700',
-      badgeBg: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      desc: 'Bodyweight postures and holds that build functional core strength, muscle tone, and joint stability without heavy weights.'
+      badgeBg: 'bg-indigo-50 text-indigo-900 border-indigo-200',
+      desc: 'Core strength holds and bodyweight stability postures that build toned muscle without unnatural joint strain.'
     },
     {
       id: 'stress',
-      title: 'Stress Relief & Peace',
+      title: 'Stress Relief & Mindfulness',
       icon: '🌿',
-      themeColor: 'from-[#4A5D3E] to-[#2D3B27]',
-      badgeBg: 'bg-green-100 text-green-800 border-green-200',
-      desc: 'Calming pranayama breathwork and guided relaxation to soothe the nervous system and clear mental fatigue.'
+      themeColor: 'from-teal-600 to-emerald-800',
+      badgeBg: 'bg-teal-50 text-teal-900 border-teal-200',
+      desc: 'Deep breathing techniques, mindfulness routines, and restorative relaxation to ease nervous tension and mental fatigue.'
     },
     {
       id: 'pcos',
-      title: 'PCOS & Hormonal Care',
+      title: 'PCOS & Hormonal Balance',
       icon: '🌸',
       themeColor: 'from-pink-500 to-rose-600',
-      badgeBg: 'bg-pink-100 text-pink-800 border-pink-200',
-      desc: 'Targeted pelvic circulation postures and stress-reduction techniques designed to complement your endocrine health.'
-    },
-    {
-      id: 'thyroid',
-      title: 'Thyroid Wellness',
-      icon: '✨',
-      themeColor: 'from-cyan-500 to-blue-600',
-      badgeBg: 'bg-cyan-100 text-cyan-800 border-cyan-200',
-      desc: 'Supported neck and throat posture work combined with gentle metabolic movement to complement overall well-being.'
+      badgeBg: 'bg-pink-50 text-pink-900 border-pink-200',
+      desc: 'Targeted pelvic circulation movement and stress-regulation protocols designed to complement endocrine health.'
     },
     {
       id: 'backpain',
-      title: 'Back Pain Relief',
+      title: 'Back & Neck Pain Care',
       icon: '🦴',
-      themeColor: 'from-orange-500 to-[#3F4D2A]',
-      badgeBg: 'bg-orange-100 text-orange-800 border-orange-200',
-      desc: 'Gentle spinal decompression, core strengthening, and posture realignment to support lower and upper back comfort.'
-    },
-    {
-      id: 'sciatica',
-      title: 'Sciatica Relief',
-      icon: '⚡',
-      themeColor: 'from-yellow-500 to-amber-600',
-      badgeBg: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      desc: 'Mindful hip openers and glute stretches focused on easing sciatic nerve tension and improving mobility.'
-    },
-    {
-      id: 'mobility',
-      title: 'Joint Mobility',
-      icon: '🔄',
-      themeColor: 'from-teal-500 to-emerald-700',
-      badgeBg: 'bg-teal-100 text-teal-800 border-teal-200',
-      desc: 'Joint mobility drills that improve your daily range of motion, reducing stiffness from long sitting hours.'
-    },
-    {
-      id: 'beginner',
-      title: 'Beginner Foundation',
-      icon: '🌱',
-      themeColor: 'from-lime-600 to-[#3F4D2A]',
-      badgeBg: 'bg-lime-100 text-lime-800 border-lime-200',
-      desc: 'Step-by-step foundation classes explaining alignment, breathing, and modifications for absolute beginners.'
+      themeColor: 'from-orange-500 to-emerald-800',
+      badgeBg: 'bg-orange-50 text-orange-900 border-orange-200',
+      desc: 'Gentle spinal decompression, core bracing, and posture realignment to relieve discomfort from long desk hours.'
     }
   ];
 
-  // Section 13: FAQ Data
   const faqs = [
     {
-      q: "Do I need previous yoga experience?",
-      a: "No. Sessions can be adapted for complete beginners as well as students with previous yoga experience."
+      q: "Can this system be used for Gyms, Dance Academies, and Yoga Studios?",
+      a: "Yes, absolutely! The platform is 100% versatile and customizable. You can adjust batch names, pricing, instructor details, attendance styles, and branding in 1 click from the Settings panel."
     },
     {
-      q: "Are the classes online?",
-      a: "Yes. Classes are conducted live online."
+      q: "How does the Free 1-Day Demo / Trial work?",
+      a: "Students click the Free Demo button, submit their preferred time slot and goal, and receive instant confirmation with direct WhatsApp connectivity to the instructor."
     },
     {
-      q: "How long is each session?",
-      a: "Each personal session is 60 minutes."
+      q: "Can members view their attendance and fee status on mobile?",
+      a: "Yes! Every student gets a branded Yogi & Member Profile Link where they can view their monthly attendance calendar, payment status, fee receipts, and submit leave requests."
     },
     {
-      q: "How many days should I practice?",
-      a: "The recommended frequency depends on your goals, schedule and current fitness level."
+      q: "Is there support for both 1-on-1 personal training and group batches?",
+      a: "Yes. Trainers can manage multiple morning and evening group batches alongside dedicated 1-on-1 personal coaching clients with individualized logs."
     },
     {
-      q: "Do you offer one-on-one classes?",
-      a: "Yes. Personalized one-on-one online yoga sessions are available."
-    },
-    {
-      q: "Do you offer group classes?",
-      a: "Yes, group classes are also available depending on the current schedule."
-    },
-    {
-      q: "Can yoga help with weight management?",
-      a: "Yoga can support an active and healthy lifestyle. Your practice can be combined with movement, mindful eating and consistent lifestyle habits."
-    },
-    {
-      q: "Can I join if I have back pain or other concerns?",
-      a: "Please share your condition before starting. Sessions can be modified according to individual needs, and medical advice should be followed where appropriate."
-    },
-    {
-      q: "How can I book a class?",
-      a: "Click the Free Demo button, fill in your details and connect with our instructor on WhatsApp."
+      q: "Do I need technical skills to edit website content or pricing?",
+      a: "No technical knowledge required! The built-in CMS & Settings panel allows instructors and studio owners to update photos, headlines, pricing packages, and announcements in real time."
     }
   ];
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-gradient-to-b from-[#FAF7F2] via-[#F3EDE2] to-[#EBE2D3] text-slate-900 font-sans selection:bg-[#4A5D3E]/20 selection:text-[#2D3B27] pb-24 md:pb-12 relative">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#0A0F1D] text-slate-100 font-sans selection:bg-emerald-500/30 selection:text-emerald-300 pb-20 relative">
       
-      {/* Decorative Background Gradient Orbs */}
-      <div className="absolute top-0 left-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-emerald-300/20 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse overflow-hidden" />
-      <div className="absolute top-1/3 right-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-amber-200/25 rounded-full blur-3xl pointer-events-none -z-10 overflow-hidden" />
+      {/* Background Subtle Mesh Gradients */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-emerald-600/10 blur-[120px]" />
+        <div className="absolute top-[30%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-indigo-600/10 blur-[140px]" />
+        <div className="absolute bottom-[-10%] left-[20%] w-[40vw] h-[40vw] rounded-full bg-amber-500/5 blur-[120px]" />
+      </div>
 
-      {/* Share Link Welcome Notice Banner */}
-      {isJoinLink && (
-        <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-900 text-white px-4 py-3 text-center text-xs font-bold shadow-md flex items-center justify-center gap-2">
-          <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
-          <span>Welcome! You are on the Official Client Self-Registration Form for {cms.brandName || 'our Studio'} with {cms.instructorName || 'our Instructor'}.</span>
-          <button 
-            onClick={() => openDemoModal()}
-            className="ml-2 px-3 py-1 bg-white text-purple-900 font-extrabold rounded-full hover:bg-amber-100 transition-colors shadow-sm"
-          >
-            📝 Fill Demo Form
-          </button>
-        </div>
-      )}
+      {/* Top Announcement Bar */}
+      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-indigo-950 border-b border-emerald-800/30 py-2.5 px-4 text-center text-xs font-bold text-emerald-200 flex items-center justify-center gap-2 shadow-sm">
+        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+        <span>{cms.announcementBar || "🌸 1-Day Free Trial Available • Book Your Live Demo Session Today"}</span>
+        <button 
+          onClick={() => openDemoModal()}
+          className="ml-2 px-3 py-0.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 font-extrabold text-[11px] transition-all"
+        >
+          Book Now →
+        </button>
+      </div>
 
       {/* ================================================== */}
-      {/* 1. TOP HEADER / NAVIGATION */}
+      {/* 1. TOP HEADER / MODERN GLASS NAVBAR */}
       {/* ================================================== */}
-      <header className="sticky top-0 z-50 bg-[#FAF7F2]/95 backdrop-blur-2xl border-b border-[#E3D9C6] px-4 sm:px-8 py-3 shadow-md transition-all">
+      <header className="sticky top-0 z-50 bg-[#0A0F1D]/85 backdrop-blur-2xl border-b border-white/10 px-4 sm:px-8 py-3.5 shadow-2xl transition-all">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           
-          {/* Brand Logo */}
-          <a href="#home" className="flex items-center gap-3 group">
-            <img 
-              src={SITE_CONFIG.logoImage} 
-              alt="Studio Brand Logo" 
-              className="w-11 h-11 rounded-2xl object-cover ring-2 ring-emerald-600/30 shadow-md group-hover:scale-105 transition-all bg-white p-0.5" 
-            />
+          {/* Brand Logo & Title */}
+          <a href="#home" className="flex items-center gap-3.5 group">
+            <div className="relative">
+              <div className="absolute -inset-1 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 opacity-40 blur-sm group-hover:opacity-75 transition-all" />
+              <img 
+                src={SITE_CONFIG.logoImage} 
+                alt="Studio Logo" 
+                className="relative w-11 h-11 rounded-2xl object-cover ring-1 ring-white/20 shadow-md bg-slate-900 p-0.5" 
+              />
+            </div>
             <div>
-              <span className="font-serif font-extrabold text-2xl tracking-wide bg-gradient-to-r from-[#2D3B27] via-[#4A5D3E] to-[#789A65] bg-clip-text text-transparent block leading-none">
-                {SITE_CONFIG.brandName}
+              <span className="font-serif font-black text-xl sm:text-2xl tracking-wide bg-gradient-to-r from-white via-slate-100 to-emerald-300 bg-clip-text text-transparent block leading-none">
+                {cms.brandName || SITE_CONFIG.brandName}
               </span>
-              <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-800/80 block mt-0.5">
-                By {SITE_CONFIG.instructorName}
+              <span className="text-[10px] uppercase font-bold tracking-widest text-emerald-400 block mt-1">
+                Studio & Member Hub
               </span>
             </div>
           </a>
 
           {/* Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-7 text-xs font-bold text-slate-700">
-            <button 
-              onClick={() => setActiveTab('home')}
-              className={`transition-colors ${activeTab === 'home' ? 'text-[#4A5D3E] font-extrabold' : 'hover:text-[#4A5D3E]'}`}
-            >
-              Home
-            </button>
-            <a href="#about" className="hover:text-[#4A5D3E] transition-colors">About</a>
-            <a href="#classes" className="hover:text-[#4A5D3E] transition-colors">Classes</a>
-            <a href="#benefits" className="hover:text-[#4A5D3E] transition-colors">Why Choose Us</a>
-            <a href="#goals" className="hover:text-[#4A5D3E] transition-colors">Goal Programs</a>
-            <a href="#blog" className="hover:text-[#4A5D3E] transition-colors flex items-center gap-1">
-              <span>Blog</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-            </a>
-            <a href="#testimonials" className="hover:text-[#4A5D3E] transition-colors">Reviews</a>
-            <a href="#faq" className="hover:text-[#4A5D3E] transition-colors">FAQ</a>
+          <nav className="hidden lg:flex items-center gap-8 text-xs font-bold text-slate-300">
+            <a href="#home" className="hover:text-emerald-400 transition-colors">Home</a>
+            <a href="#categories" className="hover:text-emerald-400 transition-colors">Disciplines</a>
+            <a href="#programs" className="hover:text-emerald-400 transition-colors">Programs</a>
+            <a href="#benefits" className="hover:text-emerald-400 transition-colors">Why Us</a>
+            <a href="#goals" className="hover:text-emerald-400 transition-colors">Goals</a>
+            <a href="#about" className="hover:text-emerald-400 transition-colors">Instructor</a>
+            <a href="#testimonials" className="hover:text-emerald-400 transition-colors">Reviews</a>
+            <a href="#faq" className="hover:text-emerald-400 transition-colors">FAQ</a>
           </nav>
 
-          {/* Right Action Buttons (Desktop & Laptop screens only - 1024px+) */}
+          {/* Right Actions */}
           <div className="hidden lg:flex items-center gap-3">
-            
-            {/* WhatsApp Icon Button */}
+            <a
+              href="/panel"
+              className="px-4 py-2.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/15 text-slate-200 font-extrabold text-xs transition-all flex items-center gap-1.5"
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
+              <span>Trainer CRM</span>
+            </a>
+
             <button
               onClick={() => handleDirectWhatsAppChat()}
-              className="p-2.5 rounded-2xl bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 text-emerald-700 transition-all border border-emerald-200/80 shadow-sm hover:scale-105"
+              className="p-2.5 rounded-2xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition-all shadow-sm"
               title="Chat on WhatsApp"
             >
-              <MessageCircle className="w-4 h-4 text-emerald-600" />
+              <MessageCircle className="w-4 h-4" />
             </button>
 
-            {/* Primary CTA Button */}
             <button
               onClick={() => openDemoModal()}
-              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#4A5D3E] via-[#3F4D2A] to-[#2D3B27] hover:from-emerald-800 hover:to-[#2D3B27] text-white font-extrabold text-xs shadow-md shadow-emerald-950/20 hover:scale-105 active:scale-95 transition-all"
+              className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/25 hover:scale-105 active:scale-95 transition-all"
             >
               FREE DEMO CLASS
             </button>
           </div>
 
-          {/* Mobile Menu Controls */}
+          {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 lg:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-2xl bg-white border border-[#E3D9C6] text-slate-700 shadow-sm"
-              aria-label="Toggle Navigation Menu"
+              className="p-2 rounded-2xl bg-white/10 border border-white/15 text-slate-200 shadow-sm"
+              aria-label="Toggle Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -418,37 +303,35 @@ export const ClientWebsite: React.FC = () => {
 
         </div>
 
-        {/* Mobile Dropdown Menu */}
+        {/* Mobile Dropdown */}
         {mobileMenuOpen && (
-          <div className="lg:hidden mt-3 p-5 bg-white/95 backdrop-blur-xl rounded-3xl border border-[#E3D9C6] shadow-2xl space-y-3 text-xs font-bold text-slate-800 animate-fadeIn">
-            <a href="#home" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Home</a>
-            <a href="#about" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">About Instructor</a>
-            <a href="#classes" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Yoga Programs</a>
-            <a href="#benefits" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Why Choose Us</a>
-            <a href="#goals" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Targeted Goal Programs</a>
-            <a href="#blog" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-emerald-800 font-extrabold flex items-center justify-between">
-              <span>🌿 Yoga Blog & Guides</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-[10px] text-emerald-900">New</span>
-            </a>
-            <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Student Reviews</a>
-            <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">FAQ</a>
+          <div className="lg:hidden mt-3 p-5 bg-[#0F172A]/95 backdrop-blur-2xl rounded-3xl border border-white/15 shadow-2xl space-y-3 text-xs font-bold text-slate-200 animate-fadeIn">
+            <a href="#home" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-400">Home</a>
+            <a href="#categories" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-400">Disciplines & Studio Types</a>
+            <a href="#programs" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-400">Classes & Programs</a>
+            <a href="#benefits" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-400">Why Choose Us</a>
+            <a href="#goals" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-400">Targeted Goals</a>
+            <a href="#about" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-400">About Instructor</a>
+            <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-400">Reviews & Results</a>
+            <a href="#faq" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-400">FAQ</a>
             
-            <div className="pt-3 border-t border-slate-100 flex items-center gap-2 justify-between">
+            <div className="pt-3 border-t border-white/10 space-y-2">
+              <a
+                href="/panel"
+                className="w-full py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 border border-white/15"
+              >
+                <Zap className="w-3.5 h-3.5 text-amber-400" />
+                Open Trainer CRM Panel
+              </a>
+
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
                   openDemoModal();
                 }}
-                className="flex-1 py-2.5 rounded-2xl bg-gradient-to-r from-[#4A5D3E] to-[#2D3B27] text-white font-extrabold text-xs shadow-md text-center"
+                className="w-full py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs shadow-md text-center"
               >
                 FREE DEMO CLASS
-              </button>
-
-              <button
-                onClick={() => handleDirectWhatsAppChat()}
-                className="px-4 py-2.5 rounded-2xl bg-emerald-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md"
-              >
-                <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
               </button>
             </div>
           </div>
@@ -456,1073 +339,682 @@ export const ClientWebsite: React.FC = () => {
       </header>
 
       {/* ================================================== */}
-      {/* HERO SECTION */}
+      {/* 2. HERO SECTION */}
       {/* ================================================== */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-8 space-y-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 pt-8 space-y-24">
         
-        <section id="home" className="pt-6 pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-          
-          {/* Hero Content Left */}
-          <div className="lg:col-span-7 space-y-6">
+        <section id="home" className="pt-6 pb-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
-            {/* Top Pill Badge */}
-            <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-100 via-amber-100 to-rose-100 border border-emerald-300/50 text-[#2D3B27] text-xs font-extrabold shadow-sm">
-              <Sparkles className="w-3.5 h-3.5 text-amber-600 animate-spin" />
-              <span>{cms.heroTagline}</span>
-            </div>
-
-            {/* Main Editorial Headline */}
-            <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-extrabold text-[#2D3B27] tracking-tight leading-[1.1] drop-shadow-sm">
-              {cms.heroTitle}
-            </h1>
-
-            {/* Supporting Headline & Subheading */}
-            <div className="space-y-3">
-              <p className="text-slate-700 text-sm sm:text-base leading-relaxed max-w-xl font-medium">
-                {cms.heroSubtitle}
-              </p>
-            </div>
-
-            {/* Glowing CTAs */}
-            <div className="flex flex-wrap items-center gap-4 pt-2">
-              <button
-                onClick={() => openDemoModal()}
-                className="px-8 py-4 rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-[#2D3B27] hover:from-emerald-500 hover:to-[#2D3B27] text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-emerald-950/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5"
-              >
-                <Sparkle className="w-4 h-4 text-amber-300 fill-amber-300" />
-                <span>JOIN FREE DEMO CLASS</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={() => handleDirectWhatsAppChat()}
-                className="px-7 py-4 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-extrabold text-xs sm:text-sm shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-              >
-                <MessageCircle className="w-4.5 h-4.5" />
-                <span>CHAT ON WHATSAPP</span>
-              </button>
-            </div>
-
-            {/* Trust Indicators */}
-            <div className="pt-6 border-t border-[#E3D9C6] grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-extrabold text-[#2D3B27]">
-              <div className="flex items-center gap-2 p-2 rounded-2xl bg-white/60 border border-white/80 shadow-sm">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Certified Instructor</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-2xl bg-white/60 border border-white/80 shadow-sm">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Personalized Online</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-2xl bg-white/60 border border-white/80 shadow-sm">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Beginner Friendly</span>
-              </div>
-              <div className="flex items-center gap-2 p-2 rounded-2xl bg-white/60 border border-white/80 shadow-sm">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>1-Day Free Trial</span>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Hero Visual Right */}
-          <div className="lg:col-span-5 relative">
-            <div className="relative mx-auto max-w-md lg:max-w-none">
+            {/* Hero Left Content */}
+            <div className="lg:col-span-7 space-y-6">
               
-              {/* Outer Decorative Gradient Frames */}
-              <div className="absolute -top-6 -left-6 w-full h-full rounded-[3rem] bg-gradient-to-tr from-amber-400/30 via-emerald-400/20 to-rose-400/20 -z-10 blur-xl" />
-              <div className="absolute -bottom-4 -right-4 w-full h-full rounded-[3rem] bg-gradient-to-br from-[#4A5D3E] to-[#2D3B27] opacity-20 -z-10" />
-
-              <img
-                src={cms.heroImage || SITE_CONFIG.heroImage}
-                alt="Certified Yoga Instructor"
-                className="w-full h-[450px] sm:h-[530px] object-cover rounded-[3rem] shadow-2xl border-4 border-white"
-              />
-              
-              {/* Floating Live Badge 1 */}
-              <div className="absolute top-6 -left-4 sm:-left-6 bg-white/95 backdrop-blur-xl p-3.5 rounded-2xl shadow-xl border border-white/80 flex items-center gap-3 animate-bounce-slow">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500 to-rose-500 text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md">
-                  ⭐
-                </div>
-                <div>
-                  <h4 className="font-serif font-extrabold text-xs text-[#2D3B27]">5.0 Star Rated</h4>
-                  <p className="text-[10px] text-emerald-700 font-bold">100+ Happy Students</p>
-                </div>
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-extrabold shadow-sm backdrop-blur-md">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-spin" />
+                <span>ALL-IN-ONE STUDIO CRM & MEMBER PORTAL</span>
               </div>
 
-              {/* Floating Live Badge 2 */}
-              <div className="absolute bottom-6 right-4 sm:-right-4 bg-white/95 backdrop-blur-xl p-4 rounded-2xl shadow-xl border border-white/80 flex items-center gap-3 max-w-xs">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md">
-                  🌿
-                </div>
-                <div>
-                  <h4 className="font-serif font-extrabold text-xs text-[#2D3B27]">Live 1-on-1 Guidance</h4>
-                  <p className="text-[10px] text-slate-600 font-medium">Practice safely from the comfort of home</p>
-                </div>
-              </div>
+              {/* Main Headline */}
+              <h1 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-black text-white tracking-tight leading-[1.08]">
+                Transform Your Body. <br />
+                <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 bg-clip-text text-transparent">
+                  Master Daily Mindful Practice.
+                </span>
+              </h1>
 
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ================================================== */}
-      {/* 5. LUXURY TRUST & EXPERIENCE SECTION: WHY CHOOSE US */}
-      {/* ================================================== */}
-      <section id="benefits" className="py-24 my-10 relative overflow-hidden bg-gradient-to-br from-[#162212] via-[#263720] to-[#121B0E] text-white rounded-[3.5rem] border-2 border-emerald-500/20 shadow-2xl">
-        
-        {/* Ambient Glow Orbs */}
-        <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-6 sm:px-12 space-y-16 relative z-10">
-          
-          {/* Section Editorial Header */}
-          <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <span className="text-xs font-black uppercase tracking-widest text-amber-300 bg-amber-400/20 px-5 py-2 rounded-full border border-amber-300/30 inline-flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-              THE STUDIO EXPERIENCE
-            </span>
-            <h2 className="font-serif text-4xl sm:text-6xl text-white font-extrabold tracking-tight leading-tight">
-              {cms.whyTitle || "Why Choose Us?"}
-            </h2>
-            <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-              {cms.whySubtitle || "Experience authentic, personalized yoga tailored around your unique body, goals and schedule."}
-            </p>
-          </div>
-
-          {/* 4 Glassmorphism Feature Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            
-            <div className="bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 space-y-4 shadow-xl hover:bg-white/10 hover:border-emerald-400/40 hover:-translate-y-2 transition-all duration-300 group">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-lg shadow-emerald-950/40 group-hover:scale-110 transition-transform">
-                <Compass className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="font-serif font-extrabold text-2xl text-white">Personalized Guidance</h3>
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                Every flow is tailored around your individual body alignment, strength levels, and fitness aspirations.
+              {/* Subtitle */}
+              <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-xl font-normal">
+                {cms.heroSubtitle || "Personalized live online and studio classes with automated member tracking, attendance journals, and progress goals."}
               </p>
-            </div>
-
-            <div className="bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 space-y-4 shadow-xl hover:bg-white/10 hover:border-amber-400/40 hover:-translate-y-2 transition-all duration-300 group">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-lg shadow-amber-950/40 group-hover:scale-110 transition-transform">
-                <Smile className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="font-serif font-extrabold text-2xl text-white">Beginner Friendly</h3>
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                Never stepped on a yoga mat before? No problem. We start gently with complete patience and zero pressure.
-              </p>
-            </div>
-
-            <div className="bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 space-y-4 shadow-xl hover:bg-white/10 hover:border-rose-400/40 hover:-translate-y-2 transition-all duration-300 group">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white flex items-center justify-center shadow-lg shadow-rose-950/40 group-hover:scale-110 transition-transform">
-                <Target className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="font-serif font-extrabold text-2xl text-white">Goal Based Practice</h3>
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                Whether your goal is weight loss, flexibility, PCOS management or back pain relief, your journey is customized.
-              </p>
-            </div>
-
-            <div className="bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 space-y-4 shadow-xl hover:bg-white/10 hover:border-purple-400/40 hover:-translate-y-2 transition-all duration-300 group">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 text-white flex items-center justify-center shadow-lg shadow-purple-950/40 group-hover:scale-110 transition-transform">
-                <Globe className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="font-serif font-extrabold text-2xl text-white">Online Convenience</h3>
-              <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                Enjoy high-energy live 1-on-1 and group sessions right from the comfort and privacy of your home.
-              </p>
-            </div>
-
-          </div>
-
-          {/* Studio Stats Live Highlight Bar */}
-          <div className="pt-8 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div className="space-y-1">
-              <h4 className="font-serif text-3xl font-extrabold text-amber-300">100+</h4>
-              <p className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Active Practitioners</p>
-            </div>
-            <div className="space-y-1">
-              <h4 className="font-serif text-3xl font-extrabold text-emerald-400">5.0 ★</h4>
-              <p className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Student Satisfaction</p>
-            </div>
-            <div className="space-y-1">
-              <h4 className="font-serif text-3xl font-extrabold text-teal-300">98%</h4>
-              <p className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Batch Regularity</p>
-            </div>
-            <div className="space-y-1">
-              <h4 className="font-serif text-3xl font-extrabold text-rose-300">100%</h4>
-              <p className="text-[11px] font-bold text-slate-300 uppercase tracking-wider">Personal Attention</p>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ================================================== */}
-      {/* 6. ABOUT INSTRUCTOR SECTION */}
-      {/* ================================================== */}
-      <section id="about" className="py-16 relative">
-        
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
-          
-          {/* Photo Left */}
-          <div className="lg:col-span-5 relative">
-            <div className="relative mx-auto max-w-md lg:max-w-none">
-              <div className="absolute -bottom-6 -right-6 w-full h-full rounded-[3rem] bg-gradient-to-br from-amber-300/40 via-emerald-300/30 to-[#4A5D3E]/30 -z-10 blur-md" />
-              <img
-                src={cms.aboutImage || SITE_CONFIG.aboutImage}
-                alt="Certified Yoga Instructor"
-                className="w-full h-[480px] object-cover rounded-[3rem] shadow-2xl border-4 border-white"
-              />
-            </div>
-          </div>
-
-          {/* Bio Right */}
-          <div className="lg:col-span-7 space-y-6">
-            
-            <div className="space-y-2">
-              <span className="text-xs font-black uppercase tracking-widest text-emerald-800 bg-emerald-100 px-3.5 py-1 rounded-full border border-emerald-200 inline-block">
-                MEET YOUR INSTRUCTOR
-              </span>
-              <h2 className="font-serif text-4xl sm:text-6xl font-extrabold text-[#2D3B27]">{cms.aboutTitle}</h2>
-            </div>
-
-            <div className="space-y-4 text-slate-700 text-sm sm:text-base leading-relaxed font-sans font-medium">
-              <p className="font-serif text-xl text-[#2D3B27] font-bold leading-normal italic">
-                {cms.aboutQuote}
-              </p>
-              <p>{cms.aboutBio1}</p>
-              <p>{cms.aboutBio2}</p>
-            </div>
-
-            {/* MY APPROACH Checklist */}
-            <div className="pt-3">
-              <h4 className="font-serif font-extrabold text-sm text-[#2D3B27] uppercase tracking-wider mb-3">MY APPROACH</h4>
-              <div className="flex flex-wrap gap-2.5">
-                {[
-                  { title: 'Personalized', bg: 'bg-emerald-700 text-white' },
-                  { title: 'Practical', bg: 'bg-teal-700 text-white' },
-                  { title: 'Sustainable', bg: 'bg-amber-700 text-white' },
-                  { title: 'Beginner Friendly', bg: 'bg-rose-700 text-white' },
-                  { title: 'Mind-Body Focused', bg: 'bg-[#2D3B27] text-white' }
-                ].map((item) => (
-                  <span key={item.title} className={`px-4 py-2 rounded-full ${item.bg} font-extrabold text-xs flex items-center gap-2 shadow-sm hover:scale-105 transition-all`}>
-                    <Check className="w-4 h-4" /> {item.title}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* CTA */}
-            <div className="pt-4">
-              <button
-                onClick={() => openDemoModal()}
-                className="px-8 py-4 rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-[#2D3B27] text-white font-extrabold text-xs sm:text-sm shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5"
-              >
-                <span>START YOUR YOGA JOURNEY</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* ================================================== */}
-      {/* 7. LUXURY TAILORED PROGRAMS SECTION */}
-      {/* ================================================== */}
-      <section id="classes" className="py-16 my-6">
-        <div className="space-y-16">
-          
-          <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <span className="text-xs font-black uppercase tracking-widest text-emerald-800 bg-emerald-100 px-5 py-2 rounded-full border border-emerald-200 inline-flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-700" />
-              TAILORED PROGRAMS
-            </span>
-            <h2 className="font-serif text-4xl sm:text-6xl text-[#2D3B27] font-extrabold tracking-tight">
-              {cms.classesTitle}
-            </h2>
-            <p className="text-slate-600 text-xs sm:text-sm font-medium">
-              {cms.classesSubtitle}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
-            
-            {/* CARD 1: 1-ON-1 PERSONAL ONLINE CLASS (HIGHLIGHTED) */}
-            <div className="bg-gradient-to-b from-[#1C2B17] via-[#2A3F23] to-[#162312] text-white rounded-[3rem] p-8 sm:p-10 border-2 border-emerald-400/40 shadow-2xl space-y-8 flex flex-col justify-between relative overflow-hidden group hover:scale-[1.02] transition-all duration-300">
-              <div className="absolute top-0 right-0 px-5 py-2 bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-black text-xs uppercase tracking-wider rounded-bl-3xl shadow-lg">
-                ⭐ MOST POPULAR
-              </div>
-
-              <div className="space-y-6 pt-2">
-                <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-emerald-500 to-teal-400 text-white flex items-center justify-center font-serif text-3xl font-extrabold shadow-xl shadow-emerald-950/50">
-                  🧘‍♀️
-                </div>
-                <div>
-                  <h3 className="font-serif font-extrabold text-3xl text-white">Personal Online Yoga</h3>
-                  <p className="text-xs font-bold text-emerald-300 mt-1">Live 1-on-1 Personalized Session</p>
-                </div>
-                <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                  Customized live 1-on-1 yoga adapted specifically to your body structure, health goals, injuries and daily pace.
-                </p>
-
-                <div className="pt-4 space-y-3 border-t border-white/15">
-                  <span className="text-[11px] font-black text-amber-300 uppercase tracking-widest block">Core Highlights:</span>
-                  <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-200">
-                    <span className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Weight Loss</span>
-                    <span className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Core Strength</span>
-                    <span className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Flexibility</span>
-                    <span className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Joint Mobility</span>
-                    <span className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Stress Relief</span>
-                    <span className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Posture Fix</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-white/15">
-                <button
-                  onClick={() => openDemoModal('', 'Personal Online Yoga Class (1-on-1)')}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-white font-extrabold text-xs tracking-wider uppercase transition-all shadow-xl shadow-emerald-950/60 flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-300" />
-                  <span>BOOK 1-ON-1 DEMO CLASS</span>
-                </button>
-              </div>
-            </div>
-
-            {/* CARD 2: GROUP YOGA BATCHES */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-[3rem] p-8 sm:p-10 border border-[#E3D9C6] shadow-xl space-y-8 flex flex-col justify-between relative overflow-hidden group hover:shadow-2xl hover:border-amber-400/50 hover:scale-[1.01] transition-all duration-300">
-              <div className="space-y-6">
-                <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center font-serif text-3xl font-extrabold shadow-lg shadow-amber-900/20">
-                  👥
-                </div>
-                <div>
-                  <h3 className="font-serif font-extrabold text-3xl text-[#2D3B27]">Group Yoga Classes</h3>
-                  <p className="text-xs font-bold text-amber-700 mt-1">Live Interactive Cohort</p>
-                </div>
-                <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                  High-energy live group classes designed to build steady practice consistency, movement discipline, and community motivation.
-                </p>
-
-                <div className="pt-4 space-y-3 border-t border-[#E3D9C6]">
-                  <span className="text-[11px] font-black text-[#2D3B27] uppercase tracking-widest block">Benefits:</span>
-                  <div className="space-y-2.5 text-xs font-semibold text-slate-800">
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-amber-600 shrink-0" /> Community Motivation & Accountability</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-amber-600 shrink-0" /> Daily Practice Consistency & Discipline</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-amber-600 shrink-0" /> Full-Body Strength, Toning & Flexibility</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-[#E3D9C6]">
-                <button
-                  onClick={() => openDemoModal('', 'Group Yoga Classes')}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-500 hover:to-orange-500 text-white font-extrabold text-xs tracking-wider uppercase transition-all shadow-lg flex items-center justify-center gap-2"
-                >
-                  <span>JOIN A GROUP BATCH</span>
-                </button>
-              </div>
-            </div>
-
-            {/* CARD 3: WELLNESS & THERAPEUTIC YOGA */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-[3rem] p-8 sm:p-10 border border-[#E3D9C6] shadow-xl space-y-8 flex flex-col justify-between relative overflow-hidden group hover:shadow-2xl hover:border-emerald-400/50 hover:scale-[1.01] transition-all duration-300">
-              <div className="space-y-6">
-                <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-[#3A4E31] to-[#202C1B] text-white flex items-center justify-center font-serif text-3xl font-extrabold shadow-lg shadow-emerald-950/20">
-                  🌿
-                </div>
-                <div>
-                  <h3 className="font-serif font-extrabold text-3xl text-[#2D3B27]">Wellness & Care</h3>
-                  <p className="text-xs font-bold text-[#4A5D3E] mt-1">Therapeutic & Restorative Focus</p>
-                </div>
-                <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                  Designed for individuals recovering from stiffness, back pain, hormonal imbalances (PCOS/Thyroid), and high stress.
-                </p>
-
-                <div className="pt-4 space-y-3 border-t border-[#E3D9C6]">
-                  <span className="text-[11px] font-black text-[#2D3B27] uppercase tracking-widest block">Includes:</span>
-                  <div className="space-y-2 text-xs font-semibold text-slate-800">
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-[#4A5D3E] shrink-0" /> Gentle spinal decompression & pain relief</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-[#4A5D3E] shrink-0" /> Pranayama breathwork & Nidra</p>
-                    <p className="flex items-center gap-2"><Check className="w-4 h-4 text-[#4A5D3E] shrink-0" /> Endocrine & metabolic circulation</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-6 border-t border-[#E3D9C6]">
-                <button
-                  onClick={() => openDemoModal('', 'Wellness-Focused Yoga')}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#3A4E31] to-[#202C1B] hover:from-emerald-800 hover:to-[#202C1B] text-white font-extrabold text-xs tracking-wider uppercase transition-all shadow-lg flex items-center justify-center gap-2"
-                >
-                  <span>LEARN MORE & CONNECT</span>
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* ================================================== */}
-      {/* 8. GOAL-BASED YOGA SECTION */}
-      {/* ================================================== */}
-      <section id="goals" className="py-24 space-y-14">
-        
-        <div className="text-center space-y-3 max-w-xl mx-auto">
-          <span className="text-xs font-black uppercase tracking-widest text-rose-800 bg-rose-100 px-4 py-1.5 rounded-full border border-rose-200 inline-block">
-            INTERACTIVE PRACTICE GOALS
-          </span>
-          <h2 className="font-serif text-3xl sm:text-5xl text-[#2D3B27] font-extrabold">What Are You Working On?</h2>
-          <p className="text-xs sm:text-sm text-slate-600 font-medium">Click any goal to reveal how personalized yoga can support your journey.</p>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          {goalsData.map((item) => {
-            const isSelected = activeGoalCard === item.id;
-            return (
-              <div
-                key={item.id}
-                onClick={() => setActiveGoalCard(isSelected ? null : item.id)}
-                className={`p-6 rounded-3xl border cursor-pointer transition-all duration-300 space-y-3 text-center ${
-                  isSelected 
-                    ? `bg-gradient-to-br ${item.themeColor} text-white border-transparent shadow-2xl scale-105` 
-                    : 'bg-white/80 backdrop-blur-md text-[#2D3B27] border-[#E3D9C6] hover:border-emerald-600/50 hover:bg-white hover:shadow-xl'
-                }`}
-              >
-                <span className="text-4xl block animate-bounce-slow">{item.icon}</span>
-                <h3 className="font-serif font-extrabold text-sm leading-tight">{item.title}</h3>
-                
-                {isSelected && (
-                  <div className="pt-3 border-t border-white/20 space-y-3 animate-fadeIn text-left text-xs font-sans">
-                    <p className="text-white/90 text-[11px] leading-relaxed font-medium">{item.desc}</p>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDirectWhatsAppChat(`Hi! I would like to talk about personalized Yoga for ${item.title}. 🌿`);
-                      }}
-                      className="w-full py-2.5 rounded-xl bg-white text-slate-900 font-extrabold text-[11px] shadow-md flex items-center justify-center gap-1.5 hover:bg-slate-100 transition-colors"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5 text-emerald-600" /> Talk on WhatsApp
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-      </section>
-
-      {/* ================================================== */}
-      {/* 9. LUXURY SIMPLE ONBOARDING SECTION */}
-      {/* ================================================== */}
-      <section id="onboarding" className="py-24 my-10 relative overflow-hidden bg-gradient-to-br from-[#162312] via-[#273820] to-[#121B0E] text-white rounded-[3.5rem] border-2 border-emerald-500/20 shadow-2xl">
-        
-        {/* Glow Orbs */}
-        <div className="absolute top-0 right-1/3 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-1/3 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto px-6 sm:px-12 space-y-16 relative z-10">
-          
-          <div className="text-center space-y-4 max-w-2xl mx-auto">
-            <span className="text-xs font-black uppercase tracking-widest text-amber-300 bg-amber-400/20 px-5 py-2 rounded-full border border-amber-300/30 inline-flex items-center gap-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-              SIMPLE 4-STEP ONBOARDING
-            </span>
-            <h2 className="font-serif text-4xl sm:text-6xl text-white font-extrabold tracking-tight">
-              Your Yoga Journey Starts Here
-            </h2>
-            <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-              Starting your practice with {cms.instructorName || 'our instructor'} is simple, welcoming and completely personalized.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            
-            {/* STEP 1 */}
-            <div className="bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 space-y-6 shadow-xl hover:bg-white/10 hover:border-emerald-400/40 hover:-translate-y-2 transition-all duration-300 group relative">
-              <div className="flex items-center justify-between">
-                <span className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white font-serif font-black text-xl flex items-center justify-center shadow-lg shadow-emerald-950/40 group-hover:scale-110 transition-transform">
-                  1
-                </span>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-400/30">
-                  Step 1
-                </span>
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-serif font-extrabold text-2xl text-white">Book Free Demo</h3>
-                <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                  Fill out the 1-minute demo form or click to connect directly on WhatsApp.
-                </p>
-              </div>
-            </div>
-
-            {/* STEP 2 */}
-            <div className="bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 space-y-6 shadow-xl hover:bg-white/10 hover:border-amber-400/40 hover:-translate-y-2 transition-all duration-300 group relative">
-              <div className="flex items-center justify-between">
-                <span className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white font-serif font-black text-xl flex items-center justify-center shadow-lg shadow-amber-950/40 group-hover:scale-110 transition-transform">
-                  2
-                </span>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-300 bg-amber-500/20 px-3 py-1 rounded-full border border-amber-400/30">
-                  Step 2
-                </span>
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-serif font-extrabold text-2xl text-white">Share Your Goals</h3>
-                <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                  Discuss your health goals, medical background, back pain/PCOS issues and schedule.
-                </p>
-              </div>
-            </div>
-
-            {/* STEP 3 */}
-            <div className="bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 space-y-6 shadow-xl hover:bg-white/10 hover:border-rose-400/40 hover:-translate-y-2 transition-all duration-300 group relative">
-              <div className="flex items-center justify-between">
-                <span className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white font-serif font-black text-xl flex items-center justify-center shadow-lg shadow-rose-950/40 group-hover:scale-110 transition-transform">
-                  3
-                </span>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-300 bg-rose-500/20 px-3 py-1 rounded-full border border-rose-400/30">
-                  Step 3
-                </span>
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-serif font-extrabold text-2xl text-white">Custom Practice</h3>
-                <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                  Attend your live demo class where postures & pranayama are tailored specifically for you.
-                </p>
-              </div>
-            </div>
-
-            {/* STEP 4 */}
-            <div className="bg-white/5 backdrop-blur-xl p-8 rounded-3xl border border-white/10 space-y-6 shadow-xl hover:bg-white/10 hover:border-teal-400/40 hover:-translate-y-2 transition-all duration-300 group relative">
-              <div className="flex items-center justify-between">
-                <span className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 to-emerald-600 text-white font-serif font-black text-xl flex items-center justify-center shadow-lg shadow-teal-950/40 group-hover:scale-110 transition-transform">
-                  4
-                </span>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-300 bg-teal-500/20 px-3 py-1 rounded-full border border-teal-400/30">
-                  Step 4
-                </span>
-              </div>
-              <div className="space-y-2">
-                <h3 className="font-serif font-extrabold text-2xl text-white">Consistent Progress</h3>
-                <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                  Join regular monthly group or 1-on-1 batches to build strength, flexibility and peace.
-                </p>
-              </div>
-            </div>
-
-          </div>
-
-          <div className="text-center pt-4">
-            <button
-              onClick={() => openDemoModal()}
-              className="px-9 py-4 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-white font-extrabold text-xs sm:text-sm tracking-wider uppercase shadow-xl hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-2.5"
-            >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>START STEP 1 - BOOK FREE DEMO</span>
-            </button>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ================================================== */}
-      {/* 10. WHAT A 60-MINUTE CLASS LOOKS LIKE */}
-      {/* ================================================== */}
-      <section className="py-16 space-y-14">
-        
-        <div className="text-center space-y-3 max-w-xl mx-auto">
-          <span className="text-xs font-black uppercase tracking-widest text-teal-800 bg-teal-100 px-4 py-1.5 rounded-full border border-teal-200 inline-block">
-            CLASS TIMELINE
-          </span>
-          <h2 className="font-serif text-3xl sm:text-5xl text-[#2D3B27] font-extrabold">60 Minutes For You</h2>
-          <p className="text-xs sm:text-sm text-slate-600 font-medium">Every session is structured to balance movement, strength, breath and relaxation.</p>
-        </div>
-
-        <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          
-          <div className="bg-gradient-to-b from-indigo-50 to-white p-5 rounded-3xl border border-indigo-200 text-center space-y-3 shadow-sm hover:shadow-md transition-all">
-            <span className="text-xs font-black text-indigo-700 bg-indigo-100 px-3 py-1 rounded-full inline-block">5 min</span>
-            <h4 className="font-serif font-extrabold text-xs text-[#2D3B27]">Breath Centering</h4>
-          </div>
-
-          <div className="bg-gradient-to-b from-emerald-50 to-white p-5 rounded-3xl border border-emerald-200 text-center space-y-3 shadow-sm hover:shadow-md transition-all">
-            <span className="text-xs font-black text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full inline-block">10 min</span>
-            <h4 className="font-serif font-extrabold text-xs text-[#2D3B27]">Joint Mobility</h4>
-          </div>
-
-          <div className="bg-gradient-to-b from-amber-50 to-white p-5 rounded-3xl border border-amber-200 text-center space-y-3 shadow-sm hover:shadow-md transition-all">
-            <span className="text-xs font-black text-amber-700 bg-amber-100 px-3 py-1 rounded-full inline-block">20 min</span>
-            <h4 className="font-serif font-extrabold text-xs text-[#2D3B27]">Yoga Asanas</h4>
-          </div>
-
-          <div className="bg-gradient-to-b from-rose-50 to-white p-5 rounded-3xl border border-rose-200 text-center space-y-3 shadow-sm hover:shadow-md transition-all">
-            <span className="text-xs font-black text-rose-700 bg-rose-100 px-3 py-1 rounded-full inline-block">10 min</span>
-            <h4 className="font-serif font-extrabold text-xs text-[#2D3B27]">Strength Focus</h4>
-          </div>
-
-          <div className="bg-gradient-to-b from-teal-50 to-white p-5 rounded-3xl border border-teal-200 text-center space-y-3 shadow-sm hover:shadow-md transition-all">
-            <span className="text-xs font-black text-teal-700 bg-teal-100 px-3 py-1 rounded-full inline-block">10 min</span>
-            <h4 className="font-serif font-extrabold text-xs text-[#2D3B27]">Pranayama</h4>
-          </div>
-
-          <div className="bg-gradient-to-b from-purple-50 to-white p-5 rounded-3xl border border-purple-200 text-center space-y-3 shadow-sm hover:shadow-md transition-all">
-            <span className="text-xs font-black text-purple-700 bg-purple-100 px-3 py-1 rounded-full inline-block">5 min</span>
-            <h4 className="font-serif font-extrabold text-xs text-[#2D3B27]">Deep Relaxation</h4>
-          </div>
-
-        </div>
-
-      </section>
-
-
-
-      {/* ================================================== */}
-      {/* 11. YOGA INSIGHTS & HOLISTIC WELLNESS BLOG SECTION */}
-      {/* ================================================== */}
-      <section id="blog" className="py-24 space-y-12">
-        
-        <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <span className="text-xs font-black uppercase tracking-widest text-emerald-800 bg-emerald-100 px-4.5 py-1.5 rounded-full border border-emerald-200 inline-flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5 text-emerald-800" />
-            <span>YOGA INSIGHTS & HOLISTIC GUIDES</span>
-          </span>
-
-          <h2 className="font-serif text-4xl sm:text-6xl text-[#2D3B27] font-extrabold tracking-tight">
-            Knowledge for Your Mat & Mind
-          </h2>
-          
-          <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-xl mx-auto leading-relaxed">
-            Explore authentic posture alignment, back pain recovery, breathwork science, and mindful health guides written by our certified yoga instructors.
-          </p>
-
-          {/* Category Filter Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-3">
-            {Array.from(new Set(['All', ...(blogs || []).filter(b => b.isPublished).map(b => b.category).filter(Boolean)])).map((cat) => {
-              const count = cat === 'All' 
-                ? (blogs || []).filter(b => b.isPublished).length 
-                : (blogs || []).filter(b => b.isPublished && b.category === cat).length;
-
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setBlogFilterCategory(cat)}
-                  className={`px-4 py-2 rounded-full text-xs font-extrabold transition-all ${
-                    blogFilterCategory === cat
-                      ? 'bg-[#2D3B27] text-white shadow-md ring-2 ring-emerald-600/30'
-                      : 'bg-white/80 text-slate-700 hover:bg-white border border-[#E3D9C6] hover:border-emerald-500'
-                  }`}
-                >
-                  <span>{cat}</span>
-                  <span className="ml-1.5 opacity-70 text-[10px]">({count})</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Blog Post Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {(blogs || [])
-            .filter(b => b.isPublished)
-            .filter(b => blogFilterCategory === 'All' || b.category === blogFilterCategory)
-            .slice(0, 3)
-            .map((post) => (
-              <div
-                key={post.id}
-                onClick={() => {
-                  setSelectedBlogForModal(post);
-                  setIsBlogModalOpen(true);
-                }}
-                className="group bg-white/95 backdrop-blur-md rounded-3xl border border-[#E3D9C6] shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer flex flex-col justify-between hover:-translate-y-1 relative"
-              >
-                <div>
-                  {/* Card Cover Image */}
-                  <div className="relative h-52 w-full overflow-hidden bg-slate-100">
-                    <img
-                      src={post.coverImage}
-                      alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                    
-                    {/* Category Badge */}
-                    <span className="absolute top-3 left-3 px-3 py-1 rounded-xl bg-slate-950/80 backdrop-blur-md text-white text-[10px] font-black border border-white/20">
-                      {post.category}
-                    </span>
-
-                    {/* Date and Read Time Overlay */}
-                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[11px] text-slate-200 font-bold">
-                      <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3 text-amber-300" />
-                        {post.date}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-amber-300" />
-                        {post.readTime}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Card Title & Excerpt */}
-                  <div className="p-6 space-y-3">
-                    <h3 className="font-serif font-extrabold text-lg sm:text-xl text-[#2D3B27] group-hover:text-emerald-800 transition-colors leading-snug line-clamp-2">
-                      {post.title}
-                    </h3>
-                    <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed font-medium">
-                      {post.excerpt}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Card Footer / Author & CTA */}
-                <div className="p-6 pt-0 flex items-center justify-between border-t border-slate-100 mt-2">
-                  <div className="flex items-center gap-2 pt-3">
-                    <img
-                      src={post.authorPhoto || '/instructor-hero.jpg'}
-                      alt={post.author}
-                      className="w-7 h-7 rounded-full object-cover ring-1 ring-emerald-500 bg-white"
-                    />
-                    <span className="text-xs font-bold text-slate-800">{post.author}</span>
-                  </div>
-
-                  <span className="pt-3 text-xs font-black text-emerald-800 flex items-center gap-1 group-hover:translate-x-1 transition-transform">
-                    <span>Read Article</span>
-                    <ArrowRight className="w-3.5 h-3.5 text-emerald-700" />
-                  </span>
-                </div>
-              </div>
-            ))}
-        </div>
-
-      </section>
-
-      {/* ================================================== */}
-      {/* 12. TESTIMONIALS & GOOGLE REVIEWS */}
-      {/* ================================================== */}
-      <section id="testimonials" className="py-24 space-y-14">
-        
-        <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <span className="text-xs font-black uppercase tracking-widest text-emerald-800 bg-emerald-100 px-4.5 py-1.5 rounded-full border border-emerald-200 inline-block">
-            VERIFIED STUDENT REVIEWS
-          </span>
-
-          <h2 className="font-serif text-4xl sm:text-6xl text-[#2D3B27] font-extrabold">What My Students Say</h2>
-          
-          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <div className="flex items-center gap-2 text-xs font-extrabold text-slate-800 bg-white/90 backdrop-blur-md px-5 py-2.5 rounded-full border border-[#E3D9C6] shadow-sm">
-              <span className="text-blue-600 text-base font-black">G</span>
-              <span>5.0 ★★★★★ Rated on Google Reviews</span>
-            </div>
-
-            <a
-              href={SITE_CONFIG.socials.googleReviews}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-6 py-2.5 rounded-full bg-gradient-to-r from-[#4A5D3E] via-[#3F4D2A] to-[#2D3B27] hover:from-emerald-800 hover:to-[#2D3B27] text-white font-extrabold text-xs shadow-md hover:scale-105 transition-all flex items-center gap-2"
-            >
-              <span>VIEW GOOGLE REVIEWS ↗</span>
-            </a>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {SITE_CONFIG.testimonials.map((t) => (
-            <div key={t.id} className="bg-white/90 backdrop-blur-md p-8 rounded-3xl border border-[#E3D9C6] shadow-xl space-y-5 flex flex-col justify-between hover-lift relative overflow-hidden group">
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1 text-amber-500 text-xs">
-                    {Array.from({ length: t.rating }).map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-
-                  <span className="text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 flex items-center gap-1">
-                    <span className="text-blue-600 font-black text-xs">G</span> Google
-                  </span>
-                </div>
-
-                <p className="text-xs text-slate-700 italic leading-relaxed font-medium">
-                  "{t.quote}"
-                </p>
-              </div>
-
-              <div className="pt-4 border-t border-[#E3D9C6] flex items-center justify-between">
-                <div>
-                  <h4 className="font-serif font-extrabold text-sm text-[#2D3B27]">{t.name}</h4>
-                  {t.location && <p className="text-[10px] text-slate-500 font-semibold">{t.location}</p>}
-                </div>
-
-                <a 
-                  href={SITE_CONFIG.socials.googleReviews} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-[10px] font-extrabold text-emerald-700 hover:text-emerald-900 transition-colors"
-                >
-                  Verified ↗
-                </a>
-              </div>
-            </div>
-          ))}
-        </div>
-
-      </section>
-
-      {/* ================================================== */}
-      {/* 13. FAQ SECTION */}
-      {/* ================================================== */}
-      <section id="faq" className="py-24 bg-white/70 backdrop-blur-xl border-y border-[#E3D9C6]">
-        <div className="max-w-4xl mx-auto space-y-12">
-          
-          <div className="text-center space-y-3">
-            <span className="text-xs font-black uppercase tracking-widest text-emerald-800 bg-emerald-100 px-4 py-1.5 rounded-full border border-emerald-200 inline-block">
-              QUESTIONS & ANSWERS
-            </span>
-            <h2 className="font-serif text-3xl sm:text-5xl text-[#2D3B27] font-extrabold">Frequently Asked Questions</h2>
-          </div>
-
-          <div className="space-y-3.5">
-            {faqs.map((faq, idx) => {
-              const isOpen = expandedFaqIndex === idx;
-              return (
-                <div 
-                  key={idx} 
-                  className="bg-[#FAF7F2] rounded-3xl border border-[#E3D9C6] overflow-hidden shadow-sm transition-all"
-                >
-                  <button
-                    onClick={() => setExpandedFaqIndex(isOpen ? null : idx)}
-                    className="w-full p-6 text-left font-serif font-extrabold text-base text-[#2D3B27] flex items-center justify-between gap-4"
-                  >
-                    <span>{faq.q}</span>
-                    {isOpen ? <ChevronUp className="w-5 h-5 text-emerald-700 shrink-0" /> : <ChevronDown className="w-5 h-5 text-emerald-700 shrink-0" />}
-                  </button>
-
-                  {isOpen && (
-                    <div className="px-6 pb-6 text-xs sm:text-sm text-slate-700 leading-relaxed font-sans border-t border-[#E3D9C6]/60 pt-4 animate-fadeIn font-medium">
-                      {faq.a}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-        </div>
-      </section>
-
-      {/* ================================================== */}
-      {/* 14. ELEGANT LUXURY SANCTUARY FINAL CTA SECTION */}
-      {/* ================================================== */}
-      <section id="contact" className="py-24 my-10 relative">
-        <div className="bg-gradient-to-br from-[#121B0D] via-[#22351C] to-[#0F170B] rounded-[3.5rem] p-8 sm:p-16 text-[#FAF7F2] shadow-2xl relative overflow-hidden border-2 border-emerald-400/30">
-          
-          {/* Ambient Gold & Emerald Lighting */}
-          <div className="absolute -top-24 -right-24 w-[550px] h-[550px] bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -left-24 w-[550px] h-[550px] bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
-            
-            {/* Left Photo & Floating Badges */}
-            <div className="lg:col-span-5 relative order-2 lg:order-1">
-              <div className="relative mx-auto max-w-sm sm:max-w-md lg:max-w-none">
-                
-                {/* Decorative Frame Orbs */}
-                <div className="absolute -top-6 -left-6 w-full h-full rounded-[3rem] bg-gradient-to-tr from-amber-400/30 via-emerald-400/20 to-teal-400/20 -z-10 blur-lg" />
-                <div className="absolute -bottom-6 -right-6 w-full h-full rounded-[3rem] bg-black/40 -z-10" />
-
-                <img 
-                  src={cms.contactImage || "/instructor-mountain-pose.jpg"} 
-                  alt="Yoga Coach Outdoor Pose" 
-                  className="w-full h-[400px] sm:h-[480px] object-cover rounded-[3rem] shadow-2xl border-4 border-white/20"
-                />
-
-
-
-                {/* Floating Badge 2 */}
-                <div className="absolute bottom-6 -right-4 sm:-right-6 bg-white/95 backdrop-blur-xl p-3.5 rounded-2xl shadow-2xl border border-white/80 text-slate-900 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-md">
-                    🌿
-                  </div>
-                  <div>
-                    <h4 className="font-serif font-extrabold text-xs text-[#2D3B27]">1-Day Free Trial</h4>
-                    <p className="text-[10px] text-slate-600 font-medium">No credit card needed</p>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
-            {/* Right Editorial Content */}
-            <div className="lg:col-span-7 space-y-8 text-left order-1 lg:order-2">
-              
-              <div className="space-y-4">
-                <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full bg-gradient-to-r from-amber-400/20 via-emerald-400/20 to-teal-400/20 border border-amber-300/40 text-amber-200 text-xs font-black uppercase tracking-widest shadow-sm">
-                  <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
-                  <span>YOUR YOGA JOURNEY STARTS HERE</span>
-                </div>
-
-                <h2 className="font-serif text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white leading-[1.08] drop-shadow-md">
-                  Ready to Transform Your Body & Peace of Mind?
-                </h2>
-
-                <p className="text-xs sm:text-base text-slate-200 font-medium max-w-xl leading-relaxed">
-                  Take your first step today with live, personalized guidance from Certified Yoga Instructor {cms.instructorName || 'our Instructor'}. Book your 100% free 1-day demo session now!
-                </p>
-              </div>
-
-              {/* 3 Checklist Highlights */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-extrabold text-emerald-200">
-                <div className="flex items-center gap-2 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>1-Day Free Trial</span>
-                </div>
-                <div className="flex items-center gap-2 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>1-on-1 & Group</span>
-                </div>
-                <div className="flex items-center gap-2 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Beginner Friendly</span>
-                </div>
-              </div>
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <button
                   onClick={() => openDemoModal()}
-                  className="px-9 py-4 sm:py-5 rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-white font-extrabold text-xs sm:text-sm tracking-wider uppercase shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-emerald-950/60 ring-2 ring-emerald-300/40"
+                  className="px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs sm:text-sm shadow-xl shadow-emerald-500/25 hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5"
                 >
-                  <Sparkle className="w-5 h-5 text-amber-300 fill-amber-300 animate-pulse" />
-                  <span>JOIN FREE DEMO CLASS</span>
+                  <Sparkle className="w-4 h-4 text-slate-950 fill-slate-950" />
+                  <span>BOOK 1-DAY FREE TRIAL</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
-                <button
-                  onClick={() => handleDirectWhatsAppChat()}
-                  className="px-8 py-4 sm:py-5 rounded-full bg-emerald-600/90 hover:bg-emerald-500 text-white font-extrabold text-xs sm:text-sm tracking-wider uppercase shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5 border border-emerald-400/40"
+                <a
+                  href="/panel"
+                  className="px-7 py-4 rounded-2xl bg-white/10 hover:bg-white/15 border border-white/20 text-white font-extrabold text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                 >
-                  <MessageCircle className="w-5 h-5 text-emerald-200" />
-                  <span>CHAT ON WHATSAPP ({SITE_CONFIG.displayPhone})</span>
-                </button>
+                  <Zap className="w-4 h-4 text-amber-400" />
+                  <span>OPEN TRAINER CRM</span>
+                </a>
               </div>
 
-              {/* Direct Hotline Footer */}
-              <div className="pt-4 border-t border-white/10 text-slate-300 text-xs font-semibold flex flex-wrap items-center gap-6">
-                <span>Primary WhatsApp: <strong className="text-emerald-400">{SITE_CONFIG.displayPhone}</strong></span>
-                <span>•</span>
-                <span>Alternative Hotline: <strong className="text-amber-300">{SITE_CONFIG.displayPhone2}</strong></span>
+              {/* Trust Indicators */}
+              <div className="pt-6 border-t border-white/10 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-bold text-slate-300">
+                <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Certified Coaches</span>
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Live 1-on-1 & Group</span>
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Student Journal</span>
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>Free Trial Class</span>
+                </div>
               </div>
 
             </div>
 
+            {/* Hero Right Visual */}
+            <div className="lg:col-span-5 relative">
+              <div className="relative mx-auto max-w-md lg:max-w-none">
+                
+                {/* Glow Backdrop */}
+                <div className="absolute -inset-4 rounded-[3rem] bg-gradient-to-tr from-emerald-500/20 via-teal-500/20 to-indigo-500/20 blur-2xl -z-10" />
+
+                <div className="relative rounded-[2.5rem] overflow-hidden border-2 border-white/20 shadow-2xl bg-slate-900">
+                  <img
+                    src={cms.heroImage || SITE_CONFIG.heroImage}
+                    alt="Certified Yoga & Studio Coach"
+                    className="w-full h-[460px] sm:h-[520px] object-cover hover:scale-105 transition-all duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+                </div>
+
+                {/* Floating Badge 1 (Top Left) */}
+                <div className="absolute top-6 -left-4 sm:-left-6 bg-slate-900/90 backdrop-blur-xl p-3.5 rounded-2xl shadow-2xl border border-white/15 flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-600 text-slate-950 flex items-center justify-center font-black text-base shadow-md">
+                    ⭐
+                  </div>
+                  <div>
+                    <h4 className="font-serif font-extrabold text-xs text-white">5.0 Star Rated</h4>
+                    <p className="text-[10px] text-emerald-400 font-bold">120+ Active Members</p>
+                  </div>
+                </div>
+
+                {/* Floating Badge 2 (Bottom Right) */}
+                <div className="absolute bottom-6 -right-2 sm:-right-4 bg-slate-900/90 backdrop-blur-xl p-4 rounded-2xl shadow-2xl border border-white/15 flex items-center gap-3 max-w-[260px]">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center font-bold text-lg shadow-md shrink-0">
+                    ⚡
+                  </div>
+                  <div>
+                    <h4 className="font-serif font-extrabold text-xs text-white">Live Member Portal</h4>
+                    <p className="text-[10px] text-slate-300 font-medium leading-tight">Instant Attendance & Fee Slips</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* ================================================== */}
+        {/* 3. MULTI-DISCIPLINE STUDIO SWITCHER */}
+        {/* ================================================== */}
+        <section id="categories" className="space-y-8">
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <span className="text-xs font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20 inline-block">
+              BUILT FOR ALL DISCIPLINES
+            </span>
+            <h2 className="font-serif text-3xl sm:text-5xl font-black text-white">
+              One Platform. Every Studio Type.
+            </h2>
+            <p className="text-slate-400 text-xs sm:text-sm font-medium">
+              Seamlessly adaptable for personal trainers, boutique studios, gyms, and academies.
+            </p>
           </div>
 
-        </div>
-      </section>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+            {studioCategories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedStudioCategory(cat.id as any)}
+                className={`p-5 rounded-3xl text-left border transition-all space-y-2 ${
+                  selectedStudioCategory === cat.id
+                    ? 'bg-gradient-to-b from-emerald-950/60 to-slate-900 border-emerald-500/50 shadow-lg shadow-emerald-500/10 scale-105'
+                    : 'bg-white/5 hover:bg-white/10 border-white/10'
+                }`}
+              >
+                <div className="text-3xl">{cat.icon}</div>
+                <h4 className="font-bold text-sm text-white">{cat.label}</h4>
+                <p className="text-[11px] text-slate-400 line-clamp-2 leading-relaxed">{cat.desc}</p>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* ================================================== */}
+        {/* 4. PROGRAMS & PRICING BENTO GRID */}
+        {/* ================================================== */}
+        <section id="programs" className="space-y-12">
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <span className="text-xs font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20 inline-block">
+              STRUCTURED PACKAGES
+            </span>
+            <h2 className="font-serif text-3xl sm:text-5xl font-black text-white">
+              {cms.classesTitle || "Tailored Studio Programs"}
+            </h2>
+            <p className="text-slate-400 text-xs sm:text-sm font-medium">
+              Choose the learning pace and coaching intensity that fits your lifestyle.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+            
+            {/* Card 1: Personal 1-on-1 (Highlighted) */}
+            <div className="bg-gradient-to-b from-emerald-950/80 via-slate-900 to-slate-950 rounded-[2.5rem] p-8 sm:p-10 border-2 border-emerald-500/40 shadow-2xl flex flex-col justify-between relative overflow-hidden group hover:scale-[1.02] transition-all">
+              <div className="absolute top-0 right-0 px-4 py-1.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-black text-[11px] uppercase tracking-wider rounded-bl-2xl">
+                ⭐ MOST POPULAR
+              </div>
+
+              <div className="space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-3xl shadow-inner">
+                  🧘‍♀️
+                </div>
+                <div>
+                  <h3 className="font-serif font-black text-2xl sm:text-3xl text-white">Personal 1-on-1 Coaching</h3>
+                  <p className="text-xs font-bold text-emerald-400 mt-1">Live Online or In-Studio</p>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                  Complete undivided attention with personalized posture corrections, diet habit guidance, and custom daily workouts.
+                </p>
+
+                <div className="pt-4 border-t border-white/10 space-y-2.5">
+                  <span className="text-[11px] font-black text-amber-400 uppercase tracking-wider">Features Included:</span>
+                  <div className="space-y-2 text-xs text-slate-200">
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> 1-on-1 live dedicated session</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Custom body & goal assessment</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Flexible morning / evening slots</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Personalized member portal</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-8">
+                <button
+                  onClick={() => openDemoModal('', 'Personal 1-on-1 Coaching')}
+                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-black text-xs tracking-wider uppercase shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>BOOK 1-ON-1 TRIAL</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Card 2: Interactive Group Batches */}
+            <div className="bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] p-8 sm:p-10 border border-white/10 shadow-xl flex flex-col justify-between relative hover:border-emerald-500/30 transition-all">
+              <div className="space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center text-3xl shadow-inner">
+                  👥
+                </div>
+                <div>
+                  <h3 className="font-serif font-black text-2xl sm:text-3xl text-white">Group Practice Batches</h3>
+                  <p className="text-xs font-bold text-indigo-400 mt-1">High-Energy Community Flows</p>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                  Daily dynamic interactive batches with fellow yogis and fitness enthusiasts. Build consistency with group motivation.
+                </p>
+
+                <div className="pt-4 border-t border-white/10 space-y-2.5">
+                  <span className="text-[11px] font-black text-indigo-400 uppercase tracking-wider">Features Included:</span>
+                  <div className="space-y-2 text-xs text-slate-200">
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Morning & Evening Batches</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Live interactive video feedback</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Monthly attendance tracking</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Weekend workshops & Q&A</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-8">
+                <button
+                  onClick={() => openDemoModal('', 'Group Practice Batches')}
+                  className="w-full py-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>JOIN GROUP BATCH TRIAL</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Card 3: Therapeutic & Specialized Care */}
+            <div className="bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] p-8 sm:p-10 border border-white/10 shadow-xl flex flex-col justify-between relative hover:border-emerald-500/30 transition-all">
+              <div className="space-y-6">
+                <div className="w-14 h-14 rounded-2xl bg-rose-500/20 border border-rose-500/30 text-rose-400 flex items-center justify-center text-3xl shadow-inner">
+                  🌿
+                </div>
+                <div>
+                  <h3 className="font-serif font-black text-2xl sm:text-3xl text-white">Therapeutic & Care</h3>
+                  <p className="text-xs font-bold text-rose-400 mt-1">Back Pain, PCOS & Mobility</p>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                  Gentle, therapeutic movement sequences tailored for recovery, posture alignment, joint ease, and hormonal well-being.
+                </p>
+
+                <div className="pt-4 border-t border-white/10 space-y-2.5">
+                  <span className="text-[11px] font-black text-rose-400 uppercase tracking-wider">Features Included:</span>
+                  <div className="space-y-2 text-xs text-slate-200">
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Zero strain, patient pacing</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Spine decompression routines</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Restorative breathwork techniques</div>
+                    <div className="flex items-center gap-2"><Check className="w-4 h-4 text-emerald-400 shrink-0" /> Progress health journals</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-8">
+                <button
+                  onClick={() => openDemoModal('', 'Therapeutic & Specialized Care')}
+                  className="w-full py-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-black text-xs tracking-wider uppercase transition-all flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  <span>EXPLORE THERAPY TRIAL</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* ================================================== */}
+        {/* 5. WHY CHOOSE US & STUDIO ADVANTAGE */}
+        {/* ================================================== */}
+        <section id="benefits" className="py-16 px-8 sm:px-12 rounded-[3rem] bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-950 border border-white/15 shadow-2xl relative overflow-hidden">
+          <div className="space-y-12">
+            
+            <div className="text-center space-y-3 max-w-2xl mx-auto">
+              <span className="text-xs font-black uppercase tracking-widest text-amber-400 bg-amber-400/10 px-4 py-1.5 rounded-full border border-amber-400/20 inline-block">
+                THE STUDIO ADVANTAGE
+              </span>
+              <h2 className="font-serif text-3xl sm:text-5xl font-black text-white">
+                {cms.whyTitle || "Why Train With Us?"}
+              </h2>
+              <p className="text-slate-300 text-xs sm:text-sm font-medium">
+                {cms.whySubtitle || "A blend of traditional wisdom, personalized attention, and modern digital journal tracking."}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              
+              <div className="p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl">
+                  🎯
+                </div>
+                <h4 className="font-serif font-black text-xl text-white">Personalized Pace</h4>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">Every pose adapted to your body mobility and current strength.</p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-2xl">
+                  📱
+                </div>
+                <h4 className="font-serif font-black text-xl text-white">Digital Member App</h4>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">Track your attendance streak, leave requests, and fee slips 24/7.</p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-2xl">
+                  🌱
+                </div>
+                <h4 className="font-serif font-black text-xl text-white">Beginner Friendly</h4>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">Zero intimidation. Gentle step-by-step guidance from day one.</p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center text-2xl">
+                  ⚡
+                </div>
+                <h4 className="font-serif font-black text-xl text-white">Online & Studio</h4>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">Practice from the convenience of your home or in-studio.</p>
+              </div>
+
+            </div>
+
+            {/* Metrics Counter Bar */}
+            <div className="pt-8 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+              <div>
+                <h4 className="font-serif text-3xl font-black text-emerald-400">500+</h4>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">Transformed Members</p>
+              </div>
+              <div>
+                <h4 className="font-serif text-3xl font-black text-amber-400">4.9 ★</h4>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">Average Review</p>
+              </div>
+              <div>
+                <h4 className="font-serif text-3xl font-black text-teal-400">99.4%</h4>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">Attendance Consistency</p>
+              </div>
+              <div>
+                <h4 className="font-serif text-3xl font-black text-rose-400">100%</h4>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mt-1">Personalized Attention</p>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* ================================================== */}
+        {/* 6. GOALS & SPECIALIZATION GRID */}
+        {/* ================================================== */}
+        <section id="goals" className="space-y-12">
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <span className="text-xs font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20 inline-block">
+              TARGETED GOALS
+            </span>
+            <h2 className="font-serif text-3xl sm:text-5xl font-black text-white">
+              What Is Your Health Priority?
+            </h2>
+            <p className="text-slate-400 text-xs sm:text-sm font-medium">
+              Select your primary goal to start your customized training routine.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {goalsData.map((goal) => (
+              <div 
+                key={goal.id}
+                className="p-7 rounded-3xl bg-slate-900/60 border border-white/10 hover:border-emerald-500/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between space-y-5 group"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-3xl">{goal.icon}</span>
+                    <span className="px-3 py-1 rounded-full bg-white/10 text-white font-black text-[10px] uppercase">Custom Routine</span>
+                  </div>
+                  <h3 className="font-serif font-black text-2xl text-white group-hover:text-emerald-300 transition-colors">
+                    {goal.title}
+                  </h3>
+                  <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                    {goal.desc}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => openDemoModal(goal.title)}
+                  className="w-full py-3 rounded-2xl bg-white/10 hover:bg-emerald-500 hover:text-slate-950 text-white font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+                >
+                  <span>Select {goal.title}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ================================================== */}
+        {/* 7. ABOUT INSTRUCTOR SPOTLIGHT */}
+        {/* ================================================== */}
+        <section id="about" className="py-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            <div className="lg:col-span-5 relative">
+              <div className="relative rounded-[2.5rem] overflow-hidden border-2 border-white/20 shadow-2xl">
+                <img
+                  src={cms.aboutImage || SITE_CONFIG.aboutImage}
+                  alt="Certified Instructor & Coach"
+                  className="w-full h-[460px] object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+                <div className="absolute bottom-6 left-6 right-6 p-4 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-white/15">
+                  <h4 className="font-serif font-black text-base text-white">{cms.instructorName || "Aarav Sharma"}</h4>
+                  <p className="text-xs text-emerald-400 font-bold">Certified Studio Coach & Yoga Master</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-7 space-y-6">
+              <span className="text-xs font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20 inline-block">
+                MEET YOUR COACH
+              </span>
+              <h2 className="font-serif text-3xl sm:text-5xl font-black text-white">
+                {cms.aboutTitle || "Guiding You Toward Strength, Ease & Alignment."}
+              </h2>
+              
+              <div className="space-y-4 text-slate-300 text-xs sm:text-sm leading-relaxed font-medium">
+                <p className="font-serif text-lg text-emerald-300 italic font-semibold">
+                  "{cms.aboutQuote || "True practice begins when you listen to your body and honor its natural rhythm."}"
+                </p>
+                <p>{cms.aboutBio1 || "With dedicated years of certified instruction, our studio specializes in functional body conditioning, posture realignment, and stress management."}</p>
+                <p>{cms.aboutBio2 || "Every session is designed to make you feel energized, light, and mentally resilient."}</p>
+              </div>
+
+              <div className="pt-2 flex flex-wrap gap-2.5">
+                {['Personalized Attention', 'Alignment First', 'Progress Tracking', 'Holistic Breathwork'].map((tag) => (
+                  <span key={tag} className="px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 text-white font-extrabold text-xs flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-emerald-400" /> {tag}
+                  </span>
+                ))}
+              </div>
+
+              <div className="pt-4">
+                <button
+                  onClick={() => openDemoModal()}
+                  className="px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs shadow-xl hover:scale-105 transition-all flex items-center gap-2"
+                >
+                  <span>SCHEDULE 1-ON-1 CONSULTATION</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* ================================================== */}
+        {/* 8. TESTIMONIALS & REVIEWS */}
+        {/* ================================================== */}
+        <section id="testimonials" className="space-y-12">
+          <div className="text-center space-y-3 max-w-2xl mx-auto">
+            <span className="text-xs font-black uppercase tracking-widest text-amber-400 bg-amber-400/10 px-4 py-1.5 rounded-full border border-amber-400/20 inline-block">
+              STUDENT EXPERIENCES
+            </span>
+            <h2 className="font-serif text-3xl sm:text-5xl font-black text-white">
+              Real Transformations & Results
+            </h2>
+            <p className="text-slate-400 text-xs sm:text-sm font-medium">
+              Read how our members improved posture, lost weight, and found mental clarity.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div className="p-7 rounded-3xl bg-slate-900/60 border border-white/10 space-y-4 shadow-xl">
+              <div className="flex text-amber-400 text-sm">★★★★★</div>
+              <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                "The 1-on-1 sessions completely cured my lower back pain after 2 months of regular practice. The coach explains alignment so patiently!"
+              </p>
+              <div className="pt-3 border-t border-white/10 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center text-xs">
+                  MP
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-white">Meera Patel</h4>
+                  <p className="text-[10px] text-slate-400">Personal Online Member</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-7 rounded-3xl bg-slate-900/60 border border-white/10 space-y-4 shadow-xl">
+              <div className="flex text-amber-400 text-sm">★★★★★</div>
+              <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                "I lost 6 kgs in 3 months with the morning dynamic batch. The student attendance portal keeps me motivated to never miss a class!"
+              </p>
+              <div className="pt-3 border-t border-white/10 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-indigo-500/20 text-indigo-400 font-bold flex items-center justify-center text-xs">
+                  RK
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-white">Rohit Khanna</h4>
+                  <p className="text-[10px] text-slate-400">Morning Vinyasa Batch</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-7 rounded-3xl bg-slate-900/60 border border-white/10 space-y-4 shadow-xl">
+              <div className="flex text-amber-400 text-sm">★★★★★</div>
+              <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                "Best studio software and coaching! I can check my fee receipts and request leaves directly from my mobile link."
+              </p>
+              <div className="pt-3 border-t border-white/10 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-rose-500/20 text-rose-400 font-bold flex items-center justify-center text-xs">
+                  AS
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-white">Ananya Sen</h4>
+                  <p className="text-[10px] text-slate-400">Evening Flow Member</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* ================================================== */}
+        {/* 9. FAQ ACCORDION */}
+        {/* ================================================== */}
+        <section id="faq" className="space-y-8 max-w-3xl mx-auto">
+          <div className="text-center space-y-3">
+            <span className="text-xs font-black uppercase tracking-widest text-emerald-400 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20 inline-block">
+              COMMON QUESTIONS
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl font-black text-white">
+              Frequently Asked Questions
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {faqs.map((faq, idx) => (
+              <div
+                key={idx}
+                className="rounded-2xl bg-slate-900/60 border border-white/10 overflow-hidden transition-all"
+              >
+                <button
+                  onClick={() => setExpandedFaqIndex(expandedFaqIndex === idx ? null : idx)}
+                  className="w-full p-5 text-left flex items-center justify-between font-bold text-xs sm:text-sm text-white hover:text-emerald-300 transition-colors"
+                >
+                  <span>{faq.q}</span>
+                  {expandedFaqIndex === idx ? (
+                    <ChevronUp className="w-4 h-4 text-emerald-400 shrink-0" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-slate-400 shrink-0" />
+                  )}
+                </button>
+                {expandedFaqIndex === idx && (
+                  <div className="px-5 pb-5 text-xs text-slate-300 font-medium leading-relaxed border-t border-white/5 pt-3 animate-fadeIn">
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ================================================== */}
+        {/* 10. FINAL BOTTOM CTA BANNER */}
+        {/* ================================================== */}
+        <section className="p-10 sm:p-14 rounded-[3rem] bg-gradient-to-r from-emerald-950 via-slate-900 to-indigo-950 border-2 border-emerald-500/30 text-center space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="space-y-3 max-w-2xl mx-auto">
+            <span className="text-xs font-black uppercase tracking-widest text-amber-300 bg-amber-400/20 px-4 py-1 rounded-full border border-amber-300/30 inline-block">
+              GET STARTED TODAY
+            </span>
+            <h2 className="font-serif text-3xl sm:text-5xl font-black text-white">
+              {cms.contactTitle || "Ready to Experience Your Free Demo Session?"}
+            </h2>
+            <p className="text-slate-300 text-xs sm:text-sm font-medium">
+              {cms.contactSubtitle || "Join our community today for guided movement, peace of mind, and automated member management."}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+            <button
+              onClick={() => openDemoModal()}
+              className="px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 text-slate-950 font-black text-xs sm:text-sm shadow-xl hover:scale-105 transition-all flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-slate-950" />
+              <span>CLAIM FREE DEMO CLASS</span>
+            </button>
+
+            <button
+              onClick={() => handleDirectWhatsAppChat()}
+              className="px-7 py-4 rounded-2xl bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-400/40 text-emerald-300 font-extrabold text-xs sm:text-sm transition-all flex items-center gap-2"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>CHAT ON WHATSAPP</span>
+            </button>
+          </div>
+        </section>
 
       </main>
 
       {/* ================================================== */}
-      {/* 15. FOOTER */}
+      {/* 11. FOOTER */}
       {/* ================================================== */}
-      <footer className="bg-[#1E2917] text-[#FAF7F2] pt-14 pb-8 border-t border-[#4A5D3E]/40 px-4 sm:px-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-[#4A5D3E]/30 text-xs font-sans">
+      <footer className="mt-24 border-t border-white/10 bg-slate-950/80 py-12 px-4 sm:px-8 text-slate-400 text-xs">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           
-          <div className="space-y-3">
+          <div className="space-y-3 md:col-span-2">
             <div className="flex items-center gap-3">
-              <img 
-                src={SITE_CONFIG.logoImage} 
-                alt="Studio Logo" 
-                className="w-11 h-11 rounded-2xl object-cover ring-2 ring-amber-300/40 shadow-md bg-white p-0.5" 
-              />
-              <h3 className="font-serif font-extrabold text-2xl text-white tracking-wide">{cms.brandName || SITE_CONFIG.brandName}</h3>
+              <img src={SITE_CONFIG.logoImage} alt="Logo" className="w-8 h-8 rounded-xl object-cover" />
+              <span className="font-serif font-black text-lg text-white">{cms.brandName || SITE_CONFIG.brandName}</span>
             </div>
-            <p className="text-slate-300 font-medium">By {cms.instructorName || SITE_CONFIG.instructorName}</p>
-            <p className="text-amber-300 italic font-serif text-xs">"{cms.tagline || SITE_CONFIG.tagline}"</p>
+            <p className="text-slate-400 text-xs max-w-sm font-medium leading-relaxed">
+              All-in-one studio management platform, member attendance journal, and online class software.
+            </p>
           </div>
 
           <div className="space-y-2">
-            <h4 className="font-extrabold text-white uppercase tracking-wider mb-2 text-xs">Quick Links</h4>
-            <button onClick={() => setActiveTab('home')} className="block text-slate-300 hover:text-white transition-colors">Home</button>
-            <a href="#about" className="block text-slate-300 hover:text-white transition-colors">About</a>
-            <a href="#classes" className="block text-slate-300 hover:text-white transition-colors">Classes</a>
-            <a href="#benefits" className="block text-slate-300 hover:text-white transition-colors">Why Choose Us</a>
-            <a href="#blog" className="block text-amber-300 hover:text-white font-bold transition-colors">🌿 Yoga Insights Blog</a>
-            <a href="#faq" className="block text-slate-300 hover:text-white transition-colors">FAQ</a>
-            <a href="/panel" className="block text-slate-400 hover:text-white transition-colors text-[11px] pt-1">🔐 Trainer Panel</a>
-            <a href="/members" className="block text-slate-400 hover:text-white transition-colors text-[11px]">🧘 Our Yogis</a>
+            <h4 className="font-bold text-white uppercase text-[11px] tracking-wider">Quick Links</h4>
+            <div className="space-y-1.5">
+              <a href="#home" className="block hover:text-emerald-400">Home</a>
+              <a href="#programs" className="block hover:text-emerald-400">Programs</a>
+              <a href="/panel" className="block text-amber-400 font-bold hover:underline">Trainer Portal Login</a>
+              <a href="#faq" className="block hover:text-emerald-400">FAQ</a>
+            </div>
           </div>
 
           <div className="space-y-2">
-            <h4 className="font-extrabold text-white uppercase tracking-wider mb-2 text-xs">Social Connections</h4>
-            <a href={cms.instagramUrl || "https://instagram.com"} target="_blank" rel="noopener noreferrer" className="block text-slate-300 hover:text-white transition-colors">Instagram</a>
-            <a href={cms.youtubeUrl || "https://youtube.com"} target="_blank" rel="noopener noreferrer" className="block text-slate-300 hover:text-white transition-colors">YouTube</a>
-            <button onClick={() => handleDirectWhatsAppChat()} className="block text-slate-300 hover:text-white text-left transition-colors">WhatsApp Direct</button>
-          </div>
-
-          <div className="space-y-2">
-            <h4 className="font-extrabold text-white uppercase tracking-wider mb-2 text-xs">Direct Contact</h4>
-            <p className="text-slate-300 font-medium">WhatsApp / Call: {cms.displayPhone || SITE_CONFIG.displayPhone}</p>
-            <p className="text-slate-300 font-medium">WhatsApp / Call 2: {cms.displayPhone2 || SITE_CONFIG.displayPhone2}</p>
-            <p className="text-slate-300 font-medium">Email: {cms.email || SITE_CONFIG.email}</p>
+            <h4 className="font-bold text-white uppercase text-[11px] tracking-wider">Contact & Support</h4>
+            <p className="text-slate-300 font-bold">{cms.displayPhone || SITE_CONFIG.displayPhone}</p>
+            <p className="text-slate-400">{cms.email || SITE_CONFIG.email}</p>
           </div>
 
         </div>
 
-        <div className="max-w-7xl mx-auto pt-6 text-center text-[11px] text-slate-400 font-semibold">
-          <p>© {new Date().getFullYear()} {cms.brandName || SITE_CONFIG.brandName} • All rights reserved. Designed for {cms.instructorName || SITE_CONFIG.instructorName} Yoga & Wellness.</p>
+        <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500">
+          <span>© {new Date().getFullYear()} {cms.brandName || SITE_CONFIG.brandName}. All rights reserved.</span>
+          <span>Studio & Fitness CRM Platform</span>
         </div>
       </footer>
 
-      {/* ================================================== */}
-      {/* 18. MOBILE STICKY BOTTOM BAR - SLEEK COMPACT FLOATING DESIGN */}
-      {/* ================================================== */}
-      <div className="fixed bottom-3 left-3 right-3 z-40 lg:hidden bg-[#2D3B27]/95 backdrop-blur-xl border border-emerald-800/50 p-2 rounded-2xl shadow-2xl flex items-center gap-2 max-w-md mx-auto">
-        <button
-          onClick={() => openDemoModal()}
-          className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-[#1E271A] font-black text-xs uppercase tracking-wider shadow-sm text-center flex items-center justify-center gap-1 transition-all active:scale-95"
-        >
-          <span>✨ FREE DEMO</span>
-        </button>
+      {/* Free Demo Registration Modal */}
+      {isDemoModalOpen && (
+        <FreeDemoModal
+          isOpen={isDemoModalOpen}
+          onClose={() => setIsDemoModalOpen(false)}
+          defaultGoal={selectedGoalForModal}
+          defaultProgram={selectedProgramForModal}
+        />
+      )}
 
-        <button
-          onClick={() => handleDirectWhatsAppChat()}
-          className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs uppercase tracking-wider shadow-sm text-center flex items-center justify-center gap-1.5 transition-all active:scale-95"
-        >
-          <MessageCircle className="w-4 h-4 text-white" />
-          <span>WHATSAPP</span>
-        </button>
-      </div>
-
-      {/* BLOG ARTICLE READER MODAL */}
-      <BlogArticleModal
-        post={selectedBlogForModal}
-        isOpen={isBlogModalOpen}
-        onClose={() => {
-          setIsBlogModalOpen(false);
-          // If URL was /blog/slug, reset clean history without reloading
-          if (typeof window !== 'undefined' && window.location.pathname.startsWith('/blog/')) {
-            window.history.pushState(null, '', '/');
-          }
-        }}
-        onOpenDemoModal={(goal, prog) => openDemoModal(goal, prog)}
-        allPosts={blogs || []}
-        onSelectPost={(p) => setSelectedBlogForModal(p)}
-      />
-
-      {/* LEAD FORM MODAL */}
-      <FreeDemoModal
-        isOpen={isDemoModalOpen}
-        onClose={() => setIsDemoModalOpen(false)}
-        defaultGoal={selectedGoalForModal}
-        defaultProgram={selectedProgramForModal}
-      />
+      {/* Blog Article Detail Modal */}
+      {isBlogModalOpen && selectedBlogForModal && (
+        <BlogArticleModal
+          post={selectedBlogForModal}
+          isOpen={isBlogModalOpen}
+          onClose={() => {
+            setIsBlogModalOpen(false);
+            setSelectedBlogForModal(null);
+          }}
+          onOpenDemoModal={openDemoModal}
+          allPosts={blogs}
+          onSelectPost={(post) => setSelectedBlogForModal(post)}
+        />
+      )}
 
     </div>
   );
