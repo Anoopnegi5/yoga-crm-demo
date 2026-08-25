@@ -32,11 +32,9 @@ const DEFAULT_CATEGORIES = [
 ];
 
 const PRESET_COVERS = [
-  { label: 'Studio Shala', url: '/about-anjali.jpg' },
-  { label: 'Group Flow', url: '/hero-group-yoga.jpg' },
-  { label: 'Sunset Pose', url: '/yoga-pose-sunset.jpg' },
-  { label: 'Meditation', url: '/meditation-sanctuary.jpg' },
-  { label: 'Trainer Anjali', url: '/anjali-hero.jpg' }
+  { label: 'Studio Flow', url: '/hero-group-yoga.jpg' },
+  { label: 'Trainer Pose', url: '/instructor-hero.jpg' },
+  { label: 'Mountain Pose', url: '/instructor-mountain-pose.jpg' }
 ];
 
 export const BlogManagerCMS: React.FC = () => {
@@ -61,7 +59,7 @@ export const BlogManagerCMS: React.FC = () => {
   const [customCategoryInput, setCustomCategoryInput] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [content, setContent] = useState('');
-  const [coverImage, setCoverImage] = useState('/about-anjali.jpg');
+  const [coverImage, setCoverImage] = useState('/about-instructor.jpg');
   const [readTime, setReadTime] = useState('5 min read');
   const [tagsString, setTagsString] = useState('');
   const [isPublished, setIsPublished] = useState(true);
@@ -87,7 +85,7 @@ export const BlogManagerCMS: React.FC = () => {
     setCustomCategoryInput('');
     setExcerpt('');
     setContent('');
-    setCoverImage('/about-anjali.jpg');
+    setCoverImage('/about-instructor.jpg');
     setReadTime('4 min read');
     setTagsString('Yoga, Health, Daily Routine');
     setIsPublished(true);
@@ -185,15 +183,15 @@ export const BlogManagerCMS: React.FC = () => {
       excerpt: excerpt.trim() || content.slice(0, 160) + '...',
       content: content.trim(),
       coverImage,
-      author: trainerProfile.name || 'Anjali Negi',
+      author: trainerProfile.name || 'Aarav Sharma',
       authorRole: 'Founder & Certified Senior Yoga Instructor',
-      authorPhoto: trainerProfile.photoUrl || '/anjali-hero.jpg',
+      authorPhoto: trainerProfile.photoUrl || '/instructor-hero.jpg',
       date: editingPost?.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       readTime: readTime || '5 min read',
       tags,
       isPublished,
       featured,
-      metaTitle: `${title.trim()} | Yoganjali Studio`,
+      metaTitle: `${title.trim()} | ${trainerProfile.studioName || 'Yoga Studio'}`,
       metaDescription: excerpt.trim() || content.slice(0, 160)
     };
 
@@ -432,7 +430,7 @@ export const BlogManagerCMS: React.FC = () => {
                     {editingPost ? 'Edit Blog Article' : 'Write & Publish New Article'}
                   </h3>
                   <p className="text-xs text-emerald-200 font-medium">
-                    Google SEO Optimized Article Editor for Yoganjali
+                    Google SEO Optimized Article Editor for {trainerProfile.studioName || 'Yoga Studio'}
                   </p>
                 </div>
               </div>

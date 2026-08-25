@@ -8,18 +8,21 @@ interface ShareLinkModalProps {
 }
 
 export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ isOpen, onClose }) => {
-  const { showSuccessToast } = useApp();
+  const { showSuccessToast, trainerProfile } = useApp();
   const [copied, setCopied] = useState(false);
   const [copiedMsg, setCopiedMsg] = useState(false);
 
   if (!isOpen) return null;
 
-  const shareableUrl = `https://www.yoganjaliyoga.com/register`;
-  const fullMessage = `Hi! 👋 Please fill in your Yoga Registration details for Yoganjali Studio:
+  const shareableUrl = typeof window !== 'undefined' 
+    ? `${window.location.origin}/register` 
+    : '/register';
+
+  const fullMessage = `Hi! 👋 Please fill in your Yoga Registration details for ${trainerProfile?.studioName || 'Yoga Studio'}:
 
 ${shareableUrl}
 
-— Anjali Negi 🧘‍♀️`;
+— ${trainerProfile?.name || 'Trainer'} 🧘‍♀️`;
 
   const copyToClipboard = (text: string): boolean => {
     try {

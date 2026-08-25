@@ -23,7 +23,8 @@ export const TrainerDreamsView: React.FC = () => {
     addTrainerDream, 
     updateTrainerDream, 
     deleteTrainerDream,
-    showSuccessToast
+    showSuccessToast,
+    trainerProfile
   } = useApp();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -38,7 +39,7 @@ export const TrainerDreamsView: React.FC = () => {
     const newSaved = Math.max(0, currentSaved + amount);
     
     if (newSaved >= dream.targetAmount && currentSaved < dream.targetAmount) {
-      showSuccessToast(`🎉 CONGRATULATIONS ANJALI! You 100% unlocked your dream: "${dream.title}"! 🏆✨`);
+      showSuccessToast(`🎉 CONGRATULATIONS! You 100% unlocked your dream: "${dream.title}"! 🏆✨`);
     }
 
     // Remember last deposit for UNDO
@@ -219,7 +220,7 @@ export const TrainerDreamsView: React.FC = () => {
                 TRAINER PERSONAL VISION & DREAM GOALS
               </div>
               <h2 className="font-serif text-2xl sm:text-4xl font-extrabold text-white">
-                Anjali's Personal Goal Tracker 🌟
+                {trainerProfile?.name ? `${trainerProfile.name}'s Personal Goal Tracker 🌟` : 'Personal Goal Tracker 🌟'}
               </h2>
               <p className="text-xs sm:text-sm text-purple-200 font-medium mt-1">
                 Keep track of your life dreams, set savings targets, and enter your progress as you save!
@@ -375,7 +376,7 @@ export const TrainerDreamsView: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <span className="font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
                             <Trophy className="w-4 h-4 text-amber-950 fill-amber-950" />
-                            <span>🎉 CONGRATULATIONS ANJALI! DREAM UNLOCKED!</span>
+                            <span>🎉 CONGRATULATIONS! DREAM UNLOCKED!</span>
                           </span>
                         </div>
                         <p className="text-xs font-extrabold leading-relaxed text-amber-950">

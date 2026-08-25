@@ -28,7 +28,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       const isValidUser =
         cleanUsername === 'admin' ||
         cleanUsername === 'demo' ||
-        cleanUsername === 'yoganjali' ||
+        cleanUsername === 'studio' ||
         (customUsername && cleanUsername === customUsername);
 
       const isValidPass =

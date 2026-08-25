@@ -5,8 +5,8 @@ export const DEFAULT_TRAINER_PROFILE: TrainerProfile = {
   studioName: 'Prana Yoga Studio',
   phone: '+91 98765 43210',
   upiId: 'pranayogastudio@upi',
-  photoUrl: '/anjali-hero.jpg',
-  studioLogoUrl: '/yoganjali-logo.png',
+  photoUrl: '/instructor-hero.jpg',
+  studioLogoUrl: '/logo.png',
   appTitle: 'Prana Yoga',
   appSubtitle: 'Yoga Journal & Fee Manager'
 };
@@ -38,7 +38,7 @@ export const INITIAL_TRAINER_DREAMS: TrainerDreamGoal[] = [
     title: 'Rishikesh 300-Hr Master Teacher Immersion',
     targetAmount: 85000,
     savedAmount: 55000,
-    photoUrl: '/about-anjali.jpg',
+    photoUrl: '/about-instructor.jpg',
     targetDate: '2026-11-30',
     category: 'Short Term',
     notes: 'Advanced alignment, pranayama therapy and sound healing immersion.'
@@ -391,19 +391,19 @@ export const INITIAL_BLOG_POSTS: BlogPost[] = [
     id: 'blog-1',
     slug: '5-morning-yoga-asanas-back-pain-relief',
     title: '5 Daily Morning Yoga Asanas for Instant Lower Back Pain Relief',
-    excerpt: 'Sitting long hours at a desk compresses your spine. Discover 5 gentle yet highly effective yoga poses recommended by Trainer Anjali Negi to realign your vertebrae and eliminate lower back stiffness.',
-    coverImage: '/about-anjali.jpg',
+    excerpt: 'Sitting long hours at a desk compresses your spine. Discover 5 gentle yet highly effective yoga poses to realign your vertebrae and eliminate lower back stiffness.',
+    coverImage: '/about-instructor.jpg',
     category: 'Posture & Back Pain',
-    author: 'Anjali Negi',
+    author: 'Aarav Sharma',
     authorRole: 'Founder & Certified Senior Yoga Instructor',
-    authorPhoto: '/anjali-hero.jpg',
+    authorPhoto: '/instructor-hero.jpg',
     date: 'August 20, 2026',
     readTime: '4 min read',
     tags: ['Back Pain', 'Posture Correction', 'Morning Routine', 'Spine Health'],
     isPublished: true,
     featured: true,
-    metaTitle: '5 Daily Morning Yoga Asanas for Lower Back Pain Relief | Yoganjali',
-    metaDescription: 'Eliminate lower back pain with 5 simple morning yoga asanas by Trainer Anjali Negi. Realign your spine and improve posture with guided home practice.',
+    metaTitle: '5 Daily Morning Yoga Asanas for Lower Back Pain Relief | Prana Yoga Studio',
+    metaDescription: 'Eliminate lower back pain with 5 simple morning yoga asanas. Realign your spine and improve posture with guided home practice.',
     content: `### Why Lower Back Pain Has Become Modern Society's #1 Epidemic
 
 In our fast-paced daily lives, most of us spend 8 to 12 hours seated in front of laptops, on commutes, or hunched over smartphones. This prolonged sedentary posture places immense pressure on the lumbar spine, tightens the hip flexors, and weakens the deep core stabilizing muscles.
@@ -439,7 +439,7 @@ The good news? You do not need complex equipment or hours of painful workouts to
 
 ---
 
-> *"The spine is the central pillar of human vitality. When your spine is supple and free of tension, energy flows unimpeded throughout your entire system."* — **Trainer Anjali Negi**
+> *"The spine is the central pillar of human vitality. When your spine is supple and free of tension, energy flows unimpeded throughout your entire system."* — **Trainer Aarav Sharma**
 
 ### Consistency Is the Key to Lasting Relief
 Practicing these 5 asanas every morning before stepping into your workstation will protect your back from cumulative strain. If you experience chronic disc issues or sciatica, personal guidance ensures each pose is modified safely for your unique anatomy.`
@@ -451,15 +451,15 @@ Practicing these 5 asanas every morning before stepping into your workstation wi
     excerpt: 'Vinyasa is more than a physical workout — it is moving meditation. Understand the physiological benefits of synchronized breath, heart rate variability, and cellular oxygenation.',
     coverImage: '/hero-group-yoga.jpg',
     category: 'Yoga Asanas',
-    author: 'Anjali Negi',
+    author: 'Aarav Sharma',
     authorRole: 'Founder & Certified Senior Yoga Instructor',
-    authorPhoto: '/anjali-hero.jpg',
+    authorPhoto: '/instructor-hero.jpg',
     date: 'August 18, 2026',
     readTime: '5 min read',
     tags: ['Vinyasa', 'Pranayama', 'Cardio Yoga', 'Energy Flow'],
     isPublished: true,
     featured: false,
-    metaTitle: 'The Science of Vinyasa Yoga Flow | Yoganjali Studio by Anjali Negi',
+    metaTitle: 'The Science of Vinyasa Yoga Flow | Prana Yoga Studio',
     metaDescription: 'Discover how Vinyasa yoga boosts cardiovascular endurance, builds lean muscle, and calms the nervous system through dynamic breath-movement synchronization.',
     content: `### What Makes Vinyasa Flow Truly Transformative?
 
@@ -480,7 +480,7 @@ Fluid, multi-planar transitions lubricate synovial joints, increase bone density
 
 ---
 
-### Key Vinyasa Principles We Emphasize at Yoganjali
+### Key Vinyasa Principles We Emphasize at Our Studio
 * **Ujjayi Pranayama (Ocean Breath)**: Inhaling and exhaling through the nose with a subtle oceanic sound created in the back of the throat.
 * **Drishti (Focused Gaze)**: Directing visual attention to a single focal point to quiet the chatter of the mind.
 * **Bandhas (Core Energy Locks)**: Activating Mula Bandha (pelvic floor) and Uddiyana Bandha (lower abdominal lock) for lightweight lightness and spine protection in transitions.
@@ -492,17 +492,17 @@ Whether you are a beginner looking to build functional strength or an experience
     slug: 'yoga-for-weight-loss-metabolism-boost',
     title: 'Yoga for Sustainable Weight Loss: Why Mindfulness Beats Crash Diets',
     excerpt: 'Struggling with stubborn weight? Discover how dynamic yoga flows, hormonal regulation, and mindful eating habits help you shed excess fat and build sustainable, lifelong vitality.',
-    coverImage: '/yoga-pose-sunset.jpg',
+    coverImage: '/hero-group-yoga.jpg',
     category: 'Weight Management',
-    author: 'Anjali Negi',
+    author: 'Aarav Sharma',
     authorRole: 'Founder & Certified Senior Yoga Instructor',
-    authorPhoto: '/anjali-hero.jpg',
+    authorPhoto: '/instructor-hero.jpg',
     date: 'August 15, 2026',
     readTime: '6 min read',
     tags: ['Weight Loss', 'Metabolism', 'Fat Burn', 'Hormonal Balance'],
     isPublished: true,
     featured: false,
-    metaTitle: 'Yoga for Weight Loss & Metabolism Boost | Yoganjali Studio',
+    metaTitle: 'Yoga for Weight Loss & Metabolism Boost | Prana Yoga Studio',
     metaDescription: 'Learn how regular yoga practice helps in fat loss, resets metabolism, regulates thyroid function, and ends stress-induced emotional eating.',
     content: `### Beyond Calorie Counting: The Holistic Secret to Weight Loss
 
@@ -533,24 +533,24 @@ Yoga cultivates interoception—the ability to perceive internal bodily sensatio
 * **1 to 2 days**: Hatha Yoga for deep flexibility and joint health
 * **Daily**: 10 minutes of Kapalbhati & Anulom Vilom Pranayama in the morning before breakfast
 
-At Yoganjali, we combine tailored asana progressions with gentle lifestyle counseling to ensure you achieve healthy, glowing transformation without exhaustion.`
+At our studio, we combine tailored asana progressions with gentle lifestyle counseling to ensure you achieve healthy, glowing transformation without exhaustion.`
   },
   {
     id: 'blog-4',
     slug: 'pranayama-101-breathing-techniques-stress-relief',
     title: 'Pranayama 101: 3 Powerful Breathing Techniques to Melt Away Stress in 5 Minutes',
     excerpt: 'Your breath is the remote control to your brain. Master Box Breathing, Nadi Shodhana, and Bhramari to calm racing thoughts, lower blood pressure, and sleep deeply.',
-    coverImage: '/meditation-sanctuary.jpg',
+    coverImage: '/instructor-mountain-pose.jpg',
     category: 'Pranayama & Meditation',
-    author: 'Anjali Negi',
+    author: 'Aarav Sharma',
     authorRole: 'Founder & Certified Senior Yoga Instructor',
-    authorPhoto: '/anjali-hero.jpg',
+    authorPhoto: '/instructor-hero.jpg',
     date: 'August 12, 2026',
     readTime: '4 min read',
     tags: ['Pranayama', 'Stress Relief', 'Mental Peace', 'Deep Sleep'],
     isPublished: true,
     featured: false,
-    metaTitle: 'Pranayama Breathing Techniques for Stress & Anxiety Relief | Yoganjali',
+    metaTitle: 'Pranayama Breathing Techniques for Stress & Anxiety Relief | Prana Yoga Studio',
     metaDescription: 'Master 3 easy pranayama breathing exercises to relieve anxiety, lower stress, and induce deep restful sleep anywhere in just 5 minutes.',
     content: `### The Breath: Your Body's Built-In Stress Antidote
 

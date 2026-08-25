@@ -135,8 +135,8 @@ export const ClientWebsite: React.FC = () => {
   };
 
   const handleDirectWhatsAppChat = (customText?: string) => {
-    const defaultMsg = customText || "Hi Anjali! 👋 I found your website Yoganjali and would like to chat about yoga classes. 🌿";
-    const waNumber = SITE_CONFIG.whatsappNumber.replace(/[^0-9]/g, '');
+    const defaultMsg = customText || `Hi! 👋 I found your website ${cms.brandName || 'Yoga Studio'} and would like to chat about yoga classes. 🌿`;
+    const waNumber = (cms.displayPhone || SITE_CONFIG.whatsappNumber).replace(/[^0-9]/g, '');
     window.open(`https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(defaultMsg)}`, '_blank');
   };
 
@@ -176,11 +176,11 @@ export const ClientWebsite: React.FC = () => {
     });
 
     setRegistrationSubmitted(true);
-    showSuccessToast(`🎉 Client Data fed successfully! Welcome ${name} to Yoganjali Studio.`);
+    showSuccessToast(`🎉 Client Data fed successfully! Welcome ${name} to ${cms.brandName || 'our Studio'}.`);
 
-    // Send WhatsApp confirmation to Anjali Negi
-    const message = `Hi Anjali! 👋\n\nI have completed my Client Registration details for Yoganjali Studio.\n\n• Name: ${name}\n• Phone/WhatsApp: ${phone}\n• Session Choice: ${sessionType} (${classTime})\n• Days: ${selectedDays.join(', ')}\n• Goals: ${selectedGoals.join(', ')}\n• Health Notes: ${healthNotes || 'None'}\n\nPlease review my profile. 🧘🌿`;
-    const waNumber = SITE_CONFIG.whatsappNumber.replace(/[^0-9]/g, '');
+    // Send WhatsApp confirmation to Instructor
+    const message = `Hi! 👋\n\nI have completed my Client Registration details for ${cms.brandName || 'Yoga Studio'}.\n\n• Name: ${name}\n• Phone/WhatsApp: ${phone}\n• Session Choice: ${sessionType} (${classTime})\n• Days: ${selectedDays.join(', ')}\n• Goals: ${selectedGoals.join(', ')}\n• Health Notes: ${healthNotes || 'None'}\n\nPlease review my profile. 🧘🌿`;
+    const waNumber = (cms.displayPhone || SITE_CONFIG.whatsappNumber).replace(/[^0-9]/g, '');
     window.open(`https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -316,7 +316,7 @@ export const ClientWebsite: React.FC = () => {
     },
     {
       q: "How can I book a class?",
-      a: "Click the Free Demo button, fill in your details and connect with Anjali on WhatsApp."
+      a: "Click the Free Demo button, fill in your details and connect with our instructor on WhatsApp."
     }
   ];
 
@@ -331,7 +331,7 @@ export const ClientWebsite: React.FC = () => {
       {isJoinLink && (
         <div className="bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-900 text-white px-4 py-3 text-center text-xs font-bold shadow-md flex items-center justify-center gap-2">
           <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
-          <span>Welcome! You are on the Official Client Self-Registration Form for Yoganjali with Anjali Negi.</span>
+          <span>Welcome! You are on the Official Client Self-Registration Form for {cms.brandName || 'our Studio'} with {cms.instructorName || 'our Instructor'}.</span>
           <button 
             onClick={() => openDemoModal()}
             className="ml-2 px-3 py-1 bg-white text-purple-900 font-extrabold rounded-full hover:bg-amber-100 transition-colors shadow-sm"
@@ -351,7 +351,7 @@ export const ClientWebsite: React.FC = () => {
           <a href="#home" className="flex items-center gap-3 group">
             <img 
               src={SITE_CONFIG.logoImage} 
-              alt="Yoganjali Official Brand Logo" 
+              alt="Studio Brand Logo" 
               className="w-11 h-11 rounded-2xl object-cover ring-2 ring-emerald-600/30 shadow-md group-hover:scale-105 transition-all bg-white p-0.5" 
             />
             <div>
@@ -374,7 +374,7 @@ export const ClientWebsite: React.FC = () => {
             </button>
             <a href="#about" className="hover:text-[#4A5D3E] transition-colors">About</a>
             <a href="#classes" className="hover:text-[#4A5D3E] transition-colors">Classes</a>
-            <a href="#benefits" className="hover:text-[#4A5D3E] transition-colors">Why Yoganjali</a>
+            <a href="#benefits" className="hover:text-[#4A5D3E] transition-colors">Why Choose Us</a>
             <a href="#goals" className="hover:text-[#4A5D3E] transition-colors">Goal Programs</a>
             <a href="#blog" className="hover:text-[#4A5D3E] transition-colors flex items-center gap-1">
               <span>Blog</span>
@@ -422,9 +422,9 @@ export const ClientWebsite: React.FC = () => {
         {mobileMenuOpen && (
           <div className="lg:hidden mt-3 p-5 bg-white/95 backdrop-blur-xl rounded-3xl border border-[#E3D9C6] shadow-2xl space-y-3 text-xs font-bold text-slate-800 animate-fadeIn">
             <a href="#home" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Home</a>
-            <a href="#about" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">About Anjali</a>
+            <a href="#about" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">About Instructor</a>
             <a href="#classes" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Yoga Programs</a>
-            <a href="#benefits" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Why Choose Yoganjali</a>
+            <a href="#benefits" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Why Choose Us</a>
             <a href="#goals" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 hover:text-emerald-700">Targeted Goal Programs</a>
             <a href="#blog" onClick={() => setMobileMenuOpen(false)} className="block py-1.5 text-emerald-800 font-extrabold flex items-center justify-between">
               <span>🌿 Yoga Blog & Guides</span>
@@ -536,7 +536,7 @@ export const ClientWebsite: React.FC = () => {
 
               <img
                 src={cms.heroImage || SITE_CONFIG.heroImage}
-                alt="Anjali Negi practicing yoga"
+                alt="Certified Yoga Instructor"
                 className="w-full h-[450px] sm:h-[530px] object-cover rounded-[3rem] shadow-2xl border-4 border-white"
               />
               
@@ -569,7 +569,7 @@ export const ClientWebsite: React.FC = () => {
       </section>
 
       {/* ================================================== */}
-      {/* 5. LUXURY TRUST & EXPERIENCE SECTION: WHY CHOOSE YOGANJALI */}
+      {/* 5. LUXURY TRUST & EXPERIENCE SECTION: WHY CHOOSE US */}
       {/* ================================================== */}
       <section id="benefits" className="py-24 my-10 relative overflow-hidden bg-gradient-to-br from-[#162212] via-[#263720] to-[#121B0E] text-white rounded-[3.5rem] border-2 border-emerald-500/20 shadow-2xl">
         
@@ -583,13 +583,13 @@ export const ClientWebsite: React.FC = () => {
           <div className="text-center space-y-4 max-w-2xl mx-auto">
             <span className="text-xs font-black uppercase tracking-widest text-amber-300 bg-amber-400/20 px-5 py-2 rounded-full border border-amber-300/30 inline-flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
-              THE YOGANJALI EXPERIENCE
+              THE STUDIO EXPERIENCE
             </span>
             <h2 className="font-serif text-4xl sm:text-6xl text-white font-extrabold tracking-tight leading-tight">
-              Why Choose Yoganjali?
+              {cms.whyTitle || "Why Choose Us?"}
             </h2>
             <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-              Experience authentic, personalized yoga tailored around your unique body, goals and schedule with Trainer Anjali Negi.
+              {cms.whySubtitle || "Experience authentic, personalized yoga tailored around your unique body, goals and schedule."}
             </p>
           </div>
 
@@ -662,7 +662,7 @@ export const ClientWebsite: React.FC = () => {
       </section>
 
       {/* ================================================== */}
-      {/* 6. ABOUT ANJALI SECTION */}
+      {/* 6. ABOUT INSTRUCTOR SECTION */}
       {/* ================================================== */}
       <section id="about" className="py-16 relative">
         
@@ -674,7 +674,7 @@ export const ClientWebsite: React.FC = () => {
               <div className="absolute -bottom-6 -right-6 w-full h-full rounded-[3rem] bg-gradient-to-br from-amber-300/40 via-emerald-300/30 to-[#4A5D3E]/30 -z-10 blur-md" />
               <img
                 src={cms.aboutImage || SITE_CONFIG.aboutImage}
-                alt="Anjali Negi Yoga Instructor"
+                alt="Certified Yoga Instructor"
                 className="w-full h-[480px] object-cover rounded-[3rem] shadow-2xl border-4 border-white"
               />
             </div>
@@ -903,7 +903,7 @@ export const ClientWebsite: React.FC = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDirectWhatsAppChat(`Hi Anjali! I would like to talk about personalized Yoga for ${item.title}. 🌿`);
+                        handleDirectWhatsAppChat(`Hi! I would like to talk about personalized Yoga for ${item.title}. 🌿`);
                       }}
                       className="w-full py-2.5 rounded-xl bg-white text-slate-900 font-extrabold text-[11px] shadow-md flex items-center justify-center gap-1.5 hover:bg-slate-100 transition-colors"
                     >
@@ -938,7 +938,7 @@ export const ClientWebsite: React.FC = () => {
               Your Yoga Journey Starts Here
             </h2>
             <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed">
-              Starting your practice with Anjali Negi is simple, welcoming and completely personalized.
+              Starting your practice with {cms.instructorName || 'our instructor'} is simple, welcoming and completely personalized.
             </p>
           </div>
 
@@ -957,7 +957,7 @@ export const ClientWebsite: React.FC = () => {
               <div className="space-y-2">
                 <h3 className="font-serif font-extrabold text-2xl text-white">Book Free Demo</h3>
                 <p className="text-xs text-slate-300 leading-relaxed font-medium">
-                  Fill out the 1-minute demo form or click to connect directly with Anjali on WhatsApp.
+                  Fill out the 1-minute demo form or click to connect directly on WhatsApp.
                 </p>
               </div>
             </div>
@@ -1098,7 +1098,7 @@ export const ClientWebsite: React.FC = () => {
           </h2>
           
           <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-xl mx-auto leading-relaxed">
-            Explore authentic posture alignment, back pain recovery, breathwork science, and mindful health guides written by Trainer Anjali Negi.
+            Explore authentic posture alignment, back pain recovery, breathwork science, and mindful health guides written by our certified yoga instructors.
           </p>
 
           {/* Category Filter Pills */}
@@ -1184,7 +1184,7 @@ export const ClientWebsite: React.FC = () => {
                 <div className="p-6 pt-0 flex items-center justify-between border-t border-slate-100 mt-2">
                   <div className="flex items-center gap-2 pt-3">
                     <img
-                      src={post.authorPhoto || '/anjali-hero.jpg'}
+                      src={post.authorPhoto || '/instructor-hero.jpg'}
                       alt={post.author}
                       className="w-7 h-7 rounded-full object-cover ring-1 ring-emerald-500 bg-white"
                     />
@@ -1337,8 +1337,8 @@ export const ClientWebsite: React.FC = () => {
                 <div className="absolute -bottom-6 -right-6 w-full h-full rounded-[3rem] bg-black/40 -z-10" />
 
                 <img 
-                  src={cms.contactImage || "/anjali-mountain-pose.jpg"} 
-                  alt="Anjali Negi Yoga Coach Outdoor Mountain Pose" 
+                  src={cms.contactImage || "/instructor-mountain-pose.jpg"} 
+                  alt="Yoga Coach Outdoor Pose" 
                   className="w-full h-[400px] sm:h-[480px] object-cover rounded-[3rem] shadow-2xl border-4 border-white/20"
                 />
 
@@ -1372,7 +1372,7 @@ export const ClientWebsite: React.FC = () => {
                 </h2>
 
                 <p className="text-xs sm:text-base text-slate-200 font-medium max-w-xl leading-relaxed">
-                  Take your first step today with live, personalized guidance from Certified Yoga Instructor Anjali Negi. Book your 100% free 1-day demo session now!
+                  Take your first step today with live, personalized guidance from Certified Yoga Instructor {cms.instructorName || 'our Instructor'}. Book your 100% free 1-day demo session now!
                 </p>
               </div>
 
@@ -1438,13 +1438,13 @@ export const ClientWebsite: React.FC = () => {
             <div className="flex items-center gap-3">
               <img 
                 src={SITE_CONFIG.logoImage} 
-                alt="Yoganjali Logo" 
+                alt="Studio Logo" 
                 className="w-11 h-11 rounded-2xl object-cover ring-2 ring-amber-300/40 shadow-md bg-white p-0.5" 
               />
-              <h3 className="font-serif font-extrabold text-2xl text-white tracking-wide">{SITE_CONFIG.brandName}</h3>
+              <h3 className="font-serif font-extrabold text-2xl text-white tracking-wide">{cms.brandName || SITE_CONFIG.brandName}</h3>
             </div>
-            <p className="text-slate-300 font-medium">By {SITE_CONFIG.instructorName}</p>
-            <p className="text-amber-300 italic font-serif text-xs">"{SITE_CONFIG.tagline}"</p>
+            <p className="text-slate-300 font-medium">By {cms.instructorName || SITE_CONFIG.instructorName}</p>
+            <p className="text-amber-300 italic font-serif text-xs">"{cms.tagline || SITE_CONFIG.tagline}"</p>
           </div>
 
           <div className="space-y-2">
@@ -1452,7 +1452,7 @@ export const ClientWebsite: React.FC = () => {
             <button onClick={() => setActiveTab('home')} className="block text-slate-300 hover:text-white transition-colors">Home</button>
             <a href="#about" className="block text-slate-300 hover:text-white transition-colors">About</a>
             <a href="#classes" className="block text-slate-300 hover:text-white transition-colors">Classes</a>
-            <a href="#benefits" className="block text-slate-300 hover:text-white transition-colors">Why Yoganjali</a>
+            <a href="#benefits" className="block text-slate-300 hover:text-white transition-colors">Why Choose Us</a>
             <a href="#blog" className="block text-amber-300 hover:text-white font-bold transition-colors">🌿 Yoga Insights Blog</a>
             <a href="#faq" className="block text-slate-300 hover:text-white transition-colors">FAQ</a>
             <a href="/panel" className="block text-slate-400 hover:text-white transition-colors text-[11px] pt-1">🔐 Trainer Panel</a>
@@ -1461,23 +1461,22 @@ export const ClientWebsite: React.FC = () => {
 
           <div className="space-y-2">
             <h4 className="font-extrabold text-white uppercase tracking-wider mb-2 text-xs">Social Connections</h4>
-            <a href={SITE_CONFIG.socials.instagram} target="_blank" rel="noopener noreferrer" className="block text-slate-300 hover:text-white transition-colors">Instagram (@Yoganjali25)</a>
-            <a href={SITE_CONFIG.socials.youtube} target="_blank" rel="noopener noreferrer" className="block text-slate-300 hover:text-white transition-colors">YouTube (Yoganjali25)</a>
-            <a href={SITE_CONFIG.socials.linkedin} target="_blank" rel="noopener noreferrer" className="block text-slate-300 hover:text-white transition-colors">LinkedIn (@anjalinegi25)</a>
+            <a href={cms.instagramUrl || "https://instagram.com"} target="_blank" rel="noopener noreferrer" className="block text-slate-300 hover:text-white transition-colors">Instagram</a>
+            <a href={cms.youtubeUrl || "https://youtube.com"} target="_blank" rel="noopener noreferrer" className="block text-slate-300 hover:text-white transition-colors">YouTube</a>
             <button onClick={() => handleDirectWhatsAppChat()} className="block text-slate-300 hover:text-white text-left transition-colors">WhatsApp Direct</button>
           </div>
 
           <div className="space-y-2">
             <h4 className="font-extrabold text-white uppercase tracking-wider mb-2 text-xs">Direct Contact</h4>
-            <p className="text-slate-300 font-medium">WhatsApp / Call: {SITE_CONFIG.displayPhone}</p>
-            <p className="text-slate-300 font-medium">WhatsApp / Call 2: {SITE_CONFIG.displayPhone2}</p>
-            <p className="text-slate-300 font-medium">Email: {SITE_CONFIG.email}</p>
+            <p className="text-slate-300 font-medium">WhatsApp / Call: {cms.displayPhone || SITE_CONFIG.displayPhone}</p>
+            <p className="text-slate-300 font-medium">WhatsApp / Call 2: {cms.displayPhone2 || SITE_CONFIG.displayPhone2}</p>
+            <p className="text-slate-300 font-medium">Email: {cms.email || SITE_CONFIG.email}</p>
           </div>
 
         </div>
 
         <div className="max-w-7xl mx-auto pt-6 text-center text-[11px] text-slate-400 font-semibold">
-          <p>© 2026 Yoganjali • All rights reserved. Designed for Anjali Negi Yoga & Wellness.</p>
+          <p>© {new Date().getFullYear()} {cms.brandName || SITE_CONFIG.brandName} • All rights reserved. Designed for {cms.instructorName || SITE_CONFIG.instructorName} Yoga & Wellness.</p>
         </div>
       </footer>
 

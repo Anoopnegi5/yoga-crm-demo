@@ -113,8 +113,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && typeof parsed === 'object') {
-          if (!parsed.photoUrl || parsed.photoUrl.includes('dicebear')) parsed.photoUrl = '/anjali-hero.jpg';
-          if (!parsed.studioLogoUrl || parsed.studioLogoUrl.includes('dicebear')) parsed.studioLogoUrl = '/yoganjali-logo.png';
+          if (!parsed.photoUrl || parsed.photoUrl.includes('dicebear')) parsed.photoUrl = '/instructor-hero.jpg';
+          if (!parsed.studioLogoUrl || parsed.studioLogoUrl.includes('dicebear')) parsed.studioLogoUrl = '/logo.png';
           return { ...DEFAULT_TRAINER_PROFILE, ...parsed };
         }
       }
@@ -163,9 +163,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...blogData,
       id: `blog-${Date.now()}`,
       slug: blogData.slug?.trim() || autoSlug || `post-${Date.now()}`,
-      author: blogData.author || trainerProfile.name || 'Anjali Negi',
+      author: blogData.author || trainerProfile.name || 'Aarav Sharma',
       authorRole: blogData.authorRole || 'Founder & Senior Yoga Instructor',
-      authorPhoto: blogData.authorPhoto || trainerProfile.photoUrl || '/anjali-hero.jpg',
+      authorPhoto: blogData.authorPhoto || trainerProfile.photoUrl || '/instructor-hero.jpg',
       date: blogData.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       isPublished: blogData.isPublished !== undefined ? blogData.isPublished : true,
     };

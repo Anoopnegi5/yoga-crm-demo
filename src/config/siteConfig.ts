@@ -34,9 +34,9 @@ export const SITE_CONFIG = {
   },
 
   // Images
-  logoImage: "/yoganjali-logo.png",
+  logoImage: "/logo.png",
   heroImage: "/hero-group-yoga.jpg",
-  aboutImage: "/anjali-hero.jpg",
+  aboutImage: "/instructor-hero.jpg",
 
   // Demo Availability & Pricing Config
   demoClassAvailability: "Daily Live Sessions (Morning & Evening)",
@@ -123,7 +123,7 @@ export const DEFAULT_WEBSITE_CMS = {
   aboutQuote: '"Yoga should fit into your life, not make your life complicated."',
   aboutBio1: "Certified yoga instructor and wellness coach dedicated to helping practitioners build sustainable movement habits, core strength, and inner stillness.",
   aboutBio2: "Sessions combine yoga asanas, mobility work, pranayama, breathing practices, relaxation and mindful movement.",
-  aboutImage: "/anjali-hero.jpg",
+  aboutImage: "/instructor-hero.jpg",
 
   // Yoga Programs Section (#classes)
   classesTitle: "Yoga Programs Designed Around You",
@@ -169,8 +169,8 @@ export const DEFAULT_WEBSITE_CMS = {
   // Contact / Final CTA Section (#contact)
   contactTitle: "Ready to Transform Your Body & Peace of Mind?",
   contactSubtitle: "Join our studio today for personalized guidance, core strength and daily tranquility.",
-  contactImage: "/anjali-mountain-pose.jpg",
-  logoImage: "/yoganjali-logo.png",
+  contactImage: "/instructor-mountain-pose.jpg",
+  logoImage: "/logo.png",
 
   // Contacts & Social Links
   displayPhone: "+91 98765 43210",

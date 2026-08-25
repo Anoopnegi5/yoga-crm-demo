@@ -1,4 +1,4 @@
-# Robots.txt for Yoganjali Yoga Studio
+# Robots.txt for Yoga Studio
 
 # Allow Social Media & Messaging Link Preview Scrapers (WhatsApp, Facebook, Twitter, Telegram, LinkedIn)
 User-agent: facebookexternalhit
@@ -45,4 +45,4 @@ Allow: /*.jpg
 Allow: /*.svg
 
 # XML Sitemap
-Sitemap: https://www.yoganjaliyoga.com/sitemap.xml
+Sitemap: https://yoga-crm-demo.negianoop99.workers.dev/sitemap.xml

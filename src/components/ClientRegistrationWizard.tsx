@@ -35,7 +35,7 @@ const MORNING_TIMES = ['06:00 AM', '06:30 AM', '07:00 AM', '07:30 AM', '08:00 AM
 const EVENING_TIMES = ['04:30 PM', '05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM'];
 
 export const ClientRegistrationWizard: React.FC = () => {
-  const { addClient, clients, payments, trainerDreams, trainerLeaves, attendance, customGroupBatches, showSuccessToast } = useApp();
+  const { addClient, clients, payments, trainerDreams, trainerLeaves, attendance, customGroupBatches, showSuccessToast, trainerProfile } = useApp();
 
   const [step, setStep] = useState<number>(1);
   const [submitted, setSubmitted] = useState(false);
@@ -180,7 +180,7 @@ export const ClientRegistrationWizard: React.FC = () => {
     } finally {
       setIsSubmitting(false);
       setSubmitted(true);
-      showSuccessToast(`🎉 Client Data fed successfully! Welcome ${name} to Yoganjali Studio.`);
+      showSuccessToast(`🎉 Client Data fed successfully! Welcome ${name} to ${trainerProfile.studioName || 'our Studio'}.`);
     }
   };
 
@@ -199,7 +199,7 @@ export const ClientRegistrationWizard: React.FC = () => {
                 {submitted ? 'Registration Successful' : 'Add New Yoga Client'}
               </h3>
               <p className="text-xs text-purple-100">
-                {submitted ? 'Yoganjali Studio Onboarding' : `Step ${step} of 5 — ${
+                {submitted ? `${trainerProfile.studioName || 'Studio'} Onboarding` : `Step ${step} of 5 — ${
                   step === 1 ? 'Basic Details & Avatar' :
                   step === 2 ? 'Class & Group Batch' :
                   step === 3 ? 'Health & Reasons' :
@@ -235,8 +235,8 @@ export const ClientRegistrationWizard: React.FC = () => {
           <div className="p-8 sm:p-12 text-center space-y-7 animate-fadeIn">
             <div className="relative w-28 h-28 mx-auto mb-2">
               <img 
-                src="/anjali_hero.jpg" 
-                alt="Trainer Anjali Negi" 
+                src={trainerProfile.photoUrl || "/instructor-hero.jpg"} 
+                alt="Trainer" 
                 className="w-28 h-28 rounded-full object-cover ring-4 ring-purple-300 shadow-xl shadow-purple-950/20 bg-white"
               />
               <div className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center text-base shadow-md ring-2 ring-white">
@@ -246,7 +246,7 @@ export const ClientRegistrationWizard: React.FC = () => {
             
             <div className="space-y-3 max-w-lg mx-auto">
               <span className="text-xs font-black uppercase tracking-widest text-emerald-800 bg-emerald-100 px-4 py-1.5 rounded-full border border-emerald-200 inline-block">
-                WELCOME TO YOGANJALI STUDIO
+                WELCOME TO {trainerProfile.studioName?.toUpperCase() || 'YOGA STUDIO'}
               </span>
 
               <h2 className="font-serif font-extrabold text-3xl sm:text-4xl text-slate-900 tracking-tight">
@@ -254,7 +254,7 @@ export const ClientRegistrationWizard: React.FC = () => {
               </h2>
 
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
-                Namaste <strong>{name}</strong>! Your client registration details have been saved directly into Trainer Anjali Negi's studio journal dashboard.
+                Namaste <strong>{name}</strong>! Your client registration details have been saved directly into {trainerProfile?.studioName || 'our studio'} journal dashboard.
               </p>
             </div>
 
@@ -303,7 +303,7 @@ export const ClientRegistrationWizard: React.FC = () => {
                       onClick={() => {
                         const url = typeof window !== 'undefined' 
                           ? `${window.location.origin}/yogi/${slugifyName(name)}` 
-                          : `https://www.yoganjaliyoga.com/yogi/${slugifyName(name)}`;
+                          : `/yogi/${slugifyName(name)}`;
                         navigator.clipboard.writeText(url);
                         setCopiedProfileUrl(true);
                         showSuccessToast('📋 Yogi Profile link copied to clipboard!');
@@ -341,9 +341,9 @@ export const ClientRegistrationWizard: React.FC = () => {
                   const daysText = selectedDays.join(', ');
                   const profileLink = typeof window !== 'undefined' 
                     ? `${window.location.origin}/yogi/${slugifyName(name)}` 
-                    : `https://www.yoganjaliyoga.com/yogi/${slugifyName(name)}`;
+                    : `/yogi/${slugifyName(name)}`;
 
-                  const message = `Hi Anjali! 👋\n\nI have completed my Client Registration details for Yoganjali Studio.\n\n📌 REGISTRATION DETAILS:\n• Name: ${name} (${gender})\n• Phone/WhatsApp: ${phone}\n• Area/Address: ${address || 'Local Studio'}\n• Batch: ${selectedBatchDropdown}\n• Class Time: ${classTime} (${timeSlot})\n• Practice Days: ${daysText}\n• Reasons for Joining: ${reasonsText}\n• Health Notes: ${healthText}\n• Fee Billing Plan: ${feeDetail}\n• Joining Date: ${joiningDate}\n• My Yogi Profile Link: ${profileLink}\n\nPlease review my profile and confirm my class timings. 🧘🌿`;
+                  const message = `Hi! 👋\n\nI have completed my Client Registration details for ${trainerProfile.studioName || 'Yoga Studio'}.\n\n📌 REGISTRATION DETAILS:\n• Name: ${name} (${gender})\n• Phone/WhatsApp: ${phone}\n• Area/Address: ${address || 'Local Studio'}\n• Batch: ${selectedBatchDropdown}\n• Class Time: ${classTime} (${timeSlot})\n• Practice Days: ${daysText}\n• Reasons for Joining: ${reasonsText}\n• Health Notes: ${healthText}\n• Fee Billing Plan: ${feeDetail}\n• Joining Date: ${joiningDate}\n• My Yogi Profile Link: ${profileLink}\n\nPlease review my profile and confirm my class timings. 🧘🌿`;
                   
                   const waNumber = SITE_CONFIG.whatsappNumber.replace(/[^0-9]/g, '');
                   window.open(`https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(message)}`, '_blank');
@@ -351,7 +351,7 @@ export const ClientRegistrationWizard: React.FC = () => {
                 className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs sm:text-sm shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2.5 ring-2 ring-emerald-400/30"
               >
                 <MessageCircle className="w-5 h-5 text-white" />
-                <span>Message Anjali on WhatsApp</span>
+                <span>Message Instructor on WhatsApp</span>
               </button>
 
               <button
@@ -369,20 +369,20 @@ export const ClientRegistrationWizard: React.FC = () => {
             <div className="pt-6 border-t border-slate-200/80 space-y-4">
               <div className="space-y-1">
                 <span className="text-[10px] font-black uppercase tracking-widest text-purple-800 bg-purple-100 px-3 py-1 rounded-full border border-purple-200 inline-block">
-                  ✨ STAY CONNECTED WITH ANJALI NEGI
+                  ✨ STAY CONNECTED WITH OUR STUDIO
                 </span>
                 <h4 className="font-extrabold text-slate-900 text-sm">
                   Watch Daily Yoga Postures, Routines & Live Updates!
                 </h4>
                 <p className="text-xs text-slate-500 font-medium max-w-md mx-auto">
-                  Follow and subscribe to our official social media handles to practice along with Anjali Negi daily:
+                  Follow and subscribe to our official social media handles to practice along daily:
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto pt-1">
                 {/* Instagram Button */}
                 <a
-                  href="https://instagram.com/yoganjali25"
+                  href={SITE_CONFIG.socials.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-4 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 text-white font-extrabold text-xs shadow-md hover:scale-105 transition-all flex items-center justify-center gap-2.5 text-center group"
@@ -390,13 +390,13 @@ export const ClientRegistrationWizard: React.FC = () => {
                   <Instagram className="w-5 h-5 text-white shrink-0 group-hover:scale-110 transition-transform" />
                   <div>
                     <span className="block text-[11px] font-bold text-amber-200">Follow on Instagram</span>
-                    <span className="block text-xs font-black">@yoganjali25</span>
+                    <span className="block text-xs font-black">Instagram</span>
                   </div>
                 </a>
 
                 {/* YouTube Button */}
                 <a
-                  href="https://www.youtube.com/@Yoganjali25"
+                  href={SITE_CONFIG.socials.youtube}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-4 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs shadow-md hover:scale-105 transition-all flex items-center justify-center gap-2.5 text-center group"
@@ -404,7 +404,7 @@ export const ClientRegistrationWizard: React.FC = () => {
                   <Youtube className="w-5 h-5 text-white shrink-0 group-hover:scale-110 transition-transform" />
                   <div>
                     <span className="block text-[11px] font-bold text-red-100">Subscribe on YouTube</span>
-                    <span className="block text-xs font-black">youtube.com/@Yoganjali25</span>
+                    <span className="block text-xs font-black">YouTube</span>
                   </div>
                 </a>
               </div>
@@ -899,7 +899,7 @@ export const ClientRegistrationWizard: React.FC = () => {
                     Ready to complete registration? Click the button below to join.
                   </p>
                   <p className="text-[11px] text-slate-400 font-medium">
-                    Your profile will be instantly synced to Trainer Anjali Negi's studio journal.
+                    Your profile will be instantly synced to the studio journal.
                   </p>
                 </div>
               </div>

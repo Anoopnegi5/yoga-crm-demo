@@ -67,9 +67,9 @@ export async function openRazorpayCheckout(opts: RazorpayCheckoutOptions): Promi
     amount: orderData.amount,
     currency: orderData.currency,
     order_id: orderData.orderId,
-    name: 'Yoganjali Yoga Studio',
+    name: 'Yoga Studio',
     description: opts.purpose,
-    image: '/yoganjali-logo.png',
+    image: '/logo.png',
     prefill: {
       name: opts.clientName,
       contact: opts.clientPhone || '',

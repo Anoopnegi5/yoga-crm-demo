@@ -39,8 +39,8 @@ export function getStoredFolderId(): string | null {
   return safeStorage.getItem(GDRIVE_FOLDER_ID_KEY);
 }
 
-// 1. Find existing folder or create 'Yoganjali Studio Backups'
-export async function findOrCreateYoganjaliFolder(accessToken: string): Promise<string> {
+// 1. Find existing folder or create backup folder
+export async function findOrCreateBackupFolder(accessToken: string): Promise<string> {
   const cachedFolderId = getStoredFolderId();
   if (cachedFolderId) return cachedFolderId;
 
@@ -79,7 +79,7 @@ export async function findOrCreateYoganjaliFolder(accessToken: string): Promise<
   });
 
   if (!createRes.ok) {
-    throw new Error('Failed to create Yoganjali Studio Backups folder on Google Drive.');
+    throw new Error('Failed to create backup folder on Google Drive.');
   }
 
   const newFolder = await createRes.json();
@@ -87,14 +87,14 @@ export async function findOrCreateYoganjaliFolder(accessToken: string): Promise<
   return newFolder.id;
 }
 
-// 2. Upload or Overwrite Yoganjali_Latest_Backup.json inside folder
+// 2. Upload or Overwrite yogademo_backup.json inside folder
 export async function uploadOrOverwriteBackupFile(
   accessToken: string,
   backupPayload: any
 ): Promise<{ success: boolean; fileId: string; folderUrl: string }> {
-  const folderId = await findOrCreateYoganjaliFolder(accessToken);
+  const folderId = await findOrCreateBackupFolder(accessToken);
 
-  // Search if Yoganjali_Latest_Backup.json already exists in folder
+  // Search if backup file already exists in folder
   const searchUrl = `https://www.googleapis.com/drive/v3/files?q=name='${encodeURIComponent(FILE_NAME)}'+and+'${folderId}'+in+parents+and+trashed=false&fields=files(id,name)`;
   const searchRes = await fetch(searchUrl, {
     headers: { Authorization: `Bearer ${accessToken}` }

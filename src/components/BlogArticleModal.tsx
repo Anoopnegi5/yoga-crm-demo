@@ -45,10 +45,10 @@ export const BlogArticleModal: React.FC<BlogArticleModalProps> = ({
 
   const articleUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/blog/${post.slug}`
-    : `https://www.yoganjaliyoga.com/blog/${post.slug}`;
+    : `/blog/${post.slug}`;
 
   const handleShareWhatsApp = () => {
-    const text = `🌿 *${post.title}*\n\nRead this insightful yoga guide by Trainer Anjali Negi:\n${articleUrl}\n\n— Yoganjali Yoga Studio`;
+    const text = `🌿 *${post.title}*\n\nRead this insightful yoga guide:\n${articleUrl}\n\n— Yoga Studio`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -208,7 +208,7 @@ export const BlogArticleModal: React.FC<BlogArticleModalProps> = ({
             {/* Author Byline */}
             <div className="flex items-center justify-center sm:justify-start gap-3 pt-2 border-t border-slate-100">
               <img
-                src={post.authorPhoto || '/anjali-hero.jpg'}
+                src={post.authorPhoto || '/instructor-hero.jpg'}
                 alt={post.author}
                 className="w-11 h-11 rounded-full object-cover ring-2 ring-emerald-500 bg-white"
               />
@@ -261,7 +261,7 @@ export const BlogArticleModal: React.FC<BlogArticleModalProps> = ({
           <div className="max-w-3xl mx-auto p-6 sm:p-8 rounded-[2.5rem] bg-gradient-to-br from-[#1B3524] via-[#2A4D3B] to-[#162D1F] text-white shadow-2xl border border-emerald-700/50 text-center space-y-4">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-400/20 text-amber-300 text-xs font-black border border-amber-400/40">
               <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span>Experience Authentic Yoga with Anjali Negi</span>
+              <span>Experience Authentic Guided Yoga</span>
             </div>
 
             <h3 className="font-serif font-extrabold text-2xl sm:text-3xl text-white tracking-tight">

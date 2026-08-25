@@ -3,7 +3,7 @@
   
   <!-- Primary Landing Page -->
   <url>
-    <loc>https://www.yoganjaliyoga.com/</loc>
+    <loc>https://yoga-crm-demo.negianoop99.workers.dev/</loc>
     <lastmod>2026-08-21</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
@@ -11,7 +11,7 @@
 
   <!-- Join / Demo Trial Page -->
   <url>
-    <loc>https://www.yoganjaliyoga.com/join</loc>
+    <loc>https://yoga-crm-demo.negianoop99.workers.dev/join</loc>
     <lastmod>2026-08-21</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
@@ -19,7 +19,7 @@
 
   <!-- Yoga Blog Articles Section -->
   <url>
-    <loc>https://www.yoganjaliyoga.com/#blog</loc>
+    <loc>https://yoga-crm-demo.negianoop99.workers.dev/#blog</loc>
     <lastmod>2026-08-21</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -27,7 +27,7 @@
 
   <!-- Blog Article 1: Morning Yoga for Back Pain -->
   <url>
-    <loc>https://www.yoganjaliyoga.com/blog/5-morning-yoga-asanas-back-pain-relief</loc>
+    <loc>https://yoga-crm-demo.negianoop99.workers.dev/blog/5-morning-yoga-asanas-back-pain-relief</loc>
     <lastmod>2026-08-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -35,7 +35,7 @@
 
   <!-- Blog Article 2: The Science of Vinyasa Flow -->
   <url>
-    <loc>https://www.yoganjaliyoga.com/blog/the-science-of-vinyasa-flow-energy-breath</loc>
+    <loc>https://yoga-crm-demo.negianoop99.workers.dev/blog/the-science-of-vinyasa-flow-energy-breath</loc>
     <lastmod>2026-08-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -43,7 +43,7 @@
 
   <!-- Blog Article 3: Yoga for Weight Loss -->
   <url>
-    <loc>https://www.yoganjaliyoga.com/blog/yoga-for-weight-loss-metabolism-boost</loc>
+    <loc>https://yoga-crm-demo.negianoop99.workers.dev/blog/yoga-for-weight-loss-metabolism-boost</loc>
     <lastmod>2026-08-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
@@ -51,7 +51,7 @@
 
   <!-- Blog Article 4: Pranayama 101 Breathing Techniques -->
   <url>
-    <loc>https://www.yoganjaliyoga.com/blog/pranayama-101-breathing-techniques-stress-relief</loc>
+    <loc>https://yoga-crm-demo.negianoop99.workers.dev/blog/pranayama-101-breathing-techniques-stress-relief</loc>
     <lastmod>2026-08-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

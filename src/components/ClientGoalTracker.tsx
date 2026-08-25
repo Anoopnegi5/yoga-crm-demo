@@ -42,7 +42,7 @@ export const ClientGoalTracker: React.FC = () => {
   const selectedClient = clients.find(c => c.id === selectedClientId) || clients[0];
 
   // Client Goal State (stored in localStorage per client)
-  const goalStorageKey = `yoganjali_goal_data_${selectedClient?.id || 'default'}`;
+  const goalStorageKey = `yogademo_goal_data_${selectedClient?.id || 'default'}`;
 
   const [goalTitle, setGoalTitle] = useState<string>('Weight Loss & Core Strength (5kg Goal)');
   const [targetDays, setTargetDays] = useState<number>(20);
@@ -132,8 +132,8 @@ export const ClientGoalTracker: React.FC = () => {
 
   // Handle WhatsApp Fee Renewal / Support Chat
   const handleFeeRenewalWhatsApp = () => {
-    const waNumber = SITE_CONFIG.whatsappNumber.replace(/[^0-9]/g, '');
-    const msg = `Hi Anjali! 👋 I am tracking my Health Goal (${goalTitle}) on Yoganjali Studio.\n\nMy current streak is 🔥 ${streakCount} Days! I would like to renew my Yoga Class Subscription Fee to keep my goal progress unlocked. 💳🧘🌿`;
+    const waNumber = (cms.displayPhone || SITE_CONFIG.whatsappNumber).replace(/[^0-9]/g, '');
+    const msg = `Hi! 👋 I am tracking my Health Goal (${goalTitle}) on ${cms.brandName || 'our Studio'}.\n\nMy current streak is 🔥 ${streakCount} Days! I would like to renew my Yoga Class Subscription Fee to keep my goal progress unlocked. 💳🧘🌿`;
     window.open(`https://api.whatsapp.com/send?phone=${waNumber}&text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -159,11 +159,11 @@ export const ClientGoalTracker: React.FC = () => {
           <div className="flex items-center gap-3">
             <img 
               src={cms.logoImage || SITE_CONFIG.logoImage} 
-              alt="Yoganjali Logo" 
+              alt="Studio Logo" 
               className="w-9 h-9 rounded-xl object-cover ring-2 ring-emerald-400/40 bg-white p-0.5" 
             />
             <div className="hidden sm:block">
-              <h1 className="font-serif font-extrabold text-lg text-white leading-none">YOGANJALI HEALTH GOAL TRACKER</h1>
+              <h1 className="font-serif font-extrabold text-lg text-white leading-none">{cms.brandName?.toUpperCase() || 'STUDIO'} HEALTH GOAL TRACKER</h1>
               <p className="text-[10px] text-emerald-300 font-bold tracking-wider mt-0.5">Daily Post-Class Progress & Fee Synergy</p>
             </div>
           </div>

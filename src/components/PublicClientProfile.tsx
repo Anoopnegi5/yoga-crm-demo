@@ -46,7 +46,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   clientId,
   onBackToDirectory 
 }) => {
-  const { clients, updateClient, attendance, leaves, trainerLeaves, payments, addPayment, showSuccessToast } = useApp();
+  const { clients, updateClient, attendance, leaves, trainerLeaves, payments, addPayment, showSuccessToast, trainerProfile, websiteCMS } = useApp();
   const [copied, setCopied] = useState(false);
   const [isPaymentCheckoutOpen, setIsPaymentCheckoutOpen] = useState(false);
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
@@ -66,9 +66,9 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
 
   useEffect(() => {
     if (targetClient?.name) {
-      document.title = `🧘 ${targetClient.name.trim()} • Official Yogi Profile | Yoganjali`;
+      document.title = `🧘 ${targetClient.name.trim()} • Official Yogi Profile | ${trainerProfile?.studioName || 'Yoga Studio'}`;
     }
-  }, [targetClient]);
+  }, [targetClient, trainerProfile]);
 
   if (!targetClient) {
     return (
@@ -193,7 +193,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
       title: 'Dedicated Yogi',
       icon: '🧘',
       earned: true,
-      desc: 'Official active practitioner at Yoganjali Studio'
+      desc: `Official active practitioner at ${trainerProfile?.studioName || 'Yoga Studio'}`
     }
   ];
 
@@ -219,7 +219,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   const currentSlug = slugifyName(targetClient.name);
   const publicProfileUrl = typeof window !== 'undefined' 
     ? `${window.location.origin}/yogi/${currentSlug}`
-    : `https://www.yoganjaliyoga.com/yogi/${currentSlug}`;
+    : `/yogi/${currentSlug}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(publicProfileUrl);
@@ -229,7 +229,9 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
   };
 
   const handleShareWhatsApp = () => {
-    const message = `Namaste ${targetClient.name}! 🙏\n\nHere is your personal Yoganjali Yoga Profile & Progress Portal link:\n${publicProfileUrl}\n\nIn this link, you can track:\n✨ Monthly Attendance & Regularity Record\n💳 Fee Payment Status & Billing History\n🧘 Batch Schedule & Personal Health Goals\n\nKeep up your dedication and practice on the mat! 🌿🧘‍♀️\n— Trainer Anjali Negi, Yoganjali Yoga Studio`;
+    const studio = trainerProfile?.studioName || 'Yoga Studio';
+    const trainer = trainerProfile?.name || 'Trainer';
+    const message = `Namaste ${targetClient.name}! 🙏\n\nHere is your personal ${studio} Progress Portal link:\n${publicProfileUrl}\n\nIn this link, you can track:\n✨ Monthly Attendance & Regularity Record\n💳 Fee Payment Status & Billing History\n🧘 Batch Schedule & Personal Health Goals\n\nKeep up your dedication and practice on the mat! 🌿🧘‍♀️\n— ${trainer}, ${studio}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`, '_blank');
   };
 
@@ -373,20 +375,18 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
               </button>
             ) : (
               <a
-                href="https://www.yoganjaliyoga.com"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/"
                 className="flex items-center gap-2.5 hover:opacity-95 transition-all group cursor-pointer"
-                title="Visit Yoganjali Yoga Studio Website"
+                title={`Visit ${trainerProfile?.studioName || 'Yoga Studio'} Website`}
               >
                 <img
-                  src="/yoganjali-logo.png"
-                  alt="Yoganjali Logo"
+                  src={trainerProfile?.studioLogoUrl || "/logo.png"}
+                  alt="Studio Logo"
                   className="w-9 h-9 rounded-full bg-white object-contain p-0.5 shadow-md ring-2 ring-amber-400 group-hover:scale-105 transition-transform"
                 />
                 <div>
                   <h2 className="font-serif font-extrabold text-sm sm:text-base text-white tracking-tight leading-tight group-hover:text-amber-300 transition-colors">
-                    Yoganjali Studio
+                    {trainerProfile?.studioName || 'Yoga Studio'}
                   </h2>
                   <p className="text-[10px] text-emerald-200 font-medium leading-none mt-0.5">
                     Official Member Practice Portal
@@ -404,7 +404,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
             <button
               onClick={() => setIsLeaveModalOpen(true)}
               className="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs sm:text-sm border border-white/20 transition-all flex items-center gap-1.5 hover:scale-105 active:scale-95 shadow-sm"
-              title="Inform Trainer Anjali of upcoming leave"
+              title="Inform instructor of upcoming leave"
             >
               <span>🏖️</span>
               <span className="hidden sm:inline">Inform Leave</span>
@@ -1168,7 +1168,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
             )}
 
             <p className="text-[11px] text-slate-400 font-medium italic text-center pt-1 flex items-center justify-center gap-1">
-              <Lock className="w-3 h-3 text-slate-400" /> All fee transactions are securely recorded in Yoganjali Studio ledger.
+              <Lock className="w-3 h-3 text-slate-400" /> All fee transactions are securely recorded in the studio ledger.
             </p>
           </div>
 
@@ -1186,12 +1186,12 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
 
             <div className="flex items-center gap-3">
               <img
-                src="/anjali_hero.jpg"
-                alt="Trainer Anjali Negi"
+                src={trainerProfile?.photoUrl || "/instructor-hero.jpg"}
+                alt={trainerProfile?.name || "Trainer"}
                 className="w-12 h-12 rounded-full object-cover ring-2 ring-amber-400 shrink-0 bg-white"
               />
               <div>
-                <h5 className="font-extrabold text-white text-sm">Trainer Anjali Negi</h5>
+                <h5 className="font-extrabold text-white text-sm">{trainerProfile?.name || "Trainer Aarav Sharma"}</h5>
                 <p className="text-[11px] text-emerald-200 font-medium">Founder & Certified Senior Yoga Instructor</p>
               </div>
             </div>
@@ -1247,7 +1247,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
         <div className="max-w-xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-100 text-emerald-900 text-xs font-bold border border-emerald-200">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-            <span>Connect with Yoganjali & Trainer Anjali Negi</span>
+            <span>Connect with {trainerProfile?.studioName || 'Yoga Studio'} & {trainerProfile?.name || 'Trainer'}</span>
           </div>
 
           <h4 className="font-serif font-extrabold text-xl sm:text-2xl text-slate-900">
@@ -1260,9 +1260,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
           {/* Social Buttons Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
             <a
-              href="https://www.yoganjaliyoga.com"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/"
               className="flex items-center justify-center gap-2.5 p-3.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs shadow-md hover:scale-105 transition-all"
             >
               <Globe className="w-4 h-4 text-emerald-400" />
@@ -1270,17 +1268,17 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
             </a>
 
             <a
-              href="https://instagram.com/yoganjali25"
+              href={websiteCMS?.instagramUrl || "https://instagram.com"}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2.5 p-3.5 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white font-extrabold text-xs shadow-md hover:scale-105 transition-all"
             >
               <Instagram className="w-4 h-4 text-white" />
-              <span>@Yoganjali25</span>
+              <span>Instagram</span>
             </a>
 
             <a
-              href="https://www.youtube.com/@Yoganjali25"
+              href={websiteCMS?.youtubeUrl || "https://youtube.com"}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2.5 p-3.5 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs shadow-md hover:scale-105 transition-all"
@@ -1293,7 +1291,7 @@ export const PublicClientProfile: React.FC<PublicClientProfileProps> = ({
 
         <div className="pt-4 border-t border-slate-100 max-w-md mx-auto">
           <p className="text-[11px] text-slate-400 font-medium">
-            © {new Date().getFullYear()} Yoganjali Yoga Studio • Guided by Anjali Negi • Official Member Progress Portal
+            © {new Date().getFullYear()} {trainerProfile?.studioName || 'Yoga Studio'} • Guided by {trainerProfile?.name || 'Trainer'} • Official Member Progress Portal
           </p>
         </div>
       </footer>

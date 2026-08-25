@@ -863,7 +863,9 @@ export const Dashboard: React.FC = () => {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="font-serif font-extrabold text-lg sm:text-xl text-white">Anjali's Future Dreams & Revenue Goals</h4>
+                  <h4 className="font-serif font-extrabold text-lg sm:text-xl text-white">
+                    {trainerProfile?.name ? `${trainerProfile.name}'s Future Dreams & Revenue Goals` : 'Trainer Vision & Revenue Goals'}
+                  </h4>
                   <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-300/40 px-2.5 py-0.5 rounded-full font-black uppercase">
                     VISION BOARD
                   </span>

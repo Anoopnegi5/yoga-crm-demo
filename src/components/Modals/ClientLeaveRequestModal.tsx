@@ -82,7 +82,7 @@ export const ClientLeaveRequestModal: React.FC<ClientLeaveRequestModalProps> = (
   const trainerPhone = trainerProfile.phone || '919876543210';
   const cleanTrainerPhone = trainerPhone.replace(/[^0-9]/g, '');
 
-  const whatsappMessage = `Namaste Trainer Anjali ji! 🙏
+  const whatsappMessage = `Namaste ${trainerProfile.name || 'Instructor'}! 🙏
 
 I would like to inform you that I will be on leave from yoga class on:
 📅 *${getEffectiveDatesText()}*
@@ -113,7 +113,7 @@ Looking forward to reconnecting on the mat upon return! 🌿🧘‍♀️
             </div>
             <div>
               <h3 className="font-extrabold text-base">Inform Class Leave</h3>
-              <p className="text-xs text-emerald-200">Notify Trainer Anjali Negi of your upcoming absence</p>
+              <p className="text-xs text-emerald-200">Notify instructor of your upcoming absence</p>
             </div>
           </div>
 
@@ -148,10 +148,10 @@ Looking forward to reconnecting on the mat upon return! 🌿🧘‍♀️
             <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200/90 text-left space-y-3">
               <div className="flex items-center gap-2 text-xs font-extrabold text-emerald-950">
                 <MessageCircle className="w-4 h-4 text-emerald-600" />
-                <span>Notify Trainer Anjali on WhatsApp</span>
+                <span>Notify Instructor on WhatsApp</span>
               </div>
               <p className="text-[11px] text-slate-600 font-medium leading-relaxed">
-                Send a 1-click respectful WhatsApp notification to Trainer Anjali Negi with your leave details.
+                Send a 1-click respectful WhatsApp notification with your leave details.
               </p>
               <button
                 type="button"
@@ -178,7 +178,7 @@ Looking forward to reconnecting on the mat upon return! 🌿🧘‍♀️
             {/* Yogi Mini Card */}
             <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200/80">
               <img
-                src={client.photoUrl || '/anjali-hero.jpg'}
+                src={client.photoUrl || '/instructor-hero.jpg'}
                 alt={client.name}
                 className="w-11 h-11 rounded-xl object-cover ring-2 ring-emerald-500 bg-white"
               />
@@ -268,7 +268,7 @@ Looking forward to reconnecting on the mat upon return! 🌿🧘‍♀️
 
             {/* Optional Note */}
             <div className="space-y-1">
-              <label className="block text-xs font-bold text-slate-700">Optional Message for Trainer Anjali</label>
+              <label className="block text-xs font-bold text-slate-700">Optional Message for Instructor</label>
               <textarea
                 rows={2}
                 value={customNotes}

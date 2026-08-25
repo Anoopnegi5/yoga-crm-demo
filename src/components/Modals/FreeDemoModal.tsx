@@ -75,7 +75,7 @@ export const FreeDemoModal: React.FC<FreeDemoModalProps> = ({
     const fullPhoneNumber = `${selectedCountry.dialCode} ${cleanPhoneDigits}`;
 
     // 1. WhatsApp Automated Message Generation with Selected Program & Group Batch
-    const waMessage = `Hi Anjali! 👋\n\nI would like to join the Free Demo Yoga Class.\n\n• Name: ${trimmedName}\n• WhatsApp: ${fullPhoneNumber}\n• Selected Program: ${selectedProgram}\n• Selected Group Batch: ${selectedGroupBatch}\n• My Goal: ${goal}\n• Preferred Time: ${preferredTime}\n\nPlease share the available demo class timings. 🧘🌿`;
+    const waMessage = `Hi! 👋\n\nI would like to join the Free Demo Yoga Class.\n\n• Name: ${trimmedName}\n• WhatsApp: ${fullPhoneNumber}\n• Selected Program: ${selectedProgram}\n• Selected Group Batch: ${selectedGroupBatch}\n• My Goal: ${goal}\n• Preferred Time: ${preferredTime}\n\nPlease share the available demo class timings. 🧘🌿`;
 
     // Destination WhatsApp Business Number from SITE_CONFIG
     const destinationNumber = SITE_CONFIG.whatsappNumber.replace(/[^0-9]/g, '');
@@ -110,7 +110,7 @@ export const FreeDemoModal: React.FC<FreeDemoModalProps> = ({
       goal: goal
     });
 
-    showSuccessToast(`Opening WhatsApp for Anjali Negi! Selected: ${selectedProgram}. Welcome ${trimmedName}.`);
+    showSuccessToast(`Opening WhatsApp! Selected: ${selectedProgram}. Welcome ${trimmedName}.`);
     onClose();
   };
 

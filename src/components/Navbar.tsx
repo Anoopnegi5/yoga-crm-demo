@@ -40,7 +40,7 @@ export const Navbar: React.FC<NavbarProps> = () => {
     { id: 'settings', label: 'Settings', icon: SettingsIcon },
   ];
 
-  const appTitle = trainerProfile.appTitle || 'Yoganjali';
+  const appTitle = trainerProfile.appTitle || trainerProfile.studioName || 'Yoga Studio CRM';
   const appSubtitle = trainerProfile.appSubtitle || 'Yoga Journal & Fee Manager';
 
   return (

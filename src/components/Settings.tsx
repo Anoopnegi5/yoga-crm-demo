@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { User, Lock, Building, Save, CheckCircle2, LogOut, Upload, Sparkles, Image as ImageIcon, Type, Download, Globe, Cloud, Database, BookOpen } from 'lucide-react';
 import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
 import { getSupabaseConfig, saveSupabaseConfig, clearSupabaseConfig } from '../utils/supabaseSync';
-import { getStoredGDriveToken, saveGDriveToken, clearGDriveToken, uploadOrOverwriteBackupFile, findOrCreateYoganjaliFolder, openGoogleOAuthTokenPage } from '../utils/gdriveSync';
+import { getStoredGDriveToken, saveGDriveToken, clearGDriveToken, uploadOrOverwriteBackupFile, findOrCreateBackupFolder, openGoogleOAuthTokenPage } from '../utils/gdriveSync';
 import { BlogManagerCMS } from './BlogManagerCMS';
 import { safeStorage } from '../utils/safeStorage';
 
@@ -17,12 +17,12 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
   const [name, setName] = useState(trainerProfile.name);
   const [studioName, setStudioName] = useState(trainerProfile.studioName);
   const [phone, setPhone] = useState(trainerProfile.phone);
-  const [upiId, setUpiId] = useState(trainerProfile.upiId || 'yoganjali@upi');
+  const [upiId, setUpiId] = useState(trainerProfile.upiId || 'trainer@upi');
   const [studioLogoUrl, setStudioLogoUrl] = useState<string>(
-    trainerProfile.studioLogoUrl || '/yoganjali-logo.png'
+    trainerProfile.studioLogoUrl || '/logo.png'
   );
   
-  const [appTitle, setAppTitle] = useState<string>(trainerProfile.appTitle || 'Yoganjali');
+  const [appTitle, setAppTitle] = useState<string>(trainerProfile.appTitle || 'Yoga Studio CRM');
   const [appSubtitle, setAppSubtitle] = useState<string>(trainerProfile.appSubtitle || 'Yoga Journal & Fee Manager');
 
   // Supabase Realtime State
@@ -37,8 +37,8 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
 
   // Brand & Header
   const [announcementBar, setAnnouncementBar] = useState(cms.announcementBar || "🌸 1-Day Free Trial Available • Book Your Live Demo Session Today");
-  const [brandName, setBrandName] = useState(cms.brandName || "YOGANJALI");
-  const [instructorName, setInstructorName] = useState(cms.instructorName || "Anjali Negi");
+  const [brandName, setBrandName] = useState(cms.brandName || "PRANA YOGA STUDIO");
+  const [instructorName, setInstructorName] = useState(cms.instructorName || "Aarav Sharma");
   const [tagline, setTagline] = useState(cms.tagline || "Yoga Should Fit Into Your Life");
 
   // Hero Section
@@ -48,10 +48,10 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
   const [heroImage, setHeroImage] = useState(cms.heroImage);
 
   // Why Choose Us
-  const [whyTitle, setWhyTitle] = useState(cms.whyTitle || "Why Choose Yoganjali?");
+  const [whyTitle, setWhyTitle] = useState(cms.whyTitle || "Why Choose Us?");
   const [whySubtitle, setWhySubtitle] = useState(cms.whySubtitle || "Experience authentic, personalized yoga...");
 
-  // About Anjali
+  // About Trainer
   const [aboutTitle, setAboutTitle] = useState(cms.aboutTitle);
   const [aboutQuote, setAboutQuote] = useState(cms.aboutQuote);
   const [aboutBio1, setAboutBio1] = useState(cms.aboutBio1);
@@ -78,15 +78,15 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
   const [faqSubtitle, setFaqSubtitle] = useState(cms.faqSubtitle || "Got questions? Here is everything you need to know...");
 
   const [contactTitle, setContactTitle] = useState(cms.contactTitle || "Ready to Transform Your Body & Peace of Mind?");
-  const [contactSubtitle, setContactSubtitle] = useState(cms.contactSubtitle || "Join Anjali Negi's studio today...");
+  const [contactSubtitle, setContactSubtitle] = useState(cms.contactSubtitle || "Join our yoga studio today...");
   const [contactImage, setContactImage] = useState(cms.contactImage);
   const [logoImage, setLogoImage] = useState(cms.logoImage);
   const [displayPhone, setDisplayPhone] = useState(cms.displayPhone);
   const [displayPhone2, setDisplayPhone2] = useState(cms.displayPhone2);
   const [email, setEmail] = useState(cms.email);
-  const [googleReviewsUrl, setGoogleReviewsUrl] = useState(cms.googleReviewsUrl || "https://share.google/Jz55Wo5fRsfuUPMhV");
-  const [instagramUrl, setInstagramUrl] = useState(cms.instagramUrl || "https://instagram.com/yoganjali25");
-  const [youtubeUrl, setYoutubeUrl] = useState(cms.youtubeUrl || "https://www.youtube.com/@Yoganjali25");
+  const [googleReviewsUrl, setGoogleReviewsUrl] = useState(cms.googleReviewsUrl || "");
+  const [instagramUrl, setInstagramUrl] = useState(cms.instagramUrl || "https://instagram.com");
+  const [youtubeUrl, setYoutubeUrl] = useState(cms.youtubeUrl || "https://youtube.com");
 
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -128,7 +128,7 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
       const backupData = exportBackupData();
       const res = await uploadOrOverwriteBackupFile(token, backupData);
       setGdriveFolderUrl(res.folderUrl);
-      alert(`🎉 SUCCESS! Backup file (Yoganjali_Latest_Backup.json) uploaded to Google Drive folder "Yoganjali Studio Backups"!\n\nFolder Link: ${res.folderUrl}`);
+      alert(`🎉 SUCCESS! Backup file uploaded to Google Drive folder "Yoga Studio Demo Backups"!\n\nFolder Link: ${res.folderUrl}`);
     } catch (err: any) {
       alert(`Google Drive Upload Error: ${err.message || err}`);
       if (String(err.message || '').includes('expired') || String(err.message || '').includes('401')) {
@@ -357,7 +357,7 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                     required
                     value={appTitle}
                     onChange={(e) => setAppTitle(e.target.value)}
-                    placeholder="Yoganjali"
+                    placeholder="Yoga Studio CRM"
                     className="w-full px-4 py-3 rounded-2xl bg-white border border-purple-200 text-xs font-extrabold text-purple-950 outline-none focus:ring-2 focus:ring-purple-500/20"
                   />
                 </div>
@@ -410,7 +410,7 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
 
                 <button
                   type="button"
-                  onClick={() => handlePresetLogo('YoganjaliLotus')}
+                  onClick={() => handlePresetLogo('LotusEmblem')}
                   className="px-3 py-2 rounded-xl bg-white border border-purple-200 text-purple-900 text-xs font-bold hover:bg-purple-100"
                 >
                   🌸 Lotus Preset
@@ -469,7 +469,7 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                   type="text"
                   value={upiId}
                   onChange={(e) => setUpiId(e.target.value)}
-                  placeholder="yoganjali@upi"
+                  placeholder="trainer@upi"
                   className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold outline-none focus:ring-2 focus:ring-purple-500/20"
                 />
               </div>
@@ -631,7 +631,7 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                     </label>
                   </div>
 
-                  {/* About Anjali Photo Uploader */}
+                  {/* About Instructor Photo Uploader */}
                   <div className="bg-white/10 p-4 rounded-2xl border border-white/15 space-y-2 text-center">
                     <span className="block text-[11px] font-bold text-purple-200">About Instructor Photo</span>
                     <div className="w-16 h-16 rounded-2xl bg-white mx-auto overflow-hidden ring-2 ring-purple-400">
@@ -1090,7 +1090,7 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                 </div>
                 <div>
                   <h4 className="font-serif font-extrabold text-white text-base">Google Drive & Daily Rolling Auto-Backup</h4>
-                  <p className="text-[11px] text-indigo-200 font-medium">Auto-creates "Yoganjali Studio Backups" folder & daily file overwrite</p>
+                  <p className="text-[11px] text-indigo-200 font-medium">Auto-creates "Yoga Studio Demo Backups" folder & daily file overwrite</p>
                 </div>
               </div>
               <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 text-[10px] font-black uppercase">
@@ -1105,11 +1105,11 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
               </div>
               <div className="flex items-center justify-between text-indigo-200">
                 <span>Google Drive Folder Name:</span>
-                <strong className="text-amber-300 font-bold">📁 Yoganjali Studio Backups</strong>
+                <strong className="text-amber-300 font-bold">📁 Yoga Studio Demo Backups</strong>
               </div>
               <div className="flex items-center justify-between text-indigo-200">
                 <span>Backup Target File:</span>
-                <code className="text-emerald-300 font-mono text-[11px]">Yoganjali_Latest_Backup.json</code>
+                <code className="text-emerald-300 font-mono text-[11px]">yogademo_backup.json</code>
               </div>
             </div>
 
@@ -1154,7 +1154,7 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                             const parsed = JSON.parse(evt.target?.result as string);
                             const success = importBackupData(parsed);
                             if (success) {
-                              alert('🎉 SUCCESS! All client records, payments, attendance, and settings restored cleanly into Yoganjali Studio Panel!');
+                              alert('🎉 SUCCESS! All client records, payments, attendance, and settings restored cleanly into Yoga Studio Panel!');
                             }
                           } catch (err) {
                             alert('Invalid backup JSON file.');
@@ -1171,7 +1171,7 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
 
             {gdriveFolderUrl && (
               <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-xs font-bold text-emerald-200 text-center">
-                🎉 Backup folder created! <a href={gdriveFolderUrl} target="_blank" rel="noopener noreferrer" className="underline text-amber-300 font-black">Click here to open "Yoganjali Studio Backups" on Google Drive ↗</a>
+                🎉 Backup folder created! <a href={gdriveFolderUrl} target="_blank" rel="noopener noreferrer" className="underline text-amber-300 font-black">Click here to open "Yoga Studio Demo Backups" on Google Drive ↗</a>
               </div>
             )}
           </div>

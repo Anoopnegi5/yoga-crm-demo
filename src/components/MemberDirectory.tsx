@@ -22,7 +22,7 @@ interface MemberDirectoryProps {
 }
 
 export const MemberDirectory: React.FC<MemberDirectoryProps> = ({ onSelectClient, onLogout }) => {
-  const { clients, attendance } = useApp();
+  const { clients, attendance, trainerProfile } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBatchFilter, setSelectedBatchFilter] = useState<string>('All');
 
@@ -53,7 +53,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({ onSelectClient
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="font-serif font-extrabold text-lg sm:text-xl text-white tracking-tight">
-                  Yoganjali Member Directory
+                  {trainerProfile?.studioName || 'Studio'} Member Directory
                 </h1>
                 <span className="px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/40 text-amber-300 text-[10px] font-bold">
                   🔒 Trainer Only
@@ -236,7 +236,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({ onSelectClient
       <footer className="mt-16 border-t border-slate-200 bg-white py-10 px-4 text-center space-y-4">
         <div className="max-w-md mx-auto space-y-2">
           <p className="text-xs font-bold text-slate-800">
-            Want to start your own yoga journey with Trainer Anjali Negi?
+            Want to start your own yoga journey with {trainerProfile?.name || 'our Instructor'}?
           </p>
           <a
             href="/join"
@@ -247,7 +247,7 @@ export const MemberDirectory: React.FC<MemberDirectoryProps> = ({ onSelectClient
           </a>
         </div>
         <p className="text-[11px] text-slate-400 font-medium">
-          © {new Date().getFullYear()} Yoganjali Studio & Fee Manager • Official Member Directory
+          © {new Date().getFullYear()} {trainerProfile?.studioName || 'Yoga Studio'} & Fee Manager • Official Member Directory
         </p>
       </footer>
 

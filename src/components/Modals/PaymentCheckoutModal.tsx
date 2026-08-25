@@ -109,7 +109,7 @@ export const PaymentCheckoutModal: React.FC<PaymentCheckoutModalProps> = ({
       clientPhone,
       clientEmail,
       purpose,
-      description: `Yoganjali Yoga Studio — ${purpose}`,
+      description: `Yoga Studio — ${purpose}`,
     });
     if (result) {
       setPaymentLink(result.link);
@@ -136,7 +136,7 @@ export const PaymentCheckoutModal: React.FC<PaymentCheckoutModalProps> = ({
 
   const shareOnWhatsApp = () => {
     const phone = clientPhone?.replace(/[^0-9]/g, '').slice(-10);
-    const msg = `Hi ${clientName}! 🙏\n\nYour yoga class fee payment link is ready:\n\n💳 ${paymentLink}\n\nAmount: ₹${editAmount.toLocaleString()}\nFor: ${purpose}\n\nLink expires: ${linkExpiry}\n\n— Anjali Negi, Yoganjali 🧘‍♀️`;
+    const msg = `Hi ${clientName}! 🙏\n\nYour yoga class fee payment link is ready:\n\n💳 ${paymentLink}\n\nAmount: ₹${editAmount.toLocaleString()}\nFor: ${purpose}\n\nLink expires: ${linkExpiry}\n\n— Yoga Studio 🧘‍♀️`;
     const waUrl = phone
       ? `https://api.whatsapp.com/send?phone=91${phone}&text=${encodeURIComponent(msg)}`
       : `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;

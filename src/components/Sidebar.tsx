@@ -140,7 +140,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div>
                 <div className="flex items-center gap-1.5">
                   <h1 className="font-extrabold text-sm tracking-wider uppercase text-white font-serif group-hover:text-emerald-400 transition-colors">
-                    {trainerProfile.appTitle || 'YOGANJALI'}
+                    {trainerProfile.appTitle || trainerProfile.studioName || 'YOGA CRM'}
                   </h1>
                 </div>
                 <p className="text-[10px] text-emerald-400/90 font-medium tracking-wide leading-none mt-0.5">
@@ -161,9 +161,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Quick Website Switcher Bar */}
           <div className="px-4 pt-3 pb-1">
             <a
-              href="https://www.yoganjaliyoga.com"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/"
               className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 text-slate-400 hover:text-emerald-300 transition-all text-xs font-semibold group"
             >
               <span className="flex items-center gap-2">
@@ -276,7 +274,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             <div className="min-w-0 flex-1">
               <p className="font-extrabold text-xs text-white truncate group-hover:text-emerald-300 transition-colors">
-                {trainerProfile.name || 'Anjali Negi'}
+                {trainerProfile.name || 'Trainer'}
               </p>
               <p className="text-[10px] text-slate-400 truncate">
                 {trainerProfile.studioName || 'Lead Yoga Instructor'}

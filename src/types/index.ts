@@ -130,7 +130,7 @@ export interface WebsiteCMS {
   heroSubtitle: string;
   heroImage: string;
 
-  // Why Choose Yoganjali Section (#benefits)
+  // Why Choose Us Section (#benefits)
   whyTitle: string;
   whySubtitle: string;
   whyCard1Title: string;
@@ -142,7 +142,7 @@ export interface WebsiteCMS {
   whyCard4Title: string;
   whyCard4Desc: string;
 
-  // About Anjali Section (#about)
+  // About Trainer Section (#about)
   aboutTitle: string;
   aboutQuote: string;
   aboutBio1: string;
