@@ -17,9 +17,9 @@ export const SITE_CONFIG = {
   title: "Certified Yoga Instructor & Wellness Coach",
   
   // WhatsApp Configuration (Destination number for Free Demo lead generation)
-  whatsappNumber: "+919876543210", // Primary WhatsApp destination number
-  displayPhone: "+91 98765 43210",
-  displayPhone2: "+91 98765 43211",
+  whatsappNumber: "+912345678901", // Primary WhatsApp destination number
+  displayPhone: "+91 23456 78901",
+  displayPhone2: "+91 23456 78902",
   email: "Negianoop99@gmail.com",
 
   // Social Links
@@ -173,8 +173,8 @@ export const DEFAULT_WEBSITE_CMS = {
   logoImage: "/logo.png",
 
   // Contacts & Social Links
-  displayPhone: "+91 98765 43210",
-  displayPhone2: "+91 98765 43211",
+  displayPhone: "+91 23456 78901",
+  displayPhone2: "+91 23456 78902",
   email: "Negianoop99@gmail.com",
   googleReviewsUrl: "https://google.com",
   instagramUrl: "https://instagram.com",

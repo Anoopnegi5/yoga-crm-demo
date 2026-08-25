@@ -104,7 +104,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_KEY = 'yogademo_fresh_state_v2';
+const LOCAL_STORAGE_KEY = 'yogademo_fresh_state_v3';
 
 // Auto-purge any stale cached items from older sessions
 try {
@@ -112,7 +112,7 @@ try {
     const staleKeys: string[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && (k.startsWith('yogademo_app_state_v1') || k.startsWith('yoganjali_') || k.includes('trainer_profile') && !k.includes('yogademo_fresh_state_v2'))) {
+      if (k && (k.startsWith('yogademo_app_state_v1') || k.startsWith('yogademo_fresh_state_v2') || k.startsWith('yoganjali_') || k.includes('trainer_profile') && !k.includes('yogademo_fresh_state_v3'))) {
         staleKeys.push(k);
       }
     }

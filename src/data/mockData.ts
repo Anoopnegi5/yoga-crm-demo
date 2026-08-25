@@ -3,7 +3,7 @@ import { Client, PaymentRecord, LeaveRecord, AttendanceRecord, TrainerProfile, T
 export const DEFAULT_TRAINER_PROFILE: TrainerProfile = {
   name: 'Aarav Sharma',
   studioName: 'Prana Yoga Studio',
-  phone: '+91 98765 43210',
+  phone: '+91 23456 78901',
   upiId: 'pranayogastudio@upi',
   photoUrl: '/instructor-hero.jpg',
   studioLogoUrl: '/logo.png',

@@ -79,7 +79,7 @@ export const ClientLeaveRequestModal: React.FC<ClientLeaveRequestModalProps> = (
     }
   };
 
-  const trainerPhone = trainerProfile.phone || '919876543210';
+  const trainerPhone = trainerProfile.phone || '912345678901';
   const cleanTrainerPhone = trainerPhone.replace(/[^0-9]/g, '');
 
   const whatsappMessage = `Namaste ${trainerProfile.name || 'Instructor'}! 🙏
