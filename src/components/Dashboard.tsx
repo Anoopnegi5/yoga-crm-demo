@@ -101,12 +101,20 @@ export const formatClassTime = (timeStr: string): string => {
   return clean;
 };
 
-// Check if class time has passed compared to current local time
-const isTimePassed = (timeStr: string): boolean => {
-  const classMins = parseTimeToMinutes(timeStr);
+// Check if class duration (60 mins) has fully completed compared to current local time (i.e. after 1 hr of start time)
+const isClassCompleted = (timeStr: string, durationMinutes = 60): boolean => {
+  const classStartMins = parseTimeToMinutes(timeStr);
   const now = new Date();
   const currentMins = now.getHours() * 60 + now.getMinutes();
-  return classMins <= currentMins;
+  return currentMins >= (classStartMins + durationMinutes);
+};
+
+// Check if class is currently live/in session right now (within its 60 min duration)
+const isClassLive = (timeStr: string, durationMinutes = 60): boolean => {
+  const classStartMins = parseTimeToMinutes(timeStr);
+  const now = new Date();
+  const currentMins = now.getHours() * 60 + now.getMinutes();
+  return currentMins >= classStartMins && currentMins < (classStartMins + durationMinutes);
 };
 
 export const Dashboard: React.FC = () => {
@@ -224,12 +232,17 @@ export const Dashboard: React.FC = () => {
     const isMarkedA = !!attA && (attA.status === 'Present' || attA.status === 'Absent');
     const isMarkedB = !!attB && (attB.status === 'Present' || attB.status === 'Absent');
 
-    const timePassedA = isTimePassed(a.classTime);
-    const timePassedB = isTimePassed(b.classTime);
+    const isLiveA = !isMarkedA && isClassLive(a.classTime);
+    const isLiveB = !isMarkedB && isClassLive(b.classTime);
 
-    const isCompletedA = isMarkedA || timePassedA;
-    const isCompletedB = isMarkedB || timePassedB;
+    const isCompletedA = isMarkedA || isClassCompleted(a.classTime);
+    const isCompletedB = isMarkedB || isClassCompleted(b.classTime);
 
+    // Live ongoing classes come very first so trainer can mark them!
+    if (isLiveA && !isLiveB) return -1;
+    if (!isLiveA && isLiveB) return 1;
+
+    // Upcoming unmarked classes come before completed/marked classes
     if (!isCompletedA && isCompletedB) return -1;
     if (isCompletedA && !isCompletedB) return 1;
 
@@ -573,15 +586,19 @@ export const Dashboard: React.FC = () => {
               {todaysScheduledClients.map((client) => {
                 const todayAtt = attendance.find(a => a.clientId === client.id && a.date === todayDateStr);
                 const isMarked = !!todayAtt && (todayAtt.status === 'Present' || todayAtt.status === 'Absent');
-                const timeHasPassed = isTimePassed(client.classTime);
+                const hasCompleted = isClassCompleted(client.classTime);
+                const isLive = isClassLive(client.classTime);
+                const isUpcoming = !hasCompleted && !isLive;
 
-                const isCompleted = isMarked || timeHasPassed;
+                const isPast = isMarked || hasCompleted;
 
                 return (
                   <div 
                     key={client.id}
                     className={`rounded-3xl p-5 border transition-all group ${
-                      !isCompleted
+                      !isMarked && isLive
+                        ? 'bg-amber-50/80 border-amber-400 ring-2 ring-amber-300 shadow-md'
+                        : !isMarked && isUpcoming
                         ? 'bg-rose-50/70 border-rose-300 ring-2 ring-rose-200/80 shadow-md'
                         : 'bg-white border-slate-200/80 shadow-soft opacity-85 hover:border-slate-300'
                     }`}
@@ -593,7 +610,11 @@ export const Dashboard: React.FC = () => {
                           src={client.photoUrl}
                           alt={client.name}
                           className={`w-14 h-14 rounded-2xl object-cover ring-2 group-hover:scale-105 transition-transform ${
-                            !isCompleted ? 'ring-rose-400' : 'ring-purple-100'
+                            !isMarked && isLive
+                              ? 'ring-amber-500'
+                              : !isPast
+                              ? 'ring-rose-400'
+                              : 'ring-purple-100'
                           }`}
                         />
                         <div>
@@ -617,20 +638,29 @@ export const Dashboard: React.FC = () => {
                               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-200">
                                 ✕ Absent Today
                               </span>
-                            ) : timeHasPassed ? (
+                            ) : isLive ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500 text-white shadow-sm border border-amber-600 animate-pulse flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-white inline-block animate-ping" />
+                                🔴 Live in Session
+                              </span>
+                            ) : hasCompleted ? (
                               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700 border border-slate-300">
                                 ✓ Class Completed
                               </span>
                             ) : (
                               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-600 text-white shadow-sm border border-rose-700 animate-pulse">
-                                🔥 Upcoming Class
+                                ⏰ Upcoming Class
                               </span>
                             )}
                           </div>
 
                           <p className="text-xs font-medium text-slate-500 mt-1 flex items-center gap-2">
                             <span className={`font-bold px-2.5 py-0.5 rounded-md ${
-                              !isCompleted ? 'bg-rose-200/80 text-rose-950 font-extrabold' : 'bg-slate-200 text-slate-800'
+                              !isMarked && isLive
+                                ? 'bg-amber-200 text-amber-950 font-extrabold'
+                                : !isPast
+                                ? 'bg-rose-200/80 text-rose-950 font-extrabold'
+                                : 'bg-slate-200 text-slate-800'
                             }`}>
                               ⏰ {formatClassTime(client.classTime)}
                             </span>
