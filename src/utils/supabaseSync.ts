@@ -1,4 +1,4 @@
-// Supabase Integration & Multi-Device Realtime Engine for Yoganjali Studio
+// Supabase Integration & Multi-Device Realtime Engine for Yoga Studio Demo
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { safeStorage } from './safeStorage';
 
@@ -8,23 +8,23 @@ export interface SupabaseConfig {
   tableName: string;
 }
 
-const STORAGE_URL_KEY = 'yoganjali_supabase_url';
-const STORAGE_ANON_KEY = 'yoganjali_supabase_key';
-const STORAGE_TABLE_KEY = 'yoganjali_supabase_table';
+const STORAGE_URL_KEY = 'yogademo_supabase_url';
+const STORAGE_ANON_KEY = 'yogademo_supabase_key';
+const STORAGE_TABLE_KEY = 'yogademo_supabase_table';
 
 export const getSupabaseConfig = (): SupabaseConfig => {
   if (typeof window === 'undefined') {
-    return { url: '', key: '', tableName: 'yoganjali_sync' };
+    return { url: '', key: '', tableName: 'yogademo_sync' };
   }
   const metaEnv = (import.meta as any).env || {};
   return {
     url: safeStorage.getItem(STORAGE_URL_KEY) || metaEnv.VITE_SUPABASE_URL || '',
     key: safeStorage.getItem(STORAGE_ANON_KEY) || metaEnv.VITE_SUPABASE_ANON_KEY || '',
-    tableName: safeStorage.getItem(STORAGE_TABLE_KEY) || 'yoganjali_sync'
+    tableName: safeStorage.getItem(STORAGE_TABLE_KEY) || 'yogademo_sync'
   };
 };
 
-export const saveSupabaseConfig = (url: string, key: string, tableName = 'yoganjali_sync') => {
+export const saveSupabaseConfig = (url: string, key: string, tableName = 'yogademo_sync') => {
   if (typeof window === 'undefined') return;
   safeStorage.setItem(STORAGE_URL_KEY, url.trim());
   safeStorage.setItem(STORAGE_ANON_KEY, key.trim());

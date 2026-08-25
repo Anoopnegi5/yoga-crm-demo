@@ -1,7 +1,7 @@
-// Vercel Serverless Sync API Proxy with Supabase Integration Auto-Detection & Server-Side Smart Merging
-// Served at https://www.yoganjaliyoga.com/api/sync
+// Serverless Sync API Proxy with Supabase Integration & Server-Side Smart Merging
 
-const PERSISTENT_BLOB_URL = 'https://api.restful-api.dev/objects/ff8081819f7e10ae019fefa0a25822af';
+const PERSISTENT_BLOB_URL = process.env.PERSISTENT_BLOB_URL || '';
+const SUPABASE_TABLE = process.env.SUPABASE_TABLE || 'yogademo_sync';
 
 function getSupabaseEnv() {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
@@ -26,7 +26,7 @@ async function fetchFromSupabaseEnv() {
     // 1. Delta Check: If we already have serverMemoryCache, check only updated_at (tiny ~40 bytes response instead of 30KB)
     if (serverMemoryCache && lastKnownUpdatedAt) {
       try {
-        const headerRes = await fetch(`${url}/rest/v1/yoganjali_sync?id=eq.master_db&select=updated_at`, {
+        const headerRes = await fetch(`${url}/rest/v1/${SUPABASE_TABLE}?id=eq.master_db&select=updated_at`, {
           method: 'GET',
           headers: {
             'apikey': key,
@@ -47,7 +47,7 @@ async function fetchFromSupabaseEnv() {
     }
 
     // 2. Fetch full payload if cache is empty or remote has newer data
-    const res = await fetch(`${url}/rest/v1/yoganjali_sync?id=eq.master_db&select=*`, {
+    const res = await fetch(`${url}/rest/v1/${SUPABASE_TABLE}?id=eq.master_db&select=*`, {
       method: 'GET',
       headers: {
         'apikey': key,
@@ -65,7 +65,7 @@ async function fetchFromSupabaseEnv() {
       }
     }
   } catch (e) {
-    console.warn('Vercel Supabase env fetch warning:', e);
+    console.warn('Supabase env fetch warning:', e);
   }
   return null;
 }
@@ -79,7 +79,7 @@ async function pushToSupabaseEnv(payload) {
   const { url, key } = getSupabaseEnv();
   if (!url || !key) return false;
   try {
-    const res = await fetch(`${url}/rest/v1/yoganjali_sync`, {
+    const res = await fetch(`${url}/rest/v1/${SUPABASE_TABLE}`, {
       method: 'POST',
       headers: {
         'apikey': key,
@@ -95,7 +95,7 @@ async function pushToSupabaseEnv(payload) {
     });
     return res.ok;
   } catch (e) {
-    console.warn('Vercel Supabase env push warning:', e);
+    console.warn('Supabase env push warning:', e);
   }
   return false;
 }
@@ -309,25 +309,27 @@ export default async function handler(req, res) {
       console.warn('Vercel Supabase env fetch fallback:', e);
     }
 
-    // 2. Fallback to Persistent Blob
-    try {
-      const response = await fetch(PERSISTENT_BLOB_URL, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' }
-      });
-      if (response.ok) {
-        const json = await response.json();
-        const data = json.data || json;
-        if (data && (Array.isArray(data.clients) || Array.isArray(data.trainerDreams))) {
-          if (Array.isArray(data.clients)) data.clients = data.clients.map(normalizeClient).filter(Boolean);
-          if (Array.isArray(data.payments)) data.payments = data.payments.map(normalizePayment).filter(Boolean);
-          if (Array.isArray(data.trainerDreams)) data.trainerDreams = data.trainerDreams.map(normalizeTrainerDream).filter(Boolean);
-          if (Array.isArray(data.attendance)) data.attendance = data.attendance.map(normalizeAttendance).filter(Boolean);
+    // 2. Fallback to Persistent Blob (if configured)
+    if (PERSISTENT_BLOB_URL) {
+      try {
+        const response = await fetch(PERSISTENT_BLOB_URL, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json', 'Cache-Control': 'no-cache' }
+        });
+        if (response.ok) {
+          const json = await response.json();
+          const data = json.data || json;
+          if (data && (Array.isArray(data.clients) || Array.isArray(data.trainerDreams))) {
+            if (Array.isArray(data.clients)) data.clients = data.clients.map(normalizeClient).filter(Boolean);
+            if (Array.isArray(data.payments)) data.payments = data.payments.map(normalizePayment).filter(Boolean);
+            if (Array.isArray(data.trainerDreams)) data.trainerDreams = data.trainerDreams.map(normalizeTrainerDream).filter(Boolean);
+            if (Array.isArray(data.attendance)) data.attendance = data.attendance.map(normalizeAttendance).filter(Boolean);
+          }
+          return res.status(200).json(data);
         }
-        return res.status(200).json(data);
+      } catch (e) {
+        console.error('Fetch persistent blob failed:', e);
       }
-    } catch (e) {
-      console.error('Fetch persistent blob failed:', e);
     }
     return res.status(200).json({ clients: [], payments: [], trainerDreams: [], trainerLeaves: [], attendance: [] });
   }
@@ -416,12 +418,14 @@ export default async function handler(req, res) {
       // Push to Vercel Supabase Integration
       await pushToSupabaseEnv(mergedPayload);
 
-      // Backup Push to RESTful Blob Store
-      await fetch(PERSISTENT_BLOB_URL, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ name: 'yoganjali_master', data: mergedPayload })
-      }).catch(e => console.warn('Blob backup push failed:', e));
+      // Backup Push to RESTful Blob Store (if configured)
+      if (PERSISTENT_BLOB_URL) {
+        await fetch(PERSISTENT_BLOB_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ name: 'yogademo_master', data: mergedPayload })
+        }).catch(e => console.warn('Blob backup push failed:', e));
+      }
 
       return res.status(200).json({ success: true, count: mergedClients.length, data: mergedPayload });
     } catch (e) {

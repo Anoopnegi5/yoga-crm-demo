@@ -22,13 +22,27 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     const cleanPassword = password.trim();
 
     setTimeout(() => {
-      // Case-insensitive username & trimmed password check
-      if (cleanUsername === 'yoganjali' && cleanPassword === 'Accbk@567') {
-        try { sessionStorage.setItem('yoganjali_auth_token', 'authenticated_true'); } catch (e) {}
-        safeStorage.setItem('yoganjali_auth_token', 'authenticated_true');
+      const customPassword = safeStorage.getItem('yogademo_admin_password');
+      const customUsername = (safeStorage.getItem('yogademo_admin_username') || '').trim().toLowerCase();
+
+      const isValidUser =
+        cleanUsername === 'admin' ||
+        cleanUsername === 'demo' ||
+        cleanUsername === 'yoganjali' ||
+        (customUsername && cleanUsername === customUsername);
+
+      const isValidPass =
+        cleanPassword === 'demo123' ||
+        cleanPassword === 'admin123' ||
+        cleanPassword === 'Accbk@567' ||
+        (customPassword && cleanPassword === customPassword);
+
+      if (isValidUser && isValidPass) {
+        try { sessionStorage.setItem('yogademo_auth_token', 'authenticated_true'); } catch (e) {}
+        safeStorage.setItem('yogademo_auth_token', 'authenticated_true');
         onLoginSuccess();
       } else {
-        setErrorMsg('Invalid Username or Password. Please check and try again.');
+        setErrorMsg('Invalid Username or Password. Use demo / demo123 or admin / admin123.');
         setIsLoading(false);
       }
     }, 200);
@@ -49,7 +63,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <Sparkles className="w-7 h-7 animate-pulse" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-purple-700 via-indigo-600 to-slate-900 bg-clip-text text-transparent">
-            Yoganjali
+            Yoga Studio CRM
           </h1>
           <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
             Yoga Trainer Journal & Fee Manager
@@ -104,6 +118,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+          </div>
+
+          {/* Demo Login Credentials Pill */}
+          <div className="p-3 rounded-2xl bg-purple-50/80 border border-purple-100 text-[11px] text-purple-700 flex flex-col gap-1 items-center text-center">
+            <span className="font-bold">✨ Quick Demo Login Credentials:</span>
+            <span className="font-mono text-[11px] text-purple-900 bg-purple-100/70 px-2 py-0.5 rounded-lg">
+              User: <strong>demo</strong> / Pass: <strong>demo123</strong>
+            </span>
           </div>
 
           {/* Login Submit Button */}

@@ -34,8 +34,8 @@ const AppShell: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
     return (
-      sessionStorage.getItem('yoganjali_auth_token') === 'authenticated_true' ||
-      safeStorage.getItem('yoganjali_auth_token') === 'authenticated_true'
+      sessionStorage.getItem('yogademo_auth_token') === 'authenticated_true' ||
+      safeStorage.getItem('yogademo_auth_token') === 'authenticated_true'
     );
   });
 
@@ -64,8 +64,8 @@ const AppShell: React.FC = () => {
   }, [isYogiProfile, isMembersDirectory, isPanel, isRegisterLink]);
 
   const handleLogout = () => {
-    try { sessionStorage.removeItem('yoganjali_auth_token'); } catch (e) {}
-    safeStorage.removeItem('yoganjali_auth_token');
+    try { sessionStorage.removeItem('yogademo_auth_token'); } catch (e) {}
+    safeStorage.removeItem('yogademo_auth_token');
     setIsAuthenticated(false);
   };
 
@@ -150,7 +150,7 @@ const AppShell: React.FC = () => {
 
         {/* Minimal Modern Footer */}
         <footer className="border-t border-slate-200/80 py-6 text-center text-xs font-semibold text-slate-400 bg-white/50">
-          <p>© {new Date().getFullYear()} Yoganjali Studio — Personal Yoga Client Journal & Fee Manager</p>
+          <p>© {new Date().getFullYear()} Yoga Studio CRM — Personal Yoga Client Journal & Fee Manager</p>
         </footer>
 
       </div>

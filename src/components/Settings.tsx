@@ -5,6 +5,7 @@ import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
 import { getSupabaseConfig, saveSupabaseConfig, clearSupabaseConfig } from '../utils/supabaseSync';
 import { getStoredGDriveToken, saveGDriveToken, clearGDriveToken, uploadOrOverwriteBackupFile, findOrCreateYoganjaliFolder, openGoogleOAuthTokenPage } from '../utils/gdriveSync';
 import { BlogManagerCMS } from './BlogManagerCMS';
+import { safeStorage } from '../utils/safeStorage';
 
 interface SettingsProps {
   onLogout?: () => void;
@@ -297,7 +298,12 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
       alert('New passwords do not match!');
       return;
     }
-    alert('Password updated successfully!');
+    if (!newPassword.trim()) {
+      alert('Password cannot be empty.');
+      return;
+    }
+    safeStorage.setItem('yogademo_admin_password', newPassword.trim());
+    alert('✅ Admin Password updated successfully! Use your new password to log in next time.');
     setOldPassword('');
     setNewPassword('');
     setConfirmPassword('');
@@ -1214,7 +1220,7 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                 </label>
                 <input
                   type="text"
-                  placeholder="yoganjali_sync"
+                  placeholder="yogademo_sync"
                   value={sbTable}
                   onChange={(e) => setSbTable(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
@@ -1241,7 +1247,7 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
                       clearSupabaseConfig();
                       setSbUrl('');
                       setSbKey('');
-                      alert('Cleared Supabase credentials. Reverted to Vercel Cloud Sync.');
+                      alert('Cleared Supabase credentials. Reverted to Default Demo Mode.');
                     }}
                     className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition-all"
                   >
@@ -1259,20 +1265,20 @@ export const Settings: React.FC<SettingsProps> = ({ onLogout }) => {
             </div>
             
             <p className="text-xs text-slate-500 font-medium leading-relaxed">
-              Log out of your Yoganjali instructor journal session. You can log back in with your username & password.
+              Log out of your yoga studio instructor journal session. You can log back in with your username & password.
             </p>
 
             <button
               type="button"
               onClick={() => {
-                if (window.confirm('Are you sure you want to log out of Yoganjali?')) {
+                if (window.confirm('Are you sure you want to log out?')) {
                   if (onLogout) onLogout();
                 }
               }}
               className="w-full py-3.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-2"
             >
               <LogOut className="w-4 h-4 text-white" />
-              Log Out of Yoganjali
+              Log Out of Trainer Portal
             </button>
           </div>
         </div>

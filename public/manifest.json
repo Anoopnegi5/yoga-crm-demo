@@ -1,7 +1,7 @@
 {
-  "name": "Yoganjali - Yoga Studio & Trainer Panel",
-  "short_name": "Yoganjali",
-  "description": "Yoganjali Yoga Studio Journal, Attendance & Fee Manager by Trainer Anjali Negi",
+  "name": "Yoga Studio CRM & Trainer Panel",
+  "short_name": "Yoga CRM",
+  "description": "Yoga Studio Journal, Attendance & Fee Manager",
   "start_url": "/panel",
   "scope": "/",
   "display": "standalone",
@@ -31,7 +31,7 @@
     {
       "name": "Live Website",
       "url": "/",
-      "description": "Open Yoganjali Website"
+      "description": "Open Yoga Studio Website"
     }
   ]
 }

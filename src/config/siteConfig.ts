@@ -1,5 +1,5 @@
-// Centralized Configuration for Anjali Negi - YOGANJALI
-// Edit these values in one place to update the entire website!
+// Centralized Configuration for Yoga Studio & CRM Demo
+// Edit these values in one place or via the in-app Settings tab to update the entire website & CRM!
 
 export interface Testimonial {
   id: string;
@@ -11,32 +11,32 @@ export interface Testimonial {
 }
 
 export const SITE_CONFIG = {
-  brandName: "YOGANJALI",
+  brandName: "Prana Yoga Studio",
   tagline: "Yoga • Wellness • Mindful Living",
-  instructorName: "Anjali Negi",
+  instructorName: "Aarav Sharma",
   title: "Certified Yoga Instructor & Wellness Coach",
   
   // WhatsApp Configuration (Destination number for Free Demo lead generation)
-  whatsappNumber: "+919528191678", // Primary WhatsApp destination number
-  displayPhone: "+91 95281 91678",
-  displayPhone2: "+91 84491 37304",
-  email: "negidytto@gmail.com",
+  whatsappNumber: "+919876543210", // Primary WhatsApp destination number
+  displayPhone: "+91 98765 43210",
+  displayPhone2: "+91 98765 43211",
+  email: "Negianoop99@gmail.com",
 
   // Social Links
   socials: {
-    instagram: "https://instagram.com/yoganjali25",
-    instagramHandle: "@Yoganjali25",
-    youtube: "https://www.youtube.com/@Yoganjali25",
-    youtubeHandle: "@Yoganjali25",
-    linkedin: "https://www.linkedin.com/in/anjalinegi25/",
-    linkedinHandle: "@anjalinegi25",
-    googleReviews: "https://share.google/Jz55Wo5fRsfuUPMhV",
+    instagram: "https://instagram.com",
+    instagramHandle: "@pranayogastudio",
+    youtube: "https://youtube.com",
+    youtubeHandle: "@pranayogastudio",
+    linkedin: "https://linkedin.com",
+    linkedinHandle: "@pranayoga",
+    googleReviews: "https://google.com",
   },
 
   // Images
-  logoImage: "/yoganjali-logo.png", // Official Yoganjali brand logo
-  heroImage: "/hero-group-yoga.jpg", // Anjali Negi live group outdoor session photo
-  aboutImage: "/anjali-hero.jpg", // Anjali Negi individual yoga posture photo
+  logoImage: "/yoganjali-logo.png",
+  heroImage: "/hero-group-yoga.jpg",
+  aboutImage: "/anjali-hero.jpg",
 
   // Demo Availability & Pricing Config
   demoClassAvailability: "Daily Live Sessions (Morning & Evening)",
@@ -56,13 +56,13 @@ export const SITE_CONFIG = {
     { label: "Evening Batch 2", time: "06:30 PM - 07:30 PM IST" },
   ],
 
-  // Testimonials (Clear placeholders that can easily be edited later)
+  // Testimonials
   testimonials: [
     {
       id: "t1",
       name: "Priya Sharma",
       location: "New Delhi",
-      quote: "Anjali's sessions have completely transformed my posture and daily energy levels. Her step-by-step guidance makes online yoga feel like a personal studio at home!",
+      quote: "The sessions have completely transformed my posture and daily energy levels. The step-by-step guidance makes online yoga feel like a personal studio at home!",
       rating: 5,
       isPlaceholder: false
     },
@@ -70,7 +70,7 @@ export const SITE_CONFIG = {
       id: "t2",
       name: "Meera Nair",
       location: "Bangalore",
-      quote: "As a complete beginner suffering from severe lower back pain, I was hesitant. Anjali adapted every pose for my body. Within 4 weeks, my mobility improved dramatically.",
+      quote: "As a complete beginner suffering from lower back stiffness, I was hesitant. The instructor adapted every pose for my body. Within 4 weeks, my mobility improved dramatically.",
       rating: 5,
       isPlaceholder: false
     },
@@ -78,15 +78,15 @@ export const SITE_CONFIG = {
       id: "t3",
       name: "Ritu Verma",
       location: "Mumbai",
-      quote: "The 60-minute session is perfectly structured — strength, breathwork, and deep relaxation. Anjali is attentive, calm, and truly cares about individual progress.",
+      quote: "The 60-minute session is perfectly structured — strength, breathwork, and deep relaxation. Attentive, calm, and truly cares about individual progress.",
       rating: 5,
       isPlaceholder: false
     },
     {
       id: "t4",
-      name: "Divya Negi",
+      name: "Rohan Verma",
       location: "Verified Practitioner",
-      quote: "Anjali's personal attention and customized yoga routines have helped me achieve my health goals.",
+      quote: "Personal attention and customized yoga routines have helped me achieve my health and fitness goals.",
       rating: 5,
       isPlaceholder: false
     }
@@ -96,19 +96,19 @@ export const SITE_CONFIG = {
 export const DEFAULT_WEBSITE_CMS = {
   // Top Announcement & Brand
   announcementBar: "🌸 1-Day Free Trial Available • Book Your Live Demo Session Today",
-  brandName: "YOGANJALI",
-  instructorName: "Anjali Negi",
+  brandName: "Prana Yoga Studio",
+  instructorName: "Aarav Sharma",
   tagline: "Yoga Should Fit Into Your Life, Not Make It Complicated",
 
   // Hero Section (#home)
   heroTagline: "CERTIFIED YOGA INSTRUCTOR & HOLISTIC WELLNESS COACH",
   heroTitle: "Transform Your Body, Mind & Spirit With Authentic Yoga",
-  heroSubtitle: "Experience personalized online 1-on-1 sessions and energetic group batches tailored for women and holistic wellness practitioners.",
+  heroSubtitle: "Experience personalized online 1-on-1 sessions and energetic group batches tailored for holistic wellness practitioners.",
   heroImage: "/hero-group-yoga.jpg",
 
-  // Why Choose Yoganjali Section (#benefits)
-  whyTitle: "Why Choose Yoganjali?",
-  whySubtitle: "Experience authentic, personalized yoga tailored around your unique body, goals and schedule with Trainer Anjali Negi.",
+  // Why Choose Us Section (#benefits)
+  whyTitle: "Why Choose Our Studio?",
+  whySubtitle: "Experience authentic, personalized yoga tailored around your unique body, goals and schedule.",
   whyCard1Title: "Personal 1-on-1 Attention",
   whyCard1Desc: "Customized live posture alignment, breathing guidance and pace designed specifically for your body and strength.",
   whyCard2Title: "Flexible Timing & Batches",
@@ -118,11 +118,11 @@ export const DEFAULT_WEBSITE_CMS = {
   whyCard4Title: "Beginner Friendly Environment",
   whyCard4Desc: "Step-by-step gentle progression with zero pressure. Suitable for all age groups and experience levels.",
 
-  // About Anjali Section (#about)
-  aboutTitle: "Hi, I'm Anjali Negi",
+  // About Section (#about)
+  aboutTitle: "Meet Your Instructor",
   aboutQuote: '"Yoga should fit into your life, not make your life complicated."',
-  aboutBio1: "I am a certified yoga instructor and wellness coach dedicated to helping practitioners build sustainable movement habits, core strength, and inner stillness.",
-  aboutBio2: "My sessions combine yoga asanas, mobility work, pranayama, breathing practices, relaxation and mindful movement.",
+  aboutBio1: "Certified yoga instructor and wellness coach dedicated to helping practitioners build sustainable movement habits, core strength, and inner stillness.",
+  aboutBio2: "Sessions combine yoga asanas, mobility work, pranayama, breathing practices, relaxation and mindful movement.",
   aboutImage: "/anjali-hero.jpg",
 
   // Yoga Programs Section (#classes)
@@ -144,13 +144,13 @@ export const DEFAULT_WEBSITE_CMS = {
 
   // Onboarding Section (#onboarding)
   onboardingTitle: "Simple 4-Step Onboarding Process",
-  onboardingSubtitle: "Start your personalized yoga journey with Anjali Negi in 4 easy steps.",
+  onboardingSubtitle: "Start your personalized yoga journey in 4 easy steps.",
   step1Title: "Book Free Demo",
   step1Desc: "Fill out the quick 1-minute form to choose your preferred demo slot.",
   step2Title: "Select Batch & Time",
   step2Desc: "Pick 1-on-1 or group batch timing that fits your schedule.",
   step3Title: "Receive Custom Plan",
-  step3Desc: "Anjali reviews your health notes and crafts your routine.",
+  step3Desc: "Instructor reviews your health notes and crafts your routine.",
   step4Title: "Begin Practice",
   step4Desc: "Join live online sessions and build sustainable health habits.",
 
@@ -160,23 +160,23 @@ export const DEFAULT_WEBSITE_CMS = {
 
   // Testimonials Section (#testimonials)
   testimonialsTitle: "What My Students Say",
-  testimonialsSubtitle: "Real stories from practitioners who transformed their health and daily peace with Anjali Negi.",
+  testimonialsSubtitle: "Real stories from practitioners who transformed their health and daily peace.",
 
   // FAQ Section (#faq)
   faqTitle: "Frequently Asked Questions",
-  faqSubtitle: "Got questions? Here is everything you need to know about joining Yoganjali Studio.",
+  faqSubtitle: "Got questions? Here is everything you need to know about joining our studio.",
 
   // Contact / Final CTA Section (#contact)
   contactTitle: "Ready to Transform Your Body & Peace of Mind?",
-  contactSubtitle: "Join Anjali Negi's studio today for personalized guidance, core strength and daily tranquility.",
+  contactSubtitle: "Join our studio today for personalized guidance, core strength and daily tranquility.",
   contactImage: "/anjali-mountain-pose.jpg",
   logoImage: "/yoganjali-logo.png",
 
   // Contacts & Social Links
-  displayPhone: "+91 95281 91678",
-  displayPhone2: "+91 84491 37304",
-  email: "negidytto@gmail.com",
-  googleReviewsUrl: "https://share.google/Jz55Wo5fRsfuUPMhV",
-  instagramUrl: "https://instagram.com/yoganjali25",
-  youtubeUrl: "https://www.youtube.com/@Yoganjali25"
+  displayPhone: "+91 98765 43210",
+  displayPhone2: "+91 98765 43211",
+  email: "Negianoop99@gmail.com",
+  googleReviewsUrl: "https://google.com",
+  instagramUrl: "https://instagram.com",
+  youtubeUrl: "https://youtube.com"
 };

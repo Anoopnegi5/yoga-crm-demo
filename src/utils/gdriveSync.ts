@@ -1,11 +1,11 @@
-// Direct Google Drive REST API & OAuth Integration Utility for Yoganjali
-// Handles automatic folder creation ('Yoganjali Studio Backups') and daily file overwriting
+// Direct Google Drive REST API & OAuth Integration Utility for Yoga Studio Demo
+// Handles automatic folder creation ('Yoga Studio Demo Backups') and daily file overwriting
 import { safeStorage } from './safeStorage';
 
-const FOLDER_NAME = 'Yoganjali Studio Backups';
-const FILE_NAME = 'Yoganjali_Latest_Backup.json';
-const GDRIVE_TOKEN_KEY = 'yoganjali_gdrive_token';
-const GDRIVE_FOLDER_ID_KEY = 'yoganjali_gdrive_folder_id';
+const FOLDER_NAME = 'Yoga Studio Demo Backups';
+const FILE_NAME = 'YogaDemo_Latest_Backup.json';
+const GDRIVE_TOKEN_KEY = 'yogademo_gdrive_token';
+const GDRIVE_FOLDER_ID_KEY = 'yogademo_gdrive_folder_id';
 
 export interface GDriveStatus {
   isConnected: boolean;

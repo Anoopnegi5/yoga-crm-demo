@@ -1,48 +1,390 @@
 import { Client, PaymentRecord, LeaveRecord, AttendanceRecord, TrainerProfile, TrainerLeave, TrainerDreamGoal, BlogPost } from '../types';
 
 export const DEFAULT_TRAINER_PROFILE: TrainerProfile = {
-  name: 'Anjali Negi',
-  studioName: 'Yoganjali',
-  phone: '+91 95281 91678',
-  upiId: 'yoganjali@upi',
+  name: 'Aarav Sharma',
+  studioName: 'Prana Yoga Studio',
+  phone: '+91 98765 43210',
+  upiId: 'pranayogastudio@upi',
   photoUrl: '/anjali-hero.jpg',
   studioLogoUrl: '/yoganjali-logo.png',
-  appTitle: 'Yoganjali',
+  appTitle: 'Prana Yoga',
   appSubtitle: 'Yoga Journal & Fee Manager'
 };
 
-export const INITIAL_TRAINER_LEAVES: TrainerLeave[] = [];
+export const INITIAL_TRAINER_LEAVES: TrainerLeave[] = [
+  {
+    id: 'tl-1',
+    startDate: '2026-08-15',
+    endDate: '2026-08-15',
+    reason: 'Independence Day Yoga Workshop Preparation',
+    status: 'Self Practice',
+    notes: 'Studio open for self-guided meditation'
+  }
+];
 
 export const INITIAL_TRAINER_DREAMS: TrainerDreamGoal[] = [
   {
     id: 'dream-1',
-    title: 'My Own Physical Yoga Studio Sanctuary',
+    title: 'Expand to Dedicated Oceanfront Yoga Shala',
     targetAmount: 500000,
-    savedAmount: 120000,
+    savedAmount: 210000,
     photoUrl: '/hero-group-yoga.jpg',
     targetDate: '2027-12-31',
     category: 'Long Term',
-    notes: 'A serene garden yoga shala with wooden flooring and natural sunlight.'
+    notes: 'Natural bamboo and wooden studio with natural airflow and live plants.'
   },
   {
     id: 'dream-2',
-    title: 'Advanced Rishikesh Yoga Teacher Certification',
-    targetAmount: 75000,
-    savedAmount: 45000,
-    photoUrl: '/anjali-mountain-pose.jpg',
+    title: 'Rishikesh 300-Hr Master Teacher Immersion',
+    targetAmount: 85000,
+    savedAmount: 55000,
+    photoUrl: '/about-anjali.jpg',
     targetDate: '2026-11-30',
     category: 'Short Term',
-    notes: '300-hour Advanced Pranayama & Alignment Teacher Training.'
+    notes: 'Advanced alignment, pranayama therapy and sound healing immersion.'
   }
 ];
 
-export const INITIAL_CLIENTS: Client[] = [];
+export const INITIAL_CLIENTS: Client[] = [
+  {
+    id: 'c1',
+    name: 'Priya Sharma',
+    gender: 'Female',
+    phone: '+91 98111 22334',
+    whatsapp: '+91 98111 22334',
+    address: 'Indiranagar, Bengaluru',
+    joiningDate: '2026-01-15',
+    photoUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+    classTime: '06:00 AM',
+    days: ['Mon', 'Wed', 'Fri'],
+    timeSlot: 'Morning',
+    sessionType: 'Group',
+    groupName: 'Morning Vinyasa Flow (6:00 AM)',
+    reasonsForJoining: ['Spine Flexibility', 'Lower Back Pain Relief'],
+    currentProblems: ['L4-L5 mild stiffness from desk job'],
+    feeType: 'Monthly',
+    feeStartMonth: '2026-08',
+    monthlyFee: 3500,
+    feeDueDate: '5th',
+    membershipPlan: '12 Classes',
+    completedClasses: 9,
+    totalClasses: 12,
+    paymentStatus: 'Paid',
+    status: 'Active',
+    trainerNotes: 'Very dedicated student. Focus on gentle lumbar extensions and hamstring opening.',
+    goal: 'Lower Back Pain Relief & Flexibility',
+    startingWeight: 62.0,
+    targetWeight: 58.0,
+    weightLogs: [
+      { id: 'w1', date: '2026-06-01', weight: 62.0, notes: 'Starting baseline' },
+      { id: 'w2', date: '2026-07-15', weight: 60.5, notes: 'Improved core stability' },
+      { id: 'w3', date: '2026-08-10', weight: 59.2, notes: 'Feeling agile and free of pain' }
+    ],
+    medicalPrecautions: ['Avoid sudden hyperextensions']
+  },
+  {
+    id: 'c2',
+    name: 'Rohan Verma',
+    gender: 'Male',
+    phone: '+91 98222 33445',
+    whatsapp: '+91 98222 33445',
+    address: 'Koramangala, Bengaluru',
+    joiningDate: '2026-02-01',
+    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80',
+    classTime: '07:15 AM',
+    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    timeSlot: 'Morning',
+    sessionType: 'Group',
+    groupName: 'Power & Core Strength (7:15 AM)',
+    reasonsForJoining: ['Weight Loss', 'Cardio Endurance', 'Stress Management'],
+    currentProblems: ['Work stress, mild hypertension'],
+    feeType: 'Monthly',
+    feeStartMonth: '2026-08',
+    monthlyFee: 4000,
+    feeDueDate: '1st',
+    membershipPlan: '20 Classes',
+    completedClasses: 14,
+    totalClasses: 20,
+    paymentStatus: 'Paid',
+    status: 'Active',
+    trainerNotes: 'Responds well to Surya Namaskar variations and Kapalbhati pranayama.',
+    goal: 'Weight Loss & Cardiovascular Endurance',
+    startingWeight: 84.0,
+    targetWeight: 76.0,
+    weightLogs: [
+      { id: 'w4', date: '2026-05-10', weight: 84.0, notes: 'Baseline' },
+      { id: 'w5', date: '2026-07-01', weight: 80.2, notes: 'Consistent practice' },
+      { id: 'w6', date: '2026-08-18', weight: 77.8, notes: 'Strong progress' }
+    ],
+    medicalPrecautions: ['Hydrate well before morning batch']
+  },
+  {
+    id: 'c3',
+    name: 'Ananya Iyer',
+    gender: 'Female',
+    phone: '+91 98333 44556',
+    whatsapp: '+91 98333 44556',
+    address: 'HSR Layout, Bengaluru',
+    joiningDate: '2026-03-10',
+    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+    classTime: '05:00 PM',
+    days: ['Mon', 'Wed', 'Fri'],
+    timeSlot: 'Evening',
+    sessionType: 'Personal',
+    groupName: '1-on-1 Personalized Session',
+    reasonsForJoining: ['Posture Alignment', 'Breathing Techniques'],
+    currentProblems: ['Shoulder hunch, neck stiffness'],
+    feeType: 'Monthly',
+    feeStartMonth: '2026-08',
+    monthlyFee: 10000,
+    feeDueDate: '10th',
+    membershipPlan: '12 Classes',
+    completedClasses: 8,
+    totalClasses: 12,
+    paymentStatus: 'Paid',
+    status: 'Active',
+    trainerNotes: 'Personal 1-on-1 client. Very precise with alignment. Loves restorative yoga sequences at end of session.',
+    goal: 'Posture Correction & Cervical Relief',
+    startingWeight: 55.0,
+    targetWeight: 54.0,
+    weightLogs: [
+      { id: 'w7', date: '2026-06-15', weight: 55.0 },
+      { id: 'w8', date: '2026-08-01', weight: 54.2 }
+    ],
+    medicalPrecautions: ['No heavy neck compression poses']
+  },
+  {
+    id: 'c4',
+    name: 'Rajesh Patel',
+    gender: 'Male',
+    phone: '+91 98444 55667',
+    whatsapp: '+91 98444 55667',
+    address: 'Whitefield, Bengaluru',
+    joiningDate: '2026-04-01',
+    photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
+    classTime: '06:30 PM',
+    days: ['Tue', 'Thu', 'Sat'],
+    timeSlot: 'Evening',
+    sessionType: 'Group',
+    groupName: 'Evening Mindful De-stress (6:30 PM)',
+    reasonsForJoining: ['Stress Relief', 'Flexibility'],
+    currentProblems: ['Tight hamstrings, high corporate stress'],
+    feeType: 'Monthly',
+    feeStartMonth: '2026-08',
+    monthlyFee: 3500,
+    feeDueDate: '5th',
+    membershipPlan: '12 Classes',
+    completedClasses: 7,
+    totalClasses: 12,
+    paymentStatus: 'Pending',
+    status: 'Active',
+    trainerNotes: 'Gentle progression. Send friendly payment reminder on 5th of every month.',
+    goal: 'Mindfulness & Hamstring Mobility',
+    startingWeight: 78.0,
+    targetWeight: 74.0,
+    weightLogs: [],
+    medicalPrecautions: []
+  },
+  {
+    id: 'c5',
+    name: 'Sneha Kulkarni',
+    gender: 'Female',
+    phone: '+91 98555 66778',
+    whatsapp: '+91 98555 66778',
+    address: 'JP Nagar, Bengaluru',
+    joiningDate: '2026-05-15',
+    photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80',
+    classTime: '06:00 AM',
+    days: ['Sat', 'Sun'],
+    timeSlot: 'Morning',
+    sessionType: 'Group',
+    groupName: 'Weekend Intensive Workshop',
+    reasonsForJoining: ['Weekend Wellness', 'Immunity'],
+    currentProblems: ['Occasional knee stiffness'],
+    feeType: 'Per Session',
+    feeStartMonth: '2026-08',
+    perSessionFee: 1000,
+    monthlyFee: 2000,
+    feeDueDate: 'Per Class',
+    membershipPlan: 'Per Session',
+    completedClasses: 2,
+    totalClasses: 4,
+    paymentStatus: 'Paid',
+    status: 'Active',
+    trainerNotes: 'Attends per session on weekends. Prefers Pranayama and guided meditation.',
+    goal: 'Weekend Rejuvenation',
+    startingWeight: 58.0,
+    targetWeight: 57.0,
+    weightLogs: [],
+    medicalPrecautions: ['Use knee pad for kneeling poses']
+  },
+  {
+    id: 'c6',
+    name: 'Vikram Mehta',
+    gender: 'Male',
+    phone: '+91 98666 77889',
+    whatsapp: '+91 98666 77889',
+    address: 'MG Road, Bengaluru',
+    joiningDate: '2026-06-01',
+    photoUrl: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80',
+    classTime: '05:00 PM',
+    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+    timeSlot: 'Evening',
+    sessionType: 'Group',
+    groupName: 'Evening Mindful De-stress (6:30 PM)',
+    reasonsForJoining: ['Deep Breathing', 'Sleep Quality'],
+    currentProblems: ['Insomnia and restlessness'],
+    feeType: 'Monthly',
+    feeStartMonth: '2026-08',
+    monthlyFee: 3500,
+    feeDueDate: '1st',
+    membershipPlan: 'Unlimited',
+    completedClasses: 11,
+    totalClasses: 24,
+    paymentStatus: 'Paid',
+    status: 'Active',
+    trainerNotes: 'Showing remarkable improvement in sleep patterns after Yin yoga & Yoga Nidra.',
+    goal: 'Deep Sleep & Nervous System Regulation',
+    startingWeight: 72.0,
+    targetWeight: 70.0,
+    weightLogs: [],
+    medicalPrecautions: []
+  }
+];
 
-export const INITIAL_LEAVES: LeaveRecord[] = [];
+export const INITIAL_LEAVES: LeaveRecord[] = [
+  {
+    id: 'leave-1',
+    clientId: 'c1',
+    clientName: 'Priya Sharma',
+    photoUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+    startDate: '2026-08-12',
+    endDate: '2026-08-12',
+    date: '2026-08-12',
+    reason: 'Family Function Out of Station',
+    duration: '1 Day (2026-08-12)'
+  }
+];
 
-export const INITIAL_PAYMENTS: PaymentRecord[] = [];
+export const INITIAL_PAYMENTS: PaymentRecord[] = [
+  {
+    id: 'p101',
+    clientId: 'c1',
+    clientName: 'Priya Sharma',
+    amount: 3500,
+    date: '2026-08-03',
+    month: '2026-08',
+    paymentMode: 'UPI',
+    paymentMethod: 'Google Pay',
+    status: 'Paid',
+    notes: 'August Monthly Fee (12 classes pass)'
+  },
+  {
+    id: 'p102',
+    clientId: 'c2',
+    clientName: 'Rohan Verma',
+    amount: 4000,
+    date: '2026-08-01',
+    month: '2026-08',
+    paymentMode: 'UPI',
+    paymentMethod: 'PhonePe',
+    status: 'Paid',
+    notes: 'August Monthly 20-class pass'
+  },
+  {
+    id: 'p103',
+    clientId: 'c3',
+    clientName: 'Ananya Iyer',
+    amount: 10000,
+    date: '2026-08-08',
+    month: '2026-08',
+    paymentMode: 'Bank',
+    paymentMethod: 'NEFT Transfer',
+    status: 'Paid',
+    notes: 'Personal 1-on-1 Monthly Fee'
+  },
+  {
+    id: 'p104',
+    clientId: 'c5',
+    clientName: 'Sneha Kulkarni',
+    amount: 1000,
+    date: '2026-08-16',
+    month: '2026-08',
+    paymentMode: 'UPI',
+    paymentMethod: 'Paytm UPI',
+    status: 'Paid',
+    notes: 'Weekend Session Fee'
+  },
+  {
+    id: 'p105',
+    clientId: 'c6',
+    clientName: 'Vikram Mehta',
+    amount: 3500,
+    date: '2026-08-02',
+    month: '2026-08',
+    paymentMode: 'Cash',
+    paymentMethod: 'Cash',
+    status: 'Paid',
+    notes: 'August Unlimited pass'
+  },
+  {
+    id: 'p106',
+    clientId: 'c4',
+    clientName: 'Rajesh Patel',
+    amount: 3500,
+    date: '2026-08-05',
+    month: '2026-08',
+    paymentMode: 'UPI',
+    paymentMethod: 'UPI',
+    status: 'Pending',
+    notes: 'August Fee Due'
+  }
+];
 
-export const INITIAL_ATTENDANCE: AttendanceRecord[] = [];
+export const INITIAL_ATTENDANCE: AttendanceRecord[] = [
+  { id: 'att-1', clientId: 'c1', clientName: 'Priya Sharma', date: '2026-08-03', status: 'Present' },
+  { id: 'att-2', clientId: 'c1', clientName: 'Priya Sharma', date: '2026-08-05', status: 'Present' },
+  { id: 'att-3', clientId: 'c1', clientName: 'Priya Sharma', date: '2026-08-07', status: 'Present' },
+  { id: 'att-4', clientId: 'c1', clientName: 'Priya Sharma', date: '2026-08-10', status: 'Present' },
+  { id: 'att-5', clientId: 'c1', clientName: 'Priya Sharma', date: '2026-08-12', status: 'Leave' },
+  { id: 'att-6', clientId: 'c1', clientName: 'Priya Sharma', date: '2026-08-14', status: 'Present' },
+  { id: 'att-7', clientId: 'c1', clientName: 'Priya Sharma', date: '2026-08-17', status: 'Present' },
+  { id: 'att-8', clientId: 'c1', clientName: 'Priya Sharma', date: '2026-08-19', status: 'Present' },
+  { id: 'att-9', clientId: 'c1', clientName: 'Priya Sharma', date: '2026-08-21', status: 'Present' },
+  { id: 'att-10', clientId: 'c1', clientName: 'Priya Sharma', date: '2026-08-24', status: 'Present' },
+
+  { id: 'att-11', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-03', status: 'Present' },
+  { id: 'att-12', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-04', status: 'Present' },
+  { id: 'att-13', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-05', status: 'Present' },
+  { id: 'att-14', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-06', status: 'Present' },
+  { id: 'att-15', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-07', status: 'Present' },
+  { id: 'att-16', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-10', status: 'Present' },
+  { id: 'att-17', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-11', status: 'Present' },
+  { id: 'att-18', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-12', status: 'Present' },
+  { id: 'att-19', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-13', status: 'Present' },
+  { id: 'att-20', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-14', status: 'Present' },
+  { id: 'att-21', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-17', status: 'Present' },
+  { id: 'att-22', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-18', status: 'Present' },
+  { id: 'att-23', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-19', status: 'Present' },
+  { id: 'att-24', clientId: 'c2', clientName: 'Rohan Verma', date: '2026-08-20', status: 'Present' },
+
+  { id: 'att-25', clientId: 'c3', clientName: 'Ananya Iyer', date: '2026-08-03', status: 'Present' },
+  { id: 'att-26', clientId: 'c3', clientName: 'Ananya Iyer', date: '2026-08-05', status: 'Present' },
+  { id: 'att-27', clientId: 'c3', clientName: 'Ananya Iyer', date: '2026-08-07', status: 'Present' },
+  { id: 'att-28', clientId: 'c3', clientName: 'Ananya Iyer', date: '2026-08-10', status: 'Present' },
+  { id: 'att-29', clientId: 'c3', clientName: 'Ananya Iyer', date: '2026-08-14', status: 'Present' },
+  { id: 'att-30', clientId: 'c3', clientName: 'Ananya Iyer', date: '2026-08-17', status: 'Present' },
+  { id: 'att-31', clientId: 'c3', clientName: 'Ananya Iyer', date: '2026-08-19', status: 'Present' },
+  { id: 'att-32', clientId: 'c3', clientName: 'Ananya Iyer', date: '2026-08-21', status: 'Present' },
+
+  { id: 'att-33', clientId: 'c4', clientName: 'Rajesh Patel', date: '2026-08-04', status: 'Present' },
+  { id: 'att-34', clientId: 'c4', clientName: 'Rajesh Patel', date: '2026-08-06', status: 'Present' },
+  { id: 'att-35', clientId: 'c4', clientName: 'Rajesh Patel', date: '2026-08-08', status: 'Present' },
+  { id: 'att-36', clientId: 'c4', clientName: 'Rajesh Patel', date: '2026-08-11', status: 'Present' },
+  { id: 'att-37', clientId: 'c4', clientName: 'Rajesh Patel', date: '2026-08-13', status: 'Present' },
+  { id: 'att-38', clientId: 'c4', clientName: 'Rajesh Patel', date: '2026-08-18', status: 'Present' },
+  { id: 'att-39', clientId: 'c4', clientName: 'Rajesh Patel', date: '2026-08-20', status: 'Present' }
+];
 
 export const INITIAL_BLOG_POSTS: BlogPost[] = [
   {
