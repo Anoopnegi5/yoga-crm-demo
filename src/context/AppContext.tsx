@@ -104,7 +104,21 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const LOCAL_STORAGE_KEY = 'yogademo_app_state_v1';
+const LOCAL_STORAGE_KEY = 'yogademo_fresh_state_v2';
+
+// Auto-purge any stale cached items from older sessions
+try {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    const staleKeys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('yogademo_app_state_v1') || k.startsWith('yoganjali_') || k.includes('trainer_profile') && !k.includes('yogademo_fresh_state_v2'))) {
+        staleKeys.push(k);
+      }
+    }
+    staleKeys.forEach(k => localStorage.removeItem(k));
+  }
+} catch (e) {}
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [trainerProfile, setTrainerProfile] = useState<TrainerProfile>(() => {
