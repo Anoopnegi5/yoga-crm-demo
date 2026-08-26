@@ -13,10 +13,7 @@ export interface CloudDataPayload {
   lastUpdated: string;
 }
 
-// Same-domain Vercel Serverless Sync API Endpoint
-const ENDPOINTS = [
-  '/api/sync'
-];
+
 
 export const normalizeClassTime = (rawTime: any): string => {
   if (!rawTime || typeof rawTime !== 'string') return '07:00 AM';
@@ -269,40 +266,45 @@ export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedId
   return list.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
 };
 
-const PRIMARY_CLOUD_OBJECT_URL = 'https://api.restful-api.dev/objects/ff8081819ff5b11001a03c185db22208';
+const ENDPOINTS = [
+  '/api/sync',
+  'https://studio-crm-demo.negianoop99.workers.dev/api/sync'
+];
 
-// Fetch Cloud Data Across Devices (Dedicated Cloud Store + Supabase Fallback)
+// Fetch Cloud Data Across Devices (Cloudflare KV Realtime Database)
 export const fetchCloudSyncData = async (): Promise<CloudDataPayload | null> => {
   if (typeof window === 'undefined') return null;
 
-  // 1. Primary: Dedicated Real-Time Cloud Store (Zero Config, 100% Multi-Device Sync)
-  try {
-    const cacheBustUrl = `${PRIMARY_CLOUD_OBJECT_URL}?t=${Date.now()}`;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+  // 1. Primary: Cloudflare KV Edge Database
+  for (const url of ENDPOINTS) {
+    try {
+      const cacheBustUrl = `${url}?t=${Date.now()}`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-    const res = await fetch(cacheBustUrl, {
-      method: 'GET',
-      cache: 'no-store',
-      signal: controller.signal,
-      headers: { 
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
-    clearTimeout(timeoutId);
+      const res = await fetch(cacheBustUrl, {
+        method: 'GET',
+        cache: 'no-store',
+        signal: controller.signal,
+        headers: { 
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      clearTimeout(timeoutId);
 
-    if (res.ok) {
-      const json = await res.json();
-      const payload = json.data || json;
-      if (payload && (Array.isArray(payload.clients) || Array.isArray(payload.payments) || Array.isArray(payload.attendance))) {
-        return payload as CloudDataPayload;
+      if (res.ok) {
+        const json = await res.json();
+        const payload = json.data || json;
+        if (payload && (Array.isArray(payload.clients) || Array.isArray(payload.payments) || Array.isArray(payload.attendance))) {
+          return payload as CloudDataPayload;
+        }
       }
+    } catch (e) {
+      // Continue to next endpoint
     }
-  } catch (e) {
-    console.warn('Primary cloud fetch warning:', e);
   }
 
   // 2. Direct Supabase Fallback (if user configured custom Supabase)
@@ -318,7 +320,7 @@ export const fetchCloudSyncData = async (): Promise<CloudDataPayload | null> => 
   return null;
 };
 
-// Push Local Changes to Cloud with Server-Side Atomic Merge
+// Push Local Changes to Cloud (Cloudflare KV Edge Database with Atomic Merging)
 export const pushCloudSyncData = async (payload: Omit<CloudDataPayload, 'lastUpdated'>): Promise<boolean> => {
   if (typeof window === 'undefined') return false;
 
@@ -329,70 +331,69 @@ export const pushCloudSyncData = async (payload: Omit<CloudDataPayload, 'lastUpd
 
   let success = false;
 
-  // 1. Primary Push to Dedicated Multi-Device Store
-  try {
-    let remotePayload: CloudDataPayload | null = null;
+  // 1. Primary Push to Cloudflare KV Edge Database
+  for (const url of ENDPOINTS) {
     try {
-      const curRes = await fetch(`${PRIMARY_CLOUD_OBJECT_URL}?t=${Date.now()}`, { 
-        method: 'GET', 
-        cache: 'no-store' 
+      let remotePayload: CloudDataPayload | null = null;
+      try {
+        const curRes = await fetch(`${url}?t=${Date.now()}`, { 
+          method: 'GET', 
+          cache: 'no-store' 
+        });
+        if (curRes.ok) {
+          const curJson = await curRes.json();
+          remotePayload = curJson.data || curJson;
+        }
+      } catch (e) {}
+
+      // Merge incoming changes with any remote changes from other devices
+      const allDeleted = Array.from(new Set([
+        ...(remotePayload?.deletedIds || []),
+        ...(payload.deletedIds || [])
+      ]));
+
+      const mergedClients = mergeArraysById(payload.clients || [], remotePayload?.clients || [], allDeleted);
+      const mergedPayments = mergeArraysById(payload.payments || [], remotePayload?.payments || [], allDeleted);
+      const mergedAttendance = mergeArraysById(payload.attendance || [], remotePayload?.attendance || [], allDeleted);
+      const mergedDreams = mergeArraysById(payload.trainerDreams || [], remotePayload?.trainerDreams || [], allDeleted);
+      const mergedTrainerLeaves = mergeArraysById(payload.trainerLeaves || [], remotePayload?.trainerLeaves || [], allDeleted);
+      const mergedLeaves = mergeArraysById(payload.leaves || [], remotePayload?.leaves || [], allDeleted);
+
+      const mergedPayload: CloudDataPayload = {
+        ...remotePayload,
+        ...payload,
+        clients: mergedClients,
+        payments: mergedPayments,
+        attendance: mergedAttendance,
+        trainerDreams: mergedDreams,
+        trainerLeaves: mergedTrainerLeaves,
+        leaves: mergedLeaves,
+        deletedIds: allDeleted,
+        lastUpdated: new Date().toISOString()
+      };
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+      const res = await fetch(url, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store'
+        },
+        body: JSON.stringify(mergedPayload)
       });
-      if (curRes.ok) {
-        const curJson = await curRes.json();
-        remotePayload = curJson.data || curJson;
+      clearTimeout(timeoutId);
+
+      if (res.ok) {
+        success = true;
+        return true;
       }
-    } catch (e) {}
-
-    // Merge incoming changes with any remote changes from other devices
-    const allDeleted = Array.from(new Set([
-      ...(remotePayload?.deletedIds || []),
-      ...(payload.deletedIds || [])
-    ]));
-
-    const mergedClients = mergeArraysById(payload.clients || [], remotePayload?.clients || [], allDeleted);
-    const mergedPayments = mergeArraysById(payload.payments || [], remotePayload?.payments || [], allDeleted);
-    const mergedAttendance = mergeArraysById(payload.attendance || [], remotePayload?.attendance || [], allDeleted);
-    const mergedDreams = mergeArraysById(payload.trainerDreams || [], remotePayload?.trainerDreams || [], allDeleted);
-    const mergedTrainerLeaves = mergeArraysById(payload.trainerLeaves || [], remotePayload?.trainerLeaves || [], allDeleted);
-    const mergedLeaves = mergeArraysById(payload.leaves || [], remotePayload?.leaves || [], allDeleted);
-
-    const mergedPayload: CloudDataPayload = {
-      ...remotePayload,
-      ...payload,
-      clients: mergedClients,
-      payments: mergedPayments,
-      attendance: mergedAttendance,
-      trainerDreams: mergedDreams,
-      trainerLeaves: mergedTrainerLeaves,
-      leaves: mergedLeaves,
-      deletedIds: allDeleted,
-      lastUpdated: new Date().toISOString()
-    };
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-    const res = await fetch(PRIMARY_CLOUD_OBJECT_URL, {
-      method: 'PUT',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache, no-store'
-      },
-      body: JSON.stringify({
-        name: 'studio_crm_demo_master',
-        data: mergedPayload
-      })
-    });
-    clearTimeout(timeoutId);
-
-    if (res.ok) {
-      success = true;
-      return true;
+    } catch (e) {
+      // Continue
     }
-  } catch (e) {
-    console.warn('Primary cloud push error:', e);
   }
 
   // 2. Direct Supabase Fallback (if configured)

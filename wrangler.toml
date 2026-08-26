@@ -1,9 +1,14 @@
 name = "studio-crm-demo"
 account_id = "cf7950ba25ac14c265564cccdf9104a5"
+main = "worker.js"
 compatibility_date = "2024-09-23"
-pages_build_output_dir = "./dist"
+
+[[kv_namespaces]]
+binding = "CRM_STORE"
+id = "7b269d96f1304704b380b2c564cd9c44"
 
 [assets]
 directory = "./dist"
 not_found_handling = "single-page-application"
+
 
