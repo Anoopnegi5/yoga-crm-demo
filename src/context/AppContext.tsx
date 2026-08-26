@@ -678,11 +678,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Initial Startup & 10-Second Background Real-Time Cloud Polling with Smart Push
+  // Initial Startup & 3.5-Second Background Real-Time Cloud Polling with Smart Push
   useEffect(() => {
     const runSync = () => {
-      // Pause background sync if user recently clicked or performed a mutation locally
-      if (Date.now() - lastUserActionTimeRef.current < 6000) {
+      // Pause background sync only if user just clicked locally within 1.2s
+      if (Date.now() - lastUserActionTimeRef.current < 1200) {
         return;
       }
       fetchCloudSyncData().then(remote => {
@@ -693,32 +693,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deleted_ids`, JSON.stringify(allDeleted));
           safeStorage.setItem(`${LOCAL_STORAGE_KEY}_deletedIds`, JSON.stringify(allDeleted));
 
-          setClients(prev => {
-            const merged = mergeArraysById(prev, remote.clients || [], allDeleted);
-            return merged;
+          const rawRemoteAttendance = Array.isArray(remote.attendance) ? remote.attendance.map(normalizeAttendance).filter(Boolean) : [];
+          const rawRemotePayments = Array.isArray(remote.payments) ? remote.payments.map(normalizePayment).filter(Boolean) : [];
+          const rawRemoteDreams = Array.isArray(remote.trainerDreams) ? remote.trainerDreams.map(normalizeTrainerDream).filter(Boolean) : [];
+          const rawRemoteLeaves = Array.isArray(remote.leaves) ? remote.leaves.map(normalizeLeave).filter(Boolean) : [];
+
+          setAttendance(prevAttendance => {
+            const mergedAtt = mergeArraysById(prevAttendance, rawRemoteAttendance, allDeleted);
+            safeStorage.setItem(`${LOCAL_STORAGE_KEY}_attendance`, JSON.stringify(mergedAtt));
+
+            setClients(prevClients => {
+              const mergedCl = mergeArraysById(prevClients, remote.clients || [], allDeleted).map(c => {
+                const presentCount = mergedAtt.filter(a => a.clientId === c.id && a.status === 'Present').length;
+                return { ...c, completedClasses: presentCount };
+              });
+              safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(mergedCl));
+              return mergedCl;
+            });
+
+            return mergedAtt;
           });
 
           setPayments(prev => {
-            const rawRemote = Array.isArray(remote.payments) ? remote.payments.map(normalizePayment).filter(Boolean) : [];
-            const merged = mergeArraysById(prev, rawRemote, allDeleted);
-            return merged.map(normalizePayment).filter(Boolean);
+            const merged = mergeArraysById(prev, rawRemotePayments, allDeleted).map(normalizePayment).filter(Boolean);
+            safeStorage.setItem(`${LOCAL_STORAGE_KEY}_payments`, JSON.stringify(merged));
+            return merged;
           });
+
           setTrainerDreams(prev => {
-            const rawRemote = Array.isArray(remote.trainerDreams) ? remote.trainerDreams.map(normalizeTrainerDream).filter(Boolean) : [];
-            const merged = mergeArraysById(prev, rawRemote, allDeleted);
-            return merged.map(normalizeTrainerDream).filter(Boolean);
+            const merged = mergeArraysById(prev, rawRemoteDreams, allDeleted).map(normalizeTrainerDream).filter(Boolean);
+            return merged;
           });
+
           setTrainerLeaves(prev => mergeArraysById(prev, remote.trainerLeaves || [], allDeleted));
+
           setLeaves(prev => {
-            const rawRemote = Array.isArray(remote.leaves) ? remote.leaves.map(normalizeLeave).filter(Boolean) : [];
-            const merged = mergeArraysById(prev, rawRemote, allDeleted);
-            return merged.map(normalizeLeave).filter(Boolean);
+            const merged = mergeArraysById(prev, rawRemoteLeaves, allDeleted).map(normalizeLeave).filter(Boolean);
+            safeStorage.setItem(`${LOCAL_STORAGE_KEY}_leaves`, JSON.stringify(merged));
+            return merged;
           });
-          setAttendance(prev => {
-            const rawRemote = Array.isArray(remote.attendance) ? remote.attendance.map(normalizeAttendance).filter(Boolean) : [];
-            const merged = mergeArraysById(prev, rawRemote, allDeleted);
-            return merged.map(normalizeAttendance).filter(Boolean);
-          });
+
           setBlogs(prev => {
             const rawRemote = Array.isArray(remote.blogs) ? remote.blogs.map(normalizeBlog).filter(Boolean) : [];
             if (rawRemote.length === 0) return prev;
@@ -742,7 +756,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     runSync();
     
     // Smart Real-time Sync:
-    // 1. Sync immediately when tab becomes active / visible / focused
+    // 1. Sync immediately when tab becomes active / visible / focused (e.g. switching between Phone and Laptop)
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         runSync();
@@ -751,12 +765,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleVisibilityChange);
 
-    // 2. High-speed 5-Second Real-Time Polling across all devices
+    // 2. High-speed 3.5-Second Real-Time Polling across all devices
     const interval = setInterval(() => {
       if (!document.hidden) {
         runSync();
       }
-    }, 5000);
+    }, 3500);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
