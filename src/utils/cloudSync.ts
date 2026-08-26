@@ -196,6 +196,23 @@ export const normalizeBlog = (b: any): any => {
   };
 };
 
+export const getRecordRecencyScore = (item: any): number => {
+  if (!item || !item.id) return 0;
+  const match = String(item.id).match(/\d{10,13}/);
+  if (match) {
+    return parseInt(match[0], 10);
+  }
+  const numMatch = String(item.id).match(/\d+/);
+  if (numMatch) {
+    return parseInt(numMatch[0], 10);
+  }
+  if (item.updatedAt || item.joiningDate || item.date) {
+    const d = new Date(item.updatedAt || item.joiningDate || item.date).getTime();
+    if (!isNaN(d)) return d;
+  }
+  return 0;
+};
+
 // Smart Array Merging by Item ID (and ClientId_Date for Attendance) with Timestamp Conflict Resolution
 export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedIds: string[] = []): any[] => {
   const map = new Map<string, any>();
@@ -263,7 +280,7 @@ export const mergeArraysById = (local: any[] = [], remote: any[] = [], deletedId
   }).filter(Boolean);
 
   // Always sort newest items (highest timestamp ID) FIRST
-  return list.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
+  return list.sort((a, b) => getRecordRecencyScore(b) - getRecordRecencyScore(a));
 };
 
 const ENDPOINTS = [

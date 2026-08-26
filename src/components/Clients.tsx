@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import { Client } from '../types';
 import { EditClientModal } from './Modals/EditClientModal';
 import { getClientCurrentMonthPaymentStatus } from '../utils/paymentUtils';
+import { getRecordRecencyScore } from '../utils/cloudSync';
 import { 
   Users, 
   Search, 
@@ -23,7 +24,6 @@ import {
   UserX,
   UserCheck,
   Table,
-  Check,
   TrendingUp,
   Activity,
   ExternalLink,
@@ -50,36 +50,37 @@ export const Clients: React.FC = () => {
   const [filterType, setFilterType] = useState<string>('All');
   const [filterGroup, setFilterGroup] = useState<string>('All');
   const [search, setSearch] = useState<string>('');
-  const [markedTodayIds, setMarkedTodayIds] = useState<Record<string, boolean>>({});
 
   const [editingClient, setEditingClient] = useState<Client | null>(null);
 
   // Extract unique Group Batch names
   const groupBatchNames = Array.from(new Set(clients.map(c => c.groupName || 'General Yoga Batch')));
 
-  // Filter clients dynamically
-  const filteredClients = clients.filter((client) => {
-    if (!client) return false;
-    const matchesSearch = 
-      (client.name || '').toLowerCase().includes((search || '').toLowerCase()) ||
-      (client.phone || '').includes(search) ||
-      (client.groupName || '').toLowerCase().includes((search || '').toLowerCase()) ||
-      (client.goal || '').toLowerCase().includes((search || '').toLowerCase());
+  // Filter clients dynamically and sort newly added clients at the very TOP
+  const filteredClients = clients
+    .filter((client) => {
+      if (!client) return false;
+      const matchesSearch = 
+        (client.name || '').toLowerCase().includes((search || '').toLowerCase()) ||
+        (client.phone || '').includes(search) ||
+        (client.groupName || '').toLowerCase().includes((search || '').toLowerCase()) ||
+        (client.goal || '').toLowerCase().includes((search || '').toLowerCase());
 
-    const matchesStatus = 
-      filterStatus === 'All' ? true :
-      filterStatus === 'Discontinued' ? client.status === 'Discontinued' :
-      client.status !== 'Discontinued';
+      const matchesStatus = 
+        filterStatus === 'All' ? true :
+        filterStatus === 'Discontinued' ? client.status === 'Discontinued' :
+        client.status !== 'Discontinued';
 
-    const matchesSlot = filterSlot === 'All' || 
-      client.timeSlot === filterSlot || 
-      (filterSlot === 'Morning' && (client.classTime || '').toUpperCase().includes('AM')) || 
-      (filterSlot === 'Evening' && (client.classTime || '').toUpperCase().includes('PM'));
-    const matchesType = filterType === 'All' || client.sessionType === filterType;
-    const matchesGroup = filterGroup === 'All' || client.groupName === filterGroup;
+      const matchesSlot = filterSlot === 'All' || 
+        client.timeSlot === filterSlot || 
+        (filterSlot === 'Morning' && (client.classTime || '').toUpperCase().includes('AM')) || 
+        (filterSlot === 'Evening' && (client.classTime || '').toUpperCase().includes('PM'));
+      const matchesType = filterType === 'All' || client.sessionType === filterType;
+      const matchesGroup = filterGroup === 'All' || client.groupName === filterGroup;
 
-    return matchesSearch && matchesStatus && matchesSlot && matchesType && matchesGroup;
-  });
+      return matchesSearch && matchesStatus && matchesSlot && matchesType && matchesGroup;
+    })
+    .sort((a, b) => getRecordRecencyScore(b) - getRecordRecencyScore(a));
 
   // Group clients by groupName for Group Batches View
   const groupedBatchesMap: Record<string, Client[]> = {};
@@ -94,15 +95,8 @@ export const Clients: React.FC = () => {
   const handleMarkBatchPresent = (batchClients: Client[], batchName: string) => {
     batchClients.forEach(c => {
       markAttendance(c.id, 'Present');
-      setMarkedTodayIds(prev => ({ ...prev, [c.id]: true }));
     });
     showSuccessToast(`Marked entire ${batchName} present today!`);
-  };
-
-  const handleQuickMarkPresent = (clientId: string, clientName: string) => {
-    markAttendance(clientId, 'Present');
-    setMarkedTodayIds(prev => ({ ...prev, [clientId]: true }));
-    showSuccessToast(`Marked ${clientName} present!`);
   };
 
   const activeCount = clients.filter(c => c.status !== 'Discontinued').length;
@@ -325,7 +319,6 @@ export const Clients: React.FC = () => {
             const isPaid = currentMonthStatus === 'Paid';
             const isDiscontinued = client.status === 'Discontinued';
             const isPerSession = client.feeType === 'Per Session';
-            const isMarkedToday = !!markedTodayIds[client.id];
 
             return (
               <div
@@ -491,22 +484,6 @@ export const Clients: React.FC = () => {
                     <Eye className="w-3.5 h-3.5" />
                     <span>View Profile</span>
                   </button>
-
-                  {/* Quick Mark Attendance Present */}
-                  {!isDiscontinued && (
-                    <button
-                      onClick={() => handleQuickMarkPresent(client.id, client.name)}
-                      disabled={isMarkedToday}
-                      className={`p-2.5 rounded-2xl text-xs font-bold transition-all flex items-center gap-1 ${
-                        isMarkedToday
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-slate-100 hover:bg-emerald-50 text-slate-600 hover:text-emerald-700'
-                      }`}
-                      title={isMarkedToday ? 'Marked Present' : 'Quick Mark Present Today'}
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                    </button>
-                  )}
 
                   {/* Status Toggle or Edit */}
                   {isDiscontinued ? (

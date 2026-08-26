@@ -4,7 +4,7 @@ import { INITIAL_CLIENTS, INITIAL_PAYMENTS, INITIAL_LEAVES, INITIAL_ATTENDANCE, 
 import { DEFAULT_WEBSITE_CMS } from '../config/siteConfig';
 import { getTodayDateString } from '../utils/dateUtils';
 import { safeStorage } from "../utils/safeStorage";
-import { fetchCloudSyncData, pushCloudSyncData, mergeArraysById, normalizeClient, normalizePayment, normalizeAttendance, normalizeTrainerDream, normalizeLeave, normalizeBlog } from '../utils/cloudSync';
+import { fetchCloudSyncData, pushCloudSyncData, mergeArraysById, normalizeClient, normalizePayment, normalizeAttendance, normalizeTrainerDream, normalizeLeave, normalizeBlog, getRecordRecencyScore } from '../utils/cloudSync';
 import { getClientBillingCycles } from '../utils/paymentUtils';
 
 interface AppContextType {
@@ -893,7 +893,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     let updatedClients: Client[] = [];
     setClients(prev => {
       const filtered = prev.filter(c => c.id !== newId);
-      const updated = [newClient, ...filtered].sort((a, b) => b.id.localeCompare(a.id));
+      const updated = [newClient, ...filtered].sort((a, b) => getRecordRecencyScore(b) - getRecordRecencyScore(a));
       updatedClients = updated;
       safeStorage.setItem(`${LOCAL_STORAGE_KEY}_clients`, JSON.stringify(updated));
       return updated;
