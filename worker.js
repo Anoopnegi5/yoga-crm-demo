@@ -1,4 +1,4 @@
-// Cloudflare Worker Script with Cloudflare KV Real-Time Database Router
+// Cloudflare Worker Script with Cloudflare KV Real-Time Database Router & SPA Fallback
 
 export default {
   async fetch(request, env, ctx) {
@@ -82,11 +82,23 @@ export default {
       });
     }
 
-    // Pass through to Cloudflare Static Assets SPA
+    // SPA Routing: Serve static assets, and route /panel, /client/:id, /demo, etc. to index.html
     if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
+      try {
+        const response = await env.ASSETS.fetch(request);
+        if (response.status === 404 || !response.ok) {
+          const indexUrl = new URL('/index.html', request.url);
+          return await env.ASSETS.fetch(new Request(indexUrl, request));
+        }
+        return response;
+      } catch (err) {
+        const indexUrl = new URL('/index.html', request.url);
+        return await env.ASSETS.fetch(new Request(indexUrl, request));
+      }
     }
 
-    return new Response('Studio CRM Demo Ready', { status: 200 });
+    // Direct fallback to index.html
+    const indexUrl = new URL('/index.html', request.url);
+    return fetch(new Request(indexUrl, request));
   }
 };
