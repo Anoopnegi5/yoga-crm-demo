@@ -38,26 +38,26 @@ export const Payments: React.FC = () => {
       .map(l => l.clientId)
   );
 
-  // Synthesize payment records for any active client marked 'Paid' / 'Partial' OR Per Session clients if missing from explicit payments list
+  // Synthesize payment records for any active client if missing from explicit payments list
   const synthesizedPaymentsFromClients: PaymentRecord[] = activeClients
     .filter(c => {
       if (fullMonthLeaveClientIds.has(c.id)) return false;
-      const isPerSession = c.feeType === 'Per Session' || c.membershipPlan === 'Per Session';
-      const isPaidOrPartial = c.paymentStatus === 'Paid' || c.paymentStatus === 'Partial';
-      if (!isPaidOrPartial && !isPerSession) return false;
-      return !payments.some(p => p.clientId === c.id);
+      return !payments.some(p => p.clientId === c.id && isDateInMonth(p.date, currentMonthStr));
     })
     .map(c => {
       const isPerSession = c.feeType === 'Per Session' || c.membershipPlan === 'Per Session';
-      let amount = c.monthlyFee || 1200;
-      let notes = 'Paid status on client profile';
+      const { status, remainingBalance, dueAmount } = getClientCurrentMonthPaymentStatus(c, payments, currentMonthStr, leaves);
+      let amount = c.monthlyFee || 2500;
+      let notes = status === 'Paid' ? 'Monthly Fee Paid' : `Fee Due by ${c.feeDueDate || '5th'}`;
 
       if (isPerSession) {
         const presentCount = attendance.filter(a => a.clientId === c.id && a.status === 'Present' && isDateInMonth(a.date, currentMonthStr)).length;
         const count = presentCount > 0 ? presentCount : (c.completedClasses || 1);
-        const rate = c.perSessionFee || 1000;
+        const rate = c.perSessionFee || 600;
         amount = count * rate;
         notes = `Pay-As-You-Go (${count} ${count === 1 ? 'session' : 'sessions'} completed @ ₹${rate}/session)`;
+      } else if (status !== 'Paid') {
+        amount = remainingBalance || dueAmount || c.monthlyFee || 2500;
       }
 
       return {
@@ -68,7 +68,7 @@ export const Payments: React.FC = () => {
         date: c.joiningDate || todayDateStr,
         month: currentMonthStr,
         paymentMode: 'UPI',
-        status: (c.paymentStatus === 'Paid' || isPerSession) ? 'Paid' : (c.paymentStatus as any),
+        status: status as any,
         notes
       };
     });
